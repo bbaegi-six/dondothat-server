@@ -2,6 +2,7 @@ package org.bbagisix.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,6 +17,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
 import javax.sql.DataSource;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,7 +43,7 @@ public class RootConfig {
 		config.setJdbcUrl(url);
 		config.setUsername(username);
 		config.setPassword(password);
-		
+
 		// MySQL 최적화 설정
 		config.setMaximumPoolSize(10);
 		config.setMinimumIdle(5);
@@ -49,7 +51,7 @@ public class RootConfig {
 		config.setIdleTimeout(600000);
 		config.setMaxLifetime(1800000);
 		config.setLeakDetectionThreshold(60000);
-		
+
 		// MySQL 연결 검증 설정
 		config.setConnectionTestQuery("SELECT 1");
 		config.setValidationTimeout(3000);
@@ -84,6 +86,9 @@ public class RootConfig {
 		SqlSessionFactoryBean sqlSessionFactory = new SqlSessionFactoryBean();
 		sqlSessionFactory.setConfigLocation(applicationContext.getResource("classpath:/mybatis-config.xml"));
 		sqlSessionFactory.setDataSource(dataSource());
+
+		// resources/mappers/ 하위의 모든 xml 파일을 매퍼로 인식하도록 경로를 설정
+		sqlSessionFactory.setMapperLocations(applicationContext.getResources("classpath:/mappers/**/*.xml"));
 
 		return (SqlSessionFactory)sqlSessionFactory.getObject();
 	}
