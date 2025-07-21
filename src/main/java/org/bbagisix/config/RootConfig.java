@@ -12,9 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 
 import javax.sql.DataSource;
 
@@ -23,7 +26,14 @@ import java.util.regex.Pattern;
 
 @Configuration
 @PropertySource({"classpath:/application.properties"})
-// @MapperScan(basePackages = {})
+@MapperScan(basePackages = {"org.bbagisix.**.mapper"})
+@ComponentScan(
+	basePackages = "org.bbagisix", // 스캔 범위는 동일
+	excludeFilters = {            // 제외할 필터를 지정
+		@ComponentScan.Filter(type = org.springframework.context.annotation.FilterType.ANNOTATION, classes = {
+			Controller.class, ControllerAdvice.class})
+	}
+)
 public class RootConfig {
 	private static final Logger log = LogManager.getLogger(RootConfig.class);
 	@Value("${jdbc.driver}")
