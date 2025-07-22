@@ -10,14 +10,13 @@ client = OpenAI(api_key=os.getenv("API_KEY"))
 app=FastAPI()
 
 class Expenditure(BaseModel):
-    expenditure_id: str
-    user_id: str
+    expenditure_id: int
+    user_id: int
     category_id: int
-    asset_id: str
+    asset_id: int
     amount: int
     description: str
     expenditure_date: str
-    is_income: bool
     created_at: str
     updated_at: str
 
