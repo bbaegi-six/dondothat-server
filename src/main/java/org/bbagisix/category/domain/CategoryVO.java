@@ -6,4 +6,5 @@ import lombok.Data;
 public class CategoryVO {
 	private Long categoryId;
 	private String name;
+	private String icon;
 }

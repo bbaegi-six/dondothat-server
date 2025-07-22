@@ -19,7 +19,7 @@ public class CategoryServiceImpl implements CategoryService {
 	public List<CategoryDTO> getAllCategories() {
 		return categoryMapper.findAll()
 			.stream()
-			.map(vo -> new CategoryDTO(vo.getCategoryId(), vo.getName()))
+			.map(vo -> new CategoryDTO(vo.getCategoryId(), vo.getName(), vo.getIcon()))
 			.collect(Collectors.toList());
 	}
 }
