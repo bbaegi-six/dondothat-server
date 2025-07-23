@@ -48,5 +48,13 @@
         WHERE cm.message_id = #{messageId}
     </select>
 
+    <!-- 사용자 정보 조회 -->
+    <select id="selectUserById" parameterType="long" resultType="map">
+        SELECT user_id,
+               user_name,
+               profile_image
+        FROM User
+        WHERE user_id = #{userId}
+    </select>
 
 </mapper>
