@@ -1,10 +1,11 @@
 FROM openjdk:17-jdk-slim as build
 
 WORKDIR /app
-COPY ../../Users/student/Desktop .
+COPY . .
 
 # Gradle로 빌드 (Gradle Wrapper가 있다면)
-RUN ./gradlew build -x test
+RUN chmod +x gradlew
+RUN ./gradlew clean build -x test
 
 FROM openjdk:17-jdk-slim
 WORKDIR /app
