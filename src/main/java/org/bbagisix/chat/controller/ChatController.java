@@ -3,6 +3,8 @@ package org.bbagisix.chat.controller;
 import java.util.Map;
 
 import org.bbagisix.chat.dto.ChatMessageDTO;
+import org.bbagisix.chat.exception.BusinessException;
+import org.bbagisix.chat.exception.ErrorCode;
 import org.bbagisix.chat.service.ChatService;
 import org.bbagisix.chat.service.ChatSessionService;
 import org.springframework.context.event.EventListener;
@@ -58,13 +60,12 @@ public class ChatController {
 
 			// 해당 챌린지 구독자들에게 브로드캐스트
 			messagingTemplate.convertAndSend("/topic/chat/" + challengeId, savedMessage);
-		} catch (IllegalArgumentException e) {
-			log.warn("메시지 검증 실패: {}", e.getMessage());
-			sendErrorMessage(challengeId, "메시지가 유효하지 않습니다: " + e.getMessage());
-
+		} catch (BusinessException e) {
+			log.warn("비즈니스 예외 발생: code={}, message={}", e.getCode(), e.getMessage());
+			// GlobalExceptionHandler 에서 처리
 		} catch (Exception e) {
-			log.error("메시지 전송 중 오류: ", e);
-			sendErrorMessage(challengeId, "메시지 전송에 실패했습니다.");
+			log.error("메시지 전송 중 예상하지 못한 오류: ", e);
+			throw new BusinessException(ErrorCode.WEBSOCKET_SEND_FAILED, e);
 		}
 	}
 
@@ -100,22 +101,24 @@ public class ChatController {
 			// 접속자 수 증가
 			chatSessionService.addParticipant(challengeId);
 
-			// 시스템 메시지 생성 (systemMessage가 null일 경우 대비)
-			ChatMessageDTO finalSystemMessage = systemMessage != null ? systemMessage :
-				chatService.createErrorMessage(challengeId, "입장 처리 중 문제가 발생했지만 접속되었습니다.");
+			// 시스템 메시지가 null일 경우 에러 처리
+			if (systemMessage == null) {
+				throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "입장 메시지 생성에 실패했습니다.");
+			}
 
 			// 시스템 메시지는 DB에 저장하지 않고 바로 브로드캐스트
-			messagingTemplate.convertAndSend("/topic/chat/" + challengeId, finalSystemMessage);
+			messagingTemplate.convertAndSend("/topic/chat/" + challengeId, systemMessage);
 
 			log.info("입장 처리 완료: 사용자 {}, 챌린지 {}", userName, challengeId);
 
-		} catch (IllegalArgumentException e) {
-			log.warn("입장 파라미터 오류: {}", e.getMessage());
-			handleJoinError(challengeId, userId, userName, headerAccessor, "잘못된 요청입니다.");
-
+		} catch (BusinessException e) {
+			log.warn("비즈니스 예외 발생: code={}, message={}", e.getCode(), e.getMessage());
+			handleJoinError(challengeId, userId, userName, headerAccessor);
+			// GlobalExceptionHandler에서 처리
 		} catch (Exception e) {
-			log.error("채팅방 입장 중 오류: ", e);
-			handleJoinError(challengeId, userId, userName, headerAccessor, "입장 처리 중 오류가 발생했습니다.");
+			log.error("채팅방 입장 중 예상하지 못한 오류: ", e);
+			handleJoinError(challengeId, userId, userName, headerAccessor);
+			throw new BusinessException(ErrorCode.WEBSOCKET_CONNECTION_ERROR, e);
 		}
 	}
 
@@ -144,20 +147,10 @@ public class ChatController {
 					messagingTemplate.convertAndSend("/topic/chat/" + challengeId, systemMessage);
 				}
 			}
+		} catch (BusinessException e) {
+			log.warn("퇴장 처리 중 비즈니스 예외: code={}, message={}", e.getCode(), e.getMessage());
 		} catch (Exception e) {
-			log.error("WebSocket 연결 해제 처리 중 오류: ", e);
-		}
-	}
-
-	/**
-	 * 에러 메시지 전송 (공통 메서드)
-	 */
-	private void sendErrorMessage(Long challengeId, String message) {
-		try {
-			ChatMessageDTO errorMessage = chatService.createErrorMessage(challengeId, message);
-			messagingTemplate.convertAndSend("/topic/chat/" + challengeId, errorMessage);
-		} catch (Exception e) {
-			log.error("에러 메시지 전송 실패: ", e);
+			log.error("WebSocket 연결 해제 처리 중 예상하지 못한 오류: ", e);
 		}
 	}
 
@@ -165,16 +158,13 @@ public class ChatController {
 	 * 입장 오류 처리 (공통 메서드)
 	 */
 	private void handleJoinError(Long challengeId, Long userId, String userName,
-		SimpMessageHeaderAccessor headerAccessor, String errorMessage) {
+		SimpMessageHeaderAccessor headerAccessor) {
 		try {
 			// 에러 발생 시에도 접속자 수는 증가
 			chatSessionService.addParticipant(challengeId);
 
 			// 안전한 세션 저장
 			saveToSession(headerAccessor, challengeId, userId, userName);
-
-			// 에러 메시지 전송
-			sendErrorMessage(challengeId, errorMessage);
 
 		} catch (Exception e) {
 			log.error("입장 오류 처리 중 추가 오류: ", e);
@@ -195,6 +185,7 @@ public class ChatController {
 			}
 		} catch (Exception e) {
 			log.error("세션 저장 중 오류: ", e);
+			throw new BusinessException(ErrorCode.SESSION_EXPIRED, e);
 		}
 	}
 }

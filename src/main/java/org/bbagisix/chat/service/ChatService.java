@@ -1,12 +1,13 @@
 package org.bbagisix.chat.service;
 
-import java.sql.Timestamp;
 import java.util.Map;
 
 import org.bbagisix.chat.converter.ChatMessageConverter;
 import org.bbagisix.chat.domain.ChatMessageVO;
 import org.bbagisix.chat.dto.ChatMessageDTO;
 import org.bbagisix.chat.entity.ChatMessage;
+import org.bbagisix.chat.exception.BusinessException;
+import org.bbagisix.chat.exception.ErrorCode;
 import org.bbagisix.chat.mapper.ChatMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,11 +47,14 @@ public class ChatService {
 			// 4. DB 저장
 			int result = chatMapper.insertMessage(entity);
 			if (result != 1) {
-				throw new RuntimeException("메시지 저장에 실패했습니다.");
+				throw new BusinessException(ErrorCode.MESSAGE_SAVE_FAILED);
 			}
 
 			// 5. 저장된 메시지 조회 (사용자 정보 포함)
 			ChatMessage savedEntity = chatMapper.selectMessageById(entity.getMessageId());
+			if (savedEntity == null) {
+				throw new BusinessException(ErrorCode.MESSAGE_LOAD_FAILED);
+			}
 
 			// 6. Entity → DTO 변환하여 반환
 			ChatMessageDTO resultDTO = converter.toDTO(savedEntity);
@@ -58,12 +62,12 @@ public class ChatService {
 			log.debug("메시지 저장 완료: messageId={}", resultDTO.getMessageId());
 			return resultDTO;
 
-		} catch (IllegalArgumentException e) {
-			log.warn("메시지 검증 실패: {}", e.getMessage());
+		} catch (BusinessException e) {
+			log.warn("비즈니스 예외 발생: code={}, message={}", e.getCode(), e.getMessage());
 			throw e;
 		} catch (Exception e) {
-			log.error("메시지 저장 중 오류: ", e);
-			throw new RuntimeException("메시지 저장 중 오류가 발생했습니다.", e);
+			log.error("메시지 저장 중 예상하지 못한 오류: ", e);
+			throw new BusinessException(ErrorCode.DATA_ACCESS_ERROR, e);
 		}
 	}
 
@@ -76,25 +80,30 @@ public class ChatService {
 		// 파라미터 검증
 		validateJoinParameters(challengeId, userId);
 
-		// 사용자 정보 조회
-		String userName = getUserName(userId);
+		try {
+			// 사용자 정보 조회
+			String userName = getUserName(userId);
 
-		// 시스템 메시지 생성
-		String message = userName + "님이 입장했습니다.";
-		ChatMessageVO systemVO = converter.createSystemMessage(challengeId, userId, userName, message);
+			// 시스템 메시지 생성
+			String message = userName + "님이 입장했습니다.";
+			ChatMessageVO systemVO = converter.createSystemMessage(challengeId, userId, userName, message);
 
-		// VO → DTO 변환하여 반환
-		ChatMessageDTO resultDTO = ChatMessageDTO.builder()
-			.challengeId(systemVO.getChallengeId())
-			.userId(systemVO.getUserId())
-			.userName(systemVO.getUserName())
-			.message(systemVO.getMessage())
-			.messageType(systemVO.getMessageType())
-			.sentAt(systemVO.getSentAt())
-			.build();
+			// VO → DTO 변환하여 반환
+			ChatMessageDTO resultDTO = ChatMessageDTO.builder()
+				.challengeId(systemVO.getChallengeId())
+				.userId(systemVO.getUserId())
+				.userName(systemVO.getUserName())
+				.message(systemVO.getMessage())
+				.messageType(systemVO.getMessageType())
+				.sentAt(systemVO.getSentAt())
+				.build();
 
-		log.debug("입장 처리 완료: userId={}, userName={}", userId, userName);
-		return resultDTO;
+			log.debug("입장 처리 완료: userId={}, userName={}", userId, userName);
+			return resultDTO;
+		} catch (Exception e) {
+			log.error("입장 처리 중 오류: ", e);
+			throw new BusinessException(ErrorCode.DATA_ACCESS_ERROR, "입장 처리 중 오류가 발생했습니다.", e);
+		}
 	}
 
 	/**
@@ -104,29 +113,34 @@ public class ChatService {
 		log.debug("사용자 퇴장 처리: challengeId={}, userId={}, userName={}", challengeId, userId, userName);
 
 		if (challengeId == null) {
-			throw new IllegalArgumentException("챌린지 ID는 필수입니다.");
+			throw new BusinessException(ErrorCode.CHALLENGE_ID_REQUIRED);
 		}
 
-		String displayName = (userName != null && !userName.trim().isEmpty())
-			? userName
-			: ("사용자" + userId);
+		try {
+			String displayName = (userName != null && !userName.trim().isEmpty())
+				? userName
+				: ("사용자" + userId);
 
-		// 시스템 메시지 생성
-		String message = displayName + "님이 퇴장했습니다.";
-		ChatMessageVO systemVO = converter.createSystemMessage(challengeId, userId, displayName, message);
+			// 시스템 메시지 생성
+			String message = displayName + "님이 퇴장했습니다.";
+			ChatMessageVO systemVO = converter.createSystemMessage(challengeId, userId, displayName, message);
 
-		// VO → DTO 변환하여 반환
-		ChatMessageDTO resultDTO = ChatMessageDTO.builder()
-			.challengeId(systemVO.getChallengeId())
-			.userId(systemVO.getUserId())
-			.userName(systemVO.getUserName())
-			.message(systemVO.getMessage())
-			.messageType(systemVO.getMessageType())
-			.sentAt(systemVO.getSentAt())
-			.build();
+			// VO → DTO 변환하여 반환
+			ChatMessageDTO resultDTO = ChatMessageDTO.builder()
+				.challengeId(systemVO.getChallengeId())
+				.userId(systemVO.getUserId())
+				.userName(systemVO.getUserName())
+				.message(systemVO.getMessage())
+				.messageType(systemVO.getMessageType())
+				.sentAt(systemVO.getSentAt())
+				.build();
 
-		log.debug("퇴장 처리 완료: userName={}", displayName);
-		return resultDTO;
+			log.debug("퇴장 처리 완료: userName={}", displayName);
+			return resultDTO;
+		} catch (Exception e) {
+			log.error("퇴장 처리 중 오류: ", e);
+			throw new BusinessException(ErrorCode.DATA_ACCESS_ERROR, "퇴장 처리 중 오류가 발생했습니다.", e);
+		}
 	}
 
 	/**
@@ -149,8 +163,20 @@ public class ChatService {
 	 * 메시지 검증
 	 */
 	private void validateMessage(ChatMessageVO vo) {
+		if (vo.getMessage() == null || vo.getMessage().trim().isEmpty()) {
+			throw new BusinessException(ErrorCode.MESSAGE_EMPTY);
+		}
+
+		if (vo.getMessage().length() > 255) {
+			throw new BusinessException(ErrorCode.MESSAGE_TOO_LONG);
+		}
+
+		if (vo.getMessage().contains("<") || vo.getMessage().contains(">")) {
+			throw new BusinessException(ErrorCode.MESSAGE_CONTAINS_HTML);
+		}
+
 		if (!vo.isValidMessage()) {
-			throw new IllegalArgumentException("유효하지 않은 메시지입니다: " + vo.getMessage());
+			throw new BusinessException(ErrorCode.INVALID_MESSAGE);
 		}
 	}
 
@@ -159,10 +185,10 @@ public class ChatService {
 	 */
 	private void validateJoinParameters(Long challengeId, Long userId) {
 		if (challengeId == null) {
-			throw new IllegalArgumentException("챌린지 ID는 필수입니다.");
+			throw new BusinessException(ErrorCode.CHALLENGE_ID_REQUIRED);
 		}
 		if (userId == null) {
-			throw new IllegalArgumentException("사용자 ID는 필수입니다.");
+			throw new BusinessException(ErrorCode.USER_ID_REQUIRED);
 		}
 	}
 
