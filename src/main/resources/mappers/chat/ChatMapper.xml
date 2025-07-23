@@ -6,19 +6,17 @@
 <mapper namespace="org.bbagisix.chat.mapper.ChatMapper">
 
     <!-- ChatMessageDto ResultMap -->
-    <resultMap id="ChatMessageMap" type="ChatMessageDTO">
+    <resultMap id="ChatMessageMap" type="ChatMessage">
         <id property="messageId" column="message_id"/>
         <result property="challengeId" column="challenge_id"/>
         <result property="userId" column="user_id"/>
         <result property="message" column="message"/>
         <result property="sentAt" column="sent_at"/>
         <result property="messageType" column="message_type"/>
-        <result property="userName" column="user_name"/>
-        <result property="userProfileImage" column="user_profile_image"/>
     </resultMap>
 
     <!-- 채팅 메시지 저장 -->
-    <insert id="insertMessage" parameterType="ChatMessageDTO"
+    <insert id="insertMessage" parameterType="ChatMessage"
             useGeneratedKeys="true" keyProperty="messageId">
         INSERT INTO chat_message (challenge_id,
                                   user_id,
@@ -41,19 +39,17 @@
                cm.message,
                cm.sent_at,
                cm.message_type,
-               u.user_name,
-               u.profile_image as user_profile_image
+               u.name AS user_name
         FROM chat_message cm
-                 LEFT JOIN User u ON cm.user_id = u.user_id
+                 LEFT JOIN user u ON cm.user_id = u.user_id
         WHERE cm.message_id = #{messageId}
     </select>
 
     <!-- 사용자 정보 조회 -->
     <select id="selectUserById" parameterType="long" resultType="map">
         SELECT user_id,
-               user_name,
-               profile_image
-        FROM User
+               name
+        FROM user
         WHERE user_id = #{userId}
     </select>
 

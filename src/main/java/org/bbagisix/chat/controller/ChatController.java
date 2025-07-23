@@ -36,6 +36,7 @@ public class ChatController {
 	 * 채팅 메시지 전송
 	 * /app/chat/{challengeId}/send 로 메시지를 받아서
 	 * /topic/chat/{challengeId} 로 브로드캐스트
+	 * DTO → VO → Entity
 	 */
 	@MessageMapping("/chat/{challengeId}/send")
 	public void sendMessage(@DestinationVariable Long challengeId,
@@ -44,32 +45,32 @@ public class ChatController {
 		try {
 			log.info("챌린지 {} 채팅 메시지 수신: {}", challengeId, chatMessage.getMessage());
 
-			// 세션에서 사용자 정보 가져오기 (나중에 인증 구현 시 사용)
-			String sessionId = headerAccessor.getSessionId();
+			// 챌린지 ID 일치 검증
+			if (!challengeId.equals(chatMessage.getChallengeId())) {
+				log.warn("챌린지 ID 불일치: URL={}, DTO={}", challengeId, chatMessage.getChallengeId());
+				chatMessage.setChallengeId(challengeId); // URL의 challengeId로 강제 설정
+			}
 
-			// 메시지를 DB에 저장
-			chatMessage.setChallengeId(challengeId);
+			// 메시지를 VO → Entity 변환 후 DB에 저장
 			ChatMessageDTO savedMessage = chatService.saveMessage(chatMessage);
 
 			log.info("메시지 저장 완료: ID {}", savedMessage.getMessageId());
 
 			// 해당 챌린지 구독자들에게 브로드캐스트
 			messagingTemplate.convertAndSend("/topic/chat/" + challengeId, savedMessage);
+		} catch (IllegalArgumentException e) {
+			log.warn("메시지 검증 실패: {}", e.getMessage());
+			sendErrorMessage(challengeId, "메시지가 유효하지 않습니다: " + e.getMessage());
+
 		} catch (Exception e) {
 			log.error("메시지 전송 중 오류: ", e);
-
-			// 에러 메시지 클라이언트에게 전송
-			ChatMessageDTO errorMessage = ChatMessageDTO.builder()
-				.challengeId(challengeId)
-				.message("메시지 전송에 실패했습니다.")
-				.messageType("ERROR")
-				.build();
-			messagingTemplate.convertAndSend("/topic/chat/" + challengeId, errorMessage);
+			sendErrorMessage(challengeId, "메시지 전송에 실패했습니다.");
 		}
 	}
 
 	/**
 	 * 사용자가 채팅방에 입장
+	 * 시스템이 제어하는 입장 처리
 	 */
 	@MessageMapping("/chat/{challengeId}/join")
 	public void joinChat(@DestinationVariable Long challengeId,
@@ -94,61 +95,33 @@ public class ChatController {
 			}
 
 			// 세션에 정보 저장 - null 값 완전 차단
-			Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
-			if (sessionAttributes != null) {
-				sessionAttributes.put("challengeId", challengeId);
-				sessionAttributes.put("userId", userId);
-				sessionAttributes.put("userName", userName);
-			}
+			saveToSession(headerAccessor, challengeId, userId, userName);
 
 			// 접속자 수 증가
 			chatSessionService.addParticipant(challengeId);
 
 			// 시스템 메시지 생성 (systemMessage가 null일 경우 대비)
 			ChatMessageDTO finalSystemMessage = systemMessage != null ? systemMessage :
-				ChatMessageDTO.builder()
-					.challengeId(challengeId)
-					.userId(userId)
-					.userName(userName)
-					.message(userName + "님이 입장했습니다.")
-					.messageType("SYSTEM")
-					.build();
+				chatService.createErrorMessage(challengeId, "입장 처리 중 문제가 발생했지만 접속되었습니다.");
 
 			// 시스템 메시지는 DB에 저장하지 않고 바로 브로드캐스트
 			messagingTemplate.convertAndSend("/topic/chat/" + challengeId, finalSystemMessage);
 
 			log.info("입장 처리 완료: 사용자 {}, 챌린지 {}", userName, challengeId);
 
+		} catch (IllegalArgumentException e) {
+			log.warn("입장 파라미터 오류: {}", e.getMessage());
+			handleJoinError(challengeId, userId, userName, headerAccessor, "잘못된 요청입니다.");
+
 		} catch (Exception e) {
 			log.error("채팅방 입장 중 오류: ", e);
-
-			// 에러 발생 시에도 접속자 수는 증가
-			chatSessionService.addParticipant(challengeId);
-
-			// 안전한 세션 저장
-			try {
-				Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
-				if (sessionAttributes != null) {
-					sessionAttributes.put("challengeId", challengeId);
-					sessionAttributes.put("userId", userId);
-					sessionAttributes.put("userName", userName);
-				}
-			} catch (Exception sessionEx) {
-				log.error("세션 저장 중 추가 오류: ", sessionEx);
-			}
-
-			// 에러 메시지 전송
-			ChatMessageDTO errorMessage = ChatMessageDTO.builder()
-				.challengeId(challengeId)
-				.message("입장 처리 중 오류가 발생했습니다.")
-				.messageType("ERROR")
-				.build();
-			messagingTemplate.convertAndSend("/topic/chat/" + challengeId, errorMessage);
+			handleJoinError(challengeId, userId, userName, headerAccessor, "입장 처리 중 오류가 발생했습니다.");
 		}
 	}
 
 	/**
 	 * WebSocket 연결 해제 시 자동 호출
+	 * 시스템이 제어하는 퇴장 처리
 	 */
 	@EventListener
 	public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
@@ -156,6 +129,7 @@ public class ChatController {
 			SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.wrap(event.getMessage());
 
 			Long challengeId = (Long)headerAccessor.getSessionAttributes().get("challengeId");
+			Long userId = (Long)headerAccessor.getSessionAttributes().get("userId");
 			String userName = (String)headerAccessor.getSessionAttributes().get("userName");
 
 			if (challengeId != null) {
@@ -164,19 +138,63 @@ public class ChatController {
 				// 접속자 수 감소
 				chatSessionService.removeParticipant(challengeId);
 
-				// 퇴장 메시지 전송
+				// 퇴장 메시지 전송 (VO 기반)
 				if (userName != null) {
-					ChatMessageDTO systemMessage = ChatMessageDTO.builder()
-						.challengeId(challengeId)
-						.message(userName + "님이 퇴장했습니다.")
-						.messageType("SYSTEM")
-						.build();
-
+					ChatMessageDTO systemMessage = chatService.handleLeave(challengeId, userId, userName);
 					messagingTemplate.convertAndSend("/topic/chat/" + challengeId, systemMessage);
 				}
 			}
 		} catch (Exception e) {
 			log.error("WebSocket 연결 해제 처리 중 오류: ", e);
+		}
+	}
+
+	/**
+	 * 에러 메시지 전송 (공통 메서드)
+	 */
+	private void sendErrorMessage(Long challengeId, String message) {
+		try {
+			ChatMessageDTO errorMessage = chatService.createErrorMessage(challengeId, message);
+			messagingTemplate.convertAndSend("/topic/chat/" + challengeId, errorMessage);
+		} catch (Exception e) {
+			log.error("에러 메시지 전송 실패: ", e);
+		}
+	}
+
+	/**
+	 * 입장 오류 처리 (공통 메서드)
+	 */
+	private void handleJoinError(Long challengeId, Long userId, String userName,
+		SimpMessageHeaderAccessor headerAccessor, String errorMessage) {
+		try {
+			// 에러 발생 시에도 접속자 수는 증가
+			chatSessionService.addParticipant(challengeId);
+
+			// 안전한 세션 저장
+			saveToSession(headerAccessor, challengeId, userId, userName);
+
+			// 에러 메시지 전송
+			sendErrorMessage(challengeId, errorMessage);
+
+		} catch (Exception e) {
+			log.error("입장 오류 처리 중 추가 오류: ", e);
+		}
+	}
+
+	/**
+	 * 세션 저장 (공통 메서드)
+	 */
+	private void saveToSession(SimpMessageHeaderAccessor headerAccessor, Long challengeId, Long userId,
+		String userName) {
+		try {
+			Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
+			if (sessionAttributes != null) {
+				sessionAttributes.put("challengeId", challengeId);
+				sessionAttributes.put("userId", userId);
+				sessionAttributes.put("userName", userName != null ? userName : "사용자" + userId);
+			}
+		} catch (Exception e) {
+			log.error("세션 저장 중 오류: ", e);
 		}
 	}
 }

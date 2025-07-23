@@ -23,7 +23,7 @@
 <%--<input type="hidden" id="userName" value="테스트유저1">--%>
 
 <label for="userId">유저 ID:</label>
-<input type="number" id="userId" value="100">
+<input type="number" id="userId">
 
 <label for="challengeId">챌린지 ID:</label>
 <input type="number" id="challengeId" value="1">
