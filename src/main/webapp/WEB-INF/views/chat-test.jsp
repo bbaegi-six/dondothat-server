@@ -14,10 +14,16 @@
 <h1>챌린지 채팅방 테스트</h1>
 
 <h2 id="chatRoomTitle">현재 채팅방: 없음</h2>
+<div id="participantCount" style="display: none;">
+    현재 접속자: <span id="participantNumber">0</span>명
+</div>
 
 <!-- 테스트용 사용자 정보 -->
-<input type="hidden" id="userId" value="100">
-<input type="hidden" id="userName" value="테스트유저1">
+<%--<input type="hidden" id="userId" value="100">--%>
+<%--<input type="hidden" id="userName" value="테스트유저1">--%>
+
+<label for="userId">유저 ID:</label>
+<input type="number" id="userId" value="100">
 
 <label for="challengeId">챌린지 ID:</label>
 <input type="number" id="challengeId" value="1">
@@ -57,7 +63,21 @@
         document.getElementById("messageInput").disabled = !connected;
         document.getElementById("sendBtn").disabled = !connected;
 
+        // 접속자 수 표시/숨김
+        const participantCountDiv = document.getElementById("participantCount");
+        if (connected) {
+            participantCountDiv.style.display = "block";
+        } else {
+            participantCountDiv.style.display = "none";
+            updateParticipantCount(0);
+        }
+
         isConnected = connected;
+    }
+
+    function updateParticipantCount(count) {
+        const participantNumber = document.getElementById("participantNumber");
+        participantNumber.textContent = count;
     }
 
     function connect() {
@@ -91,13 +111,21 @@
                         const msg = JSON.parse(message.body);
                         console.log("받은 메시지:", msg);
 
+                        // 접속자 수 업데이트 메시지 처리
+                        if (msg.type === "PARTICIPANT_COUNT") {
+                            updateParticipantCount(msg.count);
+                            log("👥 현재 접속자: " + msg.count + "명");
+                            return;
+                        }
+
+                        // 일반 채팅 메시지 처리
                         const displayName = msg.userName || msg.userId || "Unknown";
-                        let messageText = "[" + displayName + "] " + msg.message;  // 다시 message
+                        let messageText = "[" + displayName + "] " + msg.message;
 
                         if (msg.messageType === "SYSTEM") {
-                            messageText = "🔔 " + msg.message;  // 다시 message
+                            messageText = "🔔 " + msg.message;
                         } else if (msg.messageType === "ERROR") {
-                            messageText = "❌ " + msg.message;  // 다시 message
+                            messageText = "❌ " + msg.message;
                         }
 
                         log(messageText);
@@ -109,12 +137,12 @@
 
                 // 입장 메시지 전송
                 const userId = document.getElementById("userId").value;
-                const userName = document.getElementById("userName").value;
+                // const userName = document.getElementById("userName").value;
 
                 const joinMessage = {
                     challengeId: parseInt(currentChallengeId),
                     userId: parseInt(userId),
-                    userName: userName,
+                    // userName: userName,
                     messageType: "JOIN"
                 };
 
@@ -147,7 +175,7 @@
         }
 
         const userId = document.getElementById("userId").value;
-        const userName = document.getElementById("userName").value;
+        // const userName = document.getElementById("userName").value;
         const msg = document.getElementById("messageInput").value.trim();
         const challengeId = getCurrentChallengeId();
 
@@ -166,8 +194,8 @@
         const messageData = {
             challengeId: parseInt(currentChallengeId),
             userId: parseInt(userId),
-            userName: userName,
-            message: msg,  // 다시 message로 변경
+            // userName: userName,
+            message: msg,
             messageType: "MESSAGE"
         };
 
