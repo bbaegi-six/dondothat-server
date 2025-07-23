@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from openai import OpenAI
 import asyncio
 from dotenv import load_dotenv
+from typing import List
 import os
 
 load_dotenv()
@@ -20,11 +21,14 @@ class Expenditure(BaseModel):
     created_at: str
     updated_at: str
 
+class ExpenditureBatch(BaseModel):
+    exps:List[Expenditure]
+
 def classify_category(desc):
     prompt = f'''
     소비내역: {desc}
     소비내역을 아래 카테고리 번호 중 하나로 분류하세요. 설명없이 카테고리 번호만 출력하세요.
-    (카페/간식:1, 편의점:2, 식비:3, 택시:5, 쇼핑:6,  
+    (카페/간식:1, 편의점:2, 식비:3, 택시:5, 쇼핑:6,
     술/유흥:7, 문화(영화관, 티켓, 공연, 스포츠):8,
     의료(병원/약국):9, 생활(마트/생활/주거):10, 기타:11, 대중교통:12)
     우아한형제들과 요기요만 4로 분류하세요.:
@@ -49,18 +53,18 @@ async def classify(exp: Expenditure):
 
 # 여러 개 한 번에 분류 (배치)
 @app.post("/classify_batch")
-async def classify_batch(exps: list[Expenditure]):
-    tasks = [classify_category_async(e.description) for e in exps]
+async def classify_batch(batch: ExpenditureBatch):
+    tasks = [classify_category_async(e.description) for e in batch.exps]
     categories = await asyncio.gather(*tasks)
     results = [
-        {"expenditure_id": e.expenditure_id,"category_id": int(c)}
-        for e, c in zip(exps, categories)
+        {"expenditure_id": e.expenditure_id, "category_id": int(c)}
+        for e, c in zip(batch.exps, categories)
     ]
     return {"results": results}
 
 @app.post("/analysis")
-async def analysis(exps: list[Expenditure]):
-    simplified = [{"category_id": e.category_id, "amount": e.amount} for e in exps]
+async def analysis(batch: ExpenditureBatch):
+    simplified = [{"category_id": e.category_id, "amount": e.amount} for e in batch.exps]
     prompt = f'''
     소비내역:{simplified}
     아래 조건을 기준으로 '과소비' 카테고리 상위 3개를 선정하세요:
@@ -74,8 +78,8 @@ async def analysis(exps: list[Expenditure]):
         messages=[{"role": "user", "content": prompt}],
         temperature=0
     )
-    res=response.choices[0].message.content.strip()
-    result_list=[int(x.strip()) for x in res.split(",") if x.strip()]
+    res = response.choices[0].message.content.strip()
+    result_list = [int(x.strip()) for x in res.split(",") if x.strip()]
     
     return {"results": result_list}
     
