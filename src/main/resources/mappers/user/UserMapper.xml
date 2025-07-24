@@ -5,5 +5,21 @@
 
 <mapper namespace="org.bbagisix.user.mapper.UserMapper">
 
-
+    <insert id="insertUser" parameterType="org.bbagisix.user.domain.UserVO" useGeneratedKeys="true" keyProperty="id">
+        insert into user (
+            name,
+            nickname,
+            email,
+            password,
+            point,
+            email_verified
+        ) values (
+            #{name},
+            #{nickname},
+            #{email},
+            #{password},
+            #{point},
+            true
+        )
+    </insert>
 </mapper>
