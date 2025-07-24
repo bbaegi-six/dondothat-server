@@ -16,6 +16,7 @@ public class SignUpResponse {
 	private String email;
 	private String nickname;
 	private boolean emailVerified;
+	private String message;
 }
 
 

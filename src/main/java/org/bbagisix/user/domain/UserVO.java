@@ -18,7 +18,11 @@ public class UserVO {
 	private String password;
 	private Long point;
 	private String nickname;
-	private boolean emailVerified;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
+
+	// 이메일 인증 관련 필드
+	private boolean emailVerified;
+	private String emailVerificationToken;
+	private LocalDateTime emailVerificationTokenExpiry;
 }
