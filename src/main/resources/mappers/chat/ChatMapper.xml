@@ -13,6 +13,7 @@
         <result property="message" column="message"/>
         <result property="sentAt" column="sent_at"/>
         <result property="messageType" column="message_type"/>
+        <result property="userName" column="user_name"/>
     </resultMap>
 
     <!-- 채팅 메시지 저장 -->
@@ -53,4 +54,32 @@
         WHERE user_id = #{userId}
     </select>
 
+    <!-- 사용자가 현재 참여중인 챌린지 채팅방 조회 -->
+    <select id="selectUserCurrentChatRoom" parameterType="long" resultType="map">
+        SELECT uc.challenge_id,
+               c.title       as challenge_name,
+               uc.status,
+               uc.start_date as joined_at,
+               uc.end_date
+        FROM user_challenge uc
+                 JOIN challenge c ON uc.challenge_id = c.challenge_id
+        WHERE uc.user_id = #{userId}
+          AND uc.status = 'ongoing' LIMIT 1
+    </select>
+
+    <!-- 특정 챌린지의 참여자 목록 조회 -->
+    <select id="selectParticipants" parameterType="long" resultType="map">
+        SELECT u.user_id,
+               u.name        as user_name,
+               uc.start_date as joined_at,
+               CASE
+                   WHEN uc.status = 'ongoing' THEN true
+                   ELSE false
+                   END       as is_active
+        FROM user_challenge uc
+                 JOIN user u ON uc.user_id = u.user_id
+        WHERE uc.challenge_id = #{challengeId}
+          AND uc.status = 'ongoing'
+        ORDER BY uc.start_date ASC
+    </select>
 </mapper>
