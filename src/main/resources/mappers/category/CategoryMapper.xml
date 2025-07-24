@@ -5,9 +5,12 @@
 
 <mapper namespace="org.bbagisix.category.mapper.CategoryMapper">
     <select id="findAll" resultType="org.bbagisix.category.domain.CategoryVO">
-        SELECT * FROM category
+        SELECT *
+        FROM category
     </select>
     <select id="findById" resultType="org.bbagisix.category.domain.CategoryVO">
-        SELECT * FROM category WHERE category_id = #{categoryId}
+        SELECT *
+        FROM category
+        WHERE category_id = #{categoryId}
     </select>
 </mapper>

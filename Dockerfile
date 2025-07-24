@@ -1,14 +1,14 @@
-FROM openjdk:17-jdk-slim as build
+FROM gradle:8.5-jdk17 AS build
 
 WORKDIR /app
-COPY ../../Users/student/Desktop .
+COPY . .
 
-# Gradle로 빌드 (Gradle Wrapper가 있다면)
-RUN ./gradlew build -x test
+RUN gradle clean build -x test
 
-FROM openjdk:17-jdk-slim
-WORKDIR /app
-COPY --from=build /app/build/libs/*.jar app.jar
+FROM tomcat:9.0-jdk17-openjdk-slim
+
+RUN rm -rf /usr/local/tomcat/webapps/ROOT
+COPY --from=build /app/build/libs/*.war /usr/local/tomcat/webapps/ROOT.war
 
 EXPOSE 8080
-CMD ["java", "-jar", "app.jar"]
+CMD ["catalina.sh", "run"]

@@ -6,4 +6,5 @@ import org.bbagisix.category.dto.CategoryDTO;
 
 public interface CategoryService {
 	List<CategoryDTO> getAllCategories();
+	CategoryDTO getCategoryById(Long id);
 }

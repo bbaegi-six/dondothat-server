@@ -4,6 +4,55 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="org.bbagisix.expense.mapper.ExpenseMapper">
+    <insert id="insert" parameterType="org.bbagisix.expense.domain.ExpenseVO" useGeneratedKeys="true"
+            keyProperty="expenditureId">
+        INSERT INTO expenditure (user_id, category_id, asset_id, amount, description, expenditure_date)
+        VALUES (#{userId}, #{categoryId}, #{assetId}, #{amount}, #{description}, #{expenditureDate})
+    </insert>
 
+    <select id="findById" parameterType="long" resultType="org.bbagisix.expense.domain.ExpenseVO">
+        SELECT expenditure_id,
+               user_id,
+               category_id,
+               asset_id,
+               amount,
+               description,
+               expenditure_date,
+               created_at,
+               updated_at
+        FROM expenditure
+        WHERE expenditure_id = #{expenditureId}
+    </select>
+
+    <select id="findAllByUserId" parameterType="long" resultType="org.bbagisix.expense.domain.ExpenseVO">
+        SELECT expenditure_id,
+               user_id,
+               category_id,
+               asset_id,
+               amount,
+               description,
+               expenditure_date,
+               created_at,
+               updated_at
+        FROM expenditure
+        WHERE user_id = #{userId}
+        ORDER BY expenditure_date DESC
+    </select>
+
+    <update id="update" parameterType="org.bbagisix.expense.domain.ExpenseVO">
+        UPDATE expenditure
+        SET category_id      = #{categoryId},
+            asset_id         = #{assetId},
+            amount           = #{amount},
+            description      = #{description},
+            expenditure_date = #{expenditureDate}
+        WHERE expenditure_id = #{expenditureId}
+    </update>
+
+    <delete id="delete" parameterType="long">
+        DELETE
+        FROM expenditure
+        WHERE expenditure_id = #{expenditureId}
+    </delete>
 
 </mapper>

@@ -1,4 +1,17 @@
 package org.bbagisix.expense.service;
 
-public class ExpenseService {
+import java.util.List;
+
+import org.bbagisix.expense.dto.ExpenseDTO;
+
+public interface ExpenseService {
+	ExpenseDTO createExpense(ExpenseDTO expenseDTO);
+
+	ExpenseDTO getExpenseById(Long expenditureId);
+
+	List<ExpenseDTO> getExpensesByUserId(Long userId);
+
+	ExpenseDTO updateExpense(Long expenditureId, ExpenseDTO expenseDTO);
+
+	void deleteExpense(Long expenditureId);
 }

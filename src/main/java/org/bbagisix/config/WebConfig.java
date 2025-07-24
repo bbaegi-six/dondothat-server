@@ -1,6 +1,5 @@
 package org.bbagisix.config;
 
-
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.filter.CharacterEncodingFilter;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
@@ -19,7 +18,7 @@ public class WebConfig extends AbstractAnnotationConfigDispatcherServletInitiali
 	final String LOCATION = "c:/upload";
 	final long MAX_FILE_SIZE = 1024 * 1024 * 10L;
 	final long MAX_REQUEST_SIZE = 1024 * 1024 * 20L;
-	final int FILE_SIZE_THRESHOLD = 1024 * 1024 * 5;;
+	final int FILE_SIZE_THRESHOLD = 1024 * 1024 * 5;
 
 	@Override
 	protected Class<?>[] getRootConfigClasses() {
