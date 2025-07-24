@@ -17,7 +17,7 @@ public class GlobalExceptionHandler {
 
 	private final SimpMessagingTemplate messagingTemplate;
 
-	// ✅ WebSocket용 BusinessException 처리
+	// WebSocket용 BusinessException 처리
 	@MessageExceptionHandler(BusinessException.class)
 	public void handleWsBusinessException(BusinessException e) {
 		log.warn("WebSocket BusinessException 발생: code={}, message={}", e.getCode(), e.getMessage());
@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
 		}
 	}
 
-	// ✅ WebSocket용 Validation 예외 처리
+	// WebSocket용 Validation 예외 처리
 	@MessageExceptionHandler(ConstraintViolationException.class)
 	public void handleWsValidationException(ConstraintViolationException e) {
 		log.warn("WebSocket ConstraintViolationException 발생: {}", e.getMessage());
@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
 		// 전체 broadcast는 생략 (또는 필요 시 채널 구성)
 	}
 
-	// ✅ WebSocket용 일반 Runtime 예외 처리
+	// WebSocket용 일반 Runtime 예외 처리
 	@MessageExceptionHandler(RuntimeException.class)
 	public void handleWsRuntimeException(RuntimeException e) {
 		log.error("WebSocket RuntimeException 발생: {}", e.getMessage(), e);
@@ -51,7 +51,7 @@ public class GlobalExceptionHandler {
 		// broadcast 생략
 	}
 
-	// ✅ REST API용 BusinessException 처리
+	// REST API용 BusinessException 처리
 	@ExceptionHandler(BusinessException.class)
 	@ResponseBody
 	public ResponseEntity<ErrorResponse> handleRestBusinessException(BusinessException e, HttpServletRequest request) {
@@ -62,7 +62,7 @@ public class GlobalExceptionHandler {
 			.body(ErrorResponse.of(e.getErrorCode(), request.getRequestURI()));
 	}
 
-	// ✅ REST API용 Validation 예외 처리
+	// REST API용 Validation 예외 처리
 	@ExceptionHandler(ConstraintViolationException.class)
 	@ResponseStatus(org.springframework.http.HttpStatus.BAD_REQUEST)
 	@ResponseBody
@@ -72,7 +72,7 @@ public class GlobalExceptionHandler {
 		return ErrorResponse.of(ErrorCode.INVALID_REQUEST, request.getRequestURI());
 	}
 
-	// ✅ REST API용 일반 예외 처리
+	// REST API용 일반 예외 처리
 	@ExceptionHandler(Exception.class)
 	@ResponseStatus(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR)
 	@ResponseBody
@@ -82,7 +82,7 @@ public class GlobalExceptionHandler {
 		return ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR, request.getRequestURI());
 	}
 
-	// ✅ 추후 확장을 위한 challengeId 추출 로직
+	// 추후 확장을 위한 challengeId 추출 로직
 	private Long extractChallengeId(BusinessException e) {
 		// TODO: BusinessException에 challengeId 포함 시 확장 가능
 		return null;

@@ -14,7 +14,7 @@ public class ErrorResponse {
 	private final LocalDateTime timestamp;
 	private final String path; // Web API 경로 (null 허용)
 
-	// ✅ 일반 HTTP 에러 응답
+	// 일반 HTTP 에러 응답
 	public static ErrorResponse of(ErrorCode errorCode) {
 		return ErrorResponse.builder()
 			.code(errorCode.getCode())
@@ -32,7 +32,7 @@ public class ErrorResponse {
 			.build();
 	}
 
-	// ✅ WebSocket 전용 에러 응답
+	// WebSocket 전용 에러 응답
 	@Getter
 	@Builder
 	public static class WebSocketErrorResponse {
