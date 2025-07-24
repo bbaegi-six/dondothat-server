@@ -43,6 +43,11 @@ dependencies {
     implementation "org.springframework:spring-websocket:${springVersion}"
     implementation "org.springframework:spring-messaging:${springVersion}"
 
+    // Email 관련 의존성
+    implementation 'org.springframework:spring-context-support:5.3.37'
+    implementation 'javax.mail:javax.mail-api:1.6.2'
+    implementation 'com.sun.mail:javax.mail:1.6.2'
+
     // Bean Validation (JSR-380)
     implementation 'javax.validation:validation-api:2.0.1.Final'
     implementation 'org.hibernate.validator:hibernate-validator:6.0.13.Final'
