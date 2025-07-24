@@ -20,5 +20,13 @@ public class UserVO {
 	private String nickname;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
+<<<<<<< HEAD
 	private boolean emailVerified;
+=======
+
+	// 이메일 인증 관련 필드
+	private boolean emailVerified;
+	private String emailVerificationToken;
+	private LocalDateTime emailVerificationTokenExpiry;
+>>>>>>> 5265fb1 (Feat: #49 회원가입 DTO, Mapper 인터페이스 추가)
 }
