@@ -14,4 +14,6 @@ public interface ExpenseMapper {
 	int update(ExpenseVO expense);
 
 	int delete(Long expenditureId);
+
+	List<ExpenseVO> getRecentExpenses(Long userId);
 }
