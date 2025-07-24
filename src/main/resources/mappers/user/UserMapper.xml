@@ -22,4 +22,16 @@
             true
         )
     </insert>
+
+    <select id="selectUserByEmail" resultType="org.bbagisix.user.domain.UserVO">
+        select * from user where email = #{email}
+    </select>
+
+    <select id="selectUserById" resultType="org.bbagisix.user.domain.UserVO">
+        select * from user where user_id = #{Id}
+    </select>
+
+    <select id="countByEmail" resultType="int">
+        select count(*) from user where email = #{email}
+    </select>
 </mapper>
