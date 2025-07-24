@@ -55,4 +55,12 @@
         WHERE expenditure_id = #{expenditureId}
     </delete>
 
+    <select id="getRecentExpenses" parameterType="long" resultType="org.bbagisix.expense.domain.ExpenseVO">
+        SELECT *
+        FROM expenditure
+        WHERE user_id = #{userId}
+          AND expenditure_date >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)
+        ORDER BY expenditure_date DESC
+    </select>
+
 </mapper>
