@@ -1,6 +1,15 @@
 version: "3.8"
 
 services:
+  redis-server:
+    image: redis:7-alphine
+    container_name: redis-server
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - backend
+
   dondothat-server:
     build:
       context: ./
@@ -14,10 +23,12 @@ services:
       - DB_NAME=dondothat
       - DB_USER=root
       - DB_PASSWORD=dondothat1234
+      - REDIS_HOST=redis-server
     networks:
       - backend
     depends_on:
       - mysql-server
+      - redis-server
 
   llm-server:
     build:
