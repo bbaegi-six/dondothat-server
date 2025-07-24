@@ -7,4 +7,5 @@ import org.bbagisix.challenge.domain.ChallengeVO;
 @Mapper
 public interface ChallengeMapper {
 	ChallengeVO findByChallengeId(@Param("challengeId") Long challengeId);
+	boolean existsUserChallenge(@Param("challengeId") Long challengeId, @Param("userId") Long userId);
 }

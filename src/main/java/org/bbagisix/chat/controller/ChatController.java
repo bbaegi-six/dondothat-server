@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.bbagisix.chat.dto.ChatMessageDTO;
-import org.bbagisix.chat.exception.BusinessException;
-import org.bbagisix.chat.exception.ErrorCode;
+import org.bbagisix.exception.BusinessException;
+import org.bbagisix.exception.ErrorCode;
 import org.bbagisix.chat.service.ChatService;
 import org.bbagisix.chat.service.ChatSessionService;
 import org.springframework.context.event.EventListener;

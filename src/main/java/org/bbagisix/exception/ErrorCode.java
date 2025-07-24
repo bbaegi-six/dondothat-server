@@ -1,4 +1,4 @@
-package org.bbagisix.chat.exception;
+package org.bbagisix.exception;
 
 import org.springframework.http.HttpStatus;
 
