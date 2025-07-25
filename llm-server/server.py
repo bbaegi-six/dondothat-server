@@ -4,6 +4,7 @@ from openai import OpenAI
 import asyncio
 from dotenv import load_dotenv
 from typing import List
+from datetime import datetime
 import os
 
 load_dotenv()
@@ -17,9 +18,13 @@ class Expenditure(BaseModel):
     asset_id: int
     amount: int
     description: str
-    expenditure_date: str
-    created_at: str
-    updated_at: str
+    expenditure_date: datetime
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        alias_generator = lambda s: ''.join(['_'+c.lower() if c.isupper() else c for c in s]).lstrip('_')
+        allow_population_by_field_name = True
 
 class ExpenditureBatch(BaseModel):
     exps:List[Expenditure]
@@ -71,7 +76,7 @@ async def analysis(batch: ExpenditureBatch):
     1. 전체 소비 중 비율이 높은 카테고리.
     2. 카페/간식(1), 편의점(2), 배달음식(4), 택시(5), 쇼핑(6), 술/유흥(7), 문화(8) 등 사치성 소비에 가중치를 둠.
     3. 절대 지출 금액이 높을 경우 우선 고려.
-    설명 없이 과소비 카테고리 번호만 쉼표로 구분하여 출력하세요.
+    설명 없이 과소비 카테고리 번호만 쉼표로 구분하여 출력하세요. 
     '''
     response = client.chat.completions.create(
         model="gpt-4o",
