@@ -20,6 +20,12 @@ public enum ErrorCode {
 	USER_ID_REQUIRED(HttpStatus.BAD_REQUEST, "U002", "사용자 ID는 필수입니다."),
 	USER_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "U003", "권한이 없습니다."),
 
+	// 회원가입
+	EMAIL_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "E002", "이미 사용 중인 이메일입니다."),
+	INVALID_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, "E003", "인증코드가 올바르지 않습니다."),
+	VERIFICATION_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "E004", "인증코드가 만료되었습니다."),
+	EMAIL_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "E001", "이메일 발송에 실패했습니다."),
+
 	// 챌린지 관련 에러
 	CHALLENGE_NOT_FOUND(HttpStatus.NOT_FOUND, "CH001", "챌린지를 찾을 수 없습니다."),
 	CHALLENGE_ID_REQUIRED(HttpStatus.BAD_REQUEST, "CH002", "챌린지 ID는 필수입니다."),

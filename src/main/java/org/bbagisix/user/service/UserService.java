@@ -47,7 +47,7 @@ public class UserService {
 			.password(signUpRequest.getPassword())
 			.email(signUpRequest.getEmail())
 			.emailVerified(true)
-			.point(0L) // 👈 초기 포인트 값 설정
+			.point(0L)
 			.build();
 
 		userMapper.insertUser(user);
