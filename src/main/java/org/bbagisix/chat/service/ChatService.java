@@ -1,5 +1,6 @@
 package org.bbagisix.chat.service;
 
+import java.util.List;
 import java.util.Map;
 
 import org.bbagisix.chat.converter.ChatMessageConverter;
@@ -28,9 +29,6 @@ public class ChatService {
 	 * 채팅 메시지 저장
 	 */
 	public ChatMessageDTO saveMessage(ChatMessageDTO dto) {
-		log.info("챌린지 ID: {}", dto.getChallengeId());
-		log.info("유저 ID: {}", dto.getUserId());
-
 		log.debug("채팅 메시지 저장 요청: challengeId={}, userId={}, message={}",
 			dto.getChallengeId(), dto.getUserId(), dto.getMessage());
 
@@ -140,6 +138,56 @@ public class ChatService {
 		} catch (Exception e) {
 			log.error("퇴장 처리 중 오류: ", e);
 			throw new BusinessException(ErrorCode.DATA_ACCESS_ERROR, "퇴장 처리 중 오류가 발생했습니다.", e);
+		}
+	}
+
+	/**
+	 * 사용자가 참여중인 채팅방 목록 조회
+	 */
+	public Map<String, Object> getUserCurrentChatRoom(Long userId) {
+		log.debug("사용자 채팅 목록 조회: userId={}", userId);
+
+		if (userId == null) {
+			throw new BusinessException(ErrorCode.USER_ID_REQUIRED);
+		}
+
+		try {
+			Map<String, Object> currentChatRoom = chatMapper.selectUserCurrentChatRoom(userId);
+
+			if (currentChatRoom == null || currentChatRoom.isEmpty()) {
+				// 참여중인 챌린지가 없는 경우
+				log.debug("사용자 {}가 참여 중인 챌린지가 없습니다.", userId);
+				return Map.of(
+					"userId", userId,
+					"challengeId", null,
+					"challengeName", null,
+					"status", "no_challenge",
+					"message", "참여 중인 챌린지가 없습니다."
+				);
+			}
+			// 참여중인 챌린지가 있는 경우
+			return currentChatRoom;
+		} catch (Exception e) {
+			log.error("채팅방 목록 조회 중 오류: ", e);
+			throw new BusinessException(ErrorCode.DATA_ACCESS_ERROR, "채팅방 목록을 불러올 수 없습니다.");
+		}
+	}
+
+	/**
+	 * 특정 채팅방의 참여자 목록 조회
+	 */
+	public List<Map<String, Object>> getParticipants(Long challengeId) {
+		log.debug("참여자 목록 조회: challengeId={}", challengeId);
+
+		if (challengeId == null) {
+			throw new BusinessException(ErrorCode.CHALLENGE_ID_REQUIRED);
+		}
+
+		try {
+			return chatMapper.selectParticipants(challengeId);
+		} catch (Exception e) {
+			log.error("참여자 목록 조회중 오류: ", e);
+			throw new BusinessException(ErrorCode.DATA_ACCESS_ERROR, "참여자 목록을 불러올 수 없습니다.", e);
 		}
 	}
 

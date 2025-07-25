@@ -54,12 +54,21 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build and push Spring Server Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/dondothat:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push LLM Server Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./llm-server
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/dondothat-llm:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -77,7 +86,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           timeout: 300s
           script: |
-            # Docker Compose 파일 생성 (Spring Legacy + Tomcat)
+            # Docker Compose 파일 생성 (Spring Server + LLM Server + MySQL)
             cat > docker-compose.yml << 'EOF'
             version: "3.8"
             
@@ -93,8 +102,21 @@ jobs:
                   - DB_USERNAME=root
                   - DB_PASSWORD=dondothat1234
                   - DB_NAME=dondothat
+                  - LLM_SERVER_URL=http://llm-server:8000
                 depends_on:
                   - mysql
+                  - llm-server
+                networks:
+                  - dondothat-network
+                restart: unless-stopped
+
+              llm-server:
+                image: ghcr.io/${{ github.repository_owner }}/dondothat-llm:latest
+                container_name: llm-server
+                ports:
+                  - "8000:8000"
+                environment:
+                  - API_KEY=${{ secrets.OPENAI_API_KEY }}
                 networks:
                   - dondothat-network
                 restart: unless-stopped
@@ -123,6 +145,7 @@ jobs:
             
             # 최신 이미지 pull
             docker pull ghcr.io/${{ github.repository_owner }}/dondothat:latest
+            docker pull ghcr.io/${{ github.repository_owner }}/dondothat-llm:latest
             
             # 서비스 재시작
             /usr/local/bin/docker-compose down || true
@@ -132,3 +155,4 @@ jobs:
             sleep 15
             /usr/local/bin/docker-compose ps
             /usr/local/bin/docker-compose logs --tail=10 dondothat-server
+            /usr/local/bin/docker-compose logs --tail=10 llm-server

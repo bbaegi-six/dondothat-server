@@ -25,7 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Configuration
-@PropertySource({"classpath:/application.properties"})
+@PropertySource({"classpath:/application-test.properties"})
 @MapperScan(basePackages = {"org.bbagisix.**.mapper"})
 @ComponentScan(
 	basePackages = {

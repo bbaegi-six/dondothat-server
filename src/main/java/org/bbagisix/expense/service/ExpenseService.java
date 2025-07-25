@@ -2,6 +2,7 @@ package org.bbagisix.expense.service;
 
 import java.util.List;
 
+import org.bbagisix.expense.domain.ExpenseVO;
 import org.bbagisix.expense.dto.ExpenseDTO;
 
 public interface ExpenseService {
@@ -14,4 +15,8 @@ public interface ExpenseService {
 	ExpenseDTO updateExpense(Long expenditureId, ExpenseDTO expenseDTO);
 
 	void deleteExpense(Long expenditureId);
+
+	List<ExpenseVO> getRecentExpenses(Long userId);
+
+	ExpenseVO updateExpenseCategory(Long expenditureId, Long categoryId);
 }

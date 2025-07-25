@@ -2,18 +2,18 @@ package org.bbagisix.expense.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import org.bbagisix.config.RootConfig;
 import org.bbagisix.config.TestRootConfig;
+import org.bbagisix.expense.domain.ExpenseVO;
 import org.bbagisix.expense.dto.ExpenseDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -121,4 +121,53 @@ class ExpenseServiceTest {
 		assertNull(service.getExpenseById(id), "삭제된 내역은 조회 시 null이어야 함.");
 		log.info("{}번 소비 내역 삭제 완료", id);
 	}
+
+	@Test
+	@DisplayName("최근 3개월 소비내역 불러오기 테스트")
+	void getRecentExpenses() {
+
+		// given
+		ExpenseDTO e1 = createTestExpenseDTO(); // 현재 날짜 소비내역
+
+		Calendar cal = Calendar.getInstance();
+		cal.set(2025, Calendar.MARCH, 24, 0, 0, 0);  // 2025년 3월 24일 00:00:00
+		Date specificDate = cal.getTime();
+		ExpenseDTO e2 = ExpenseDTO.builder() // 4개월전 소비 내역
+			.userId(1L)
+			.categoryId(1L)
+			.assetId(1L)
+			.amount(50000L)
+			.description("4개월 전 소비내역")
+			.expenditureDate(specificDate)
+			.build();
+
+		service.createExpense(e1);
+		service.createExpense(e2);
+
+		// when
+		List<ExpenseVO> expenses = service.getRecentExpenses(1L);
+
+		// then
+		assertEquals(1, expenses.size());
+		ExpenseVO result = expenses.get(0);
+		assertEquals(e1.getDescription(), result.getDescription());
+		log.info("불러온 소비 내역: {}", result);
+	}
+
+	@Test
+	@DisplayName("소비 내역 카테고리 업데이트 테스트")
+	void updateExpenseCategory() {
+		// given
+		ExpenseDTO original = service.createExpense(createTestExpenseDTO());
+		Long expenditureId = original.getExpenditureId();
+		Long newCategoryId = 2L;
+
+		// when
+		ExpenseVO updated = service.updateExpenseCategory(expenditureId, newCategoryId);
+
+		// then
+		assertEquals(newCategoryId, updated.getCategoryId());
+		assertEquals(expenditureId, updated.getExpenditureId());
+	}
+
 }
