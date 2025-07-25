@@ -103,6 +103,13 @@ jobs:
                   - DB_PASSWORD=dondothat1234
                   - DB_NAME=dondothat
                   - REDIS_HOST=redis-server
+                  # GitHub Actions Secrets에서 SMTP 설정 주입
+                  - SPRING_MAIL_HOST=${{ secrets.SMTP_HOST }}
+                  - SPRING_MAIL_PORT=${{ secrets.SMTP_PORT }}
+                  - SPRING_MAIL_USERNAME=${{ secrets.SMTP_USERNAME }}
+                  - SPRING_MAIL_PASSWORD=${{ secrets.SMTP_PASSWORD }}
+                  - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=${{ secrets.SMTP_AUTH }}
+                  - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=${{ secrets.SMTP_STARTTLS_ENABLE }}
                 depends_on:
                   - mysql
                   - redis-server
