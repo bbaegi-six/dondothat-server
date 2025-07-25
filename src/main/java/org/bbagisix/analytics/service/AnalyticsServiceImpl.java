@@ -3,6 +3,7 @@ package org.bbagisix.analytics.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.bbagisix.category.dto.CategoryDTO;
 import org.bbagisix.category.service.CategoryService;
@@ -33,9 +34,17 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 		try {
 			List<ExpenseVO> expenses = expenseService.getRecentExpenses(userId);
 
-			Map<String, Object> payload = Map.of("exps", expenses);
+			// FastAPI 서버가 요구하는 형태로 변환
+			List<Map<String, Object>> expsForAnalytics = expenses.stream()
+				.map(e -> Map.<String, Object>of(
+					"category_id", e.getCategoryId(),
+					"amount", e.getAmount()
+				))
+				.collect(Collectors.toList());
 
-			Map<String, Object> response = restTemplate.postForObject(URL, payload, Map.class);
+			Map<String, Object> payload = Map.of("exps", expsForAnalytics);
+
+			Map<String, Object> response = restTemplate.postForObject(LOCAL_URL, payload, Map.class);
 			if (response == null || !response.containsKey("results")) {
 				throw new BusinessException(ErrorCode.LLM_ANALYTICS_ERROR);
 			}
