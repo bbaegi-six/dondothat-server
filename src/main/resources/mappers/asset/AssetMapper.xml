@@ -4,4 +4,68 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="org.bbagisix.asset.mapper.AssetMapper">
+
+
+    <insert id="insertUserAsset" parameterType="org.bbagisix.asset.domain.AssetVO">
+        INSERT INTO user_asset (
+            user_id,
+            asset_name,
+            bank_name,
+            bank_account,
+            bank_id,
+            bank_pw,
+            connected_id,
+            balance,
+            created_at
+        ) VALUES (
+                     #{userId},
+                     #{assetName},
+                     #{bankName},
+                     #{bankAccount},
+                     #{bankId},
+                     #{bankPw},
+                     #{connectedId},
+                     #{balance},
+                     NOW()
+                 )
+    </insert>
+
+    <select id="selectAssetByUserId" resultType="org.bbagisix.asset.domain.AssetVO">
+        select
+            asset_id as assetId,
+            user_id as userId,
+            asset_name as assetName,
+            bank_name as bankName,
+            bank_account as bankAccount,
+            bank_id as bankId,
+            bank_pw as bankPw,
+            connected_id as connectedId,
+            balance,
+            created_at as createdAt
+        from user_asset
+        where user_id = #{userId}
+    </select>
+
+    <insert id="insertExpenses" parameterType="java.util.List">
+        INSERT INTO expenditure (
+        user_id,
+        asset_id,
+        category_id,
+        amount,
+        description,
+        expenditure_date,
+        created_at
+        ) VALUES
+        <foreach collection="list" item="expense" separator=",">
+            (
+            #{expense.userId},
+            #{expense.assetId},
+            #{expense.categoryId},
+            #{expense.amount},
+            #{expense.description},
+            #{expense.expenditureDate},
+            NOW()
+            )
+        </foreach>
+    </insert>
 </mapper>
