@@ -32,7 +32,8 @@ import com.zaxxer.hikari.HikariDataSource;
 		"org.bbagisix.expense",
 		"org.bbagisix.category",
 		"org.bbagisix.user",
-		"org.bbagisix.analytics"
+		"org.bbagisix.analytics",
+		"org.bbagisix.classify",
 	},
 	excludeFilters = {
 		@ComponentScan.Filter(type = org.springframework.context.annotation.FilterType.ANNOTATION, classes = {

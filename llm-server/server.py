@@ -11,23 +11,19 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("API_KEY"))
 app=FastAPI()
 
-class Expenditure(BaseModel):
+class Exp(BaseModel):
     expenditure_id: int
-    user_id: int
-    category_id: int
-    asset_id: int
-    amount: int
     description: str
-    expenditure_date: datetime
-    created_at: datetime
-    updated_at: datetime
 
-    class Config:
-        alias_generator = lambda s: ''.join(['_'+c.lower() if c.isupper() else c for c in s]).lstrip('_')
-        allow_population_by_field_name = True
+class ExpsBatch(BaseModel):
+    exps:List[Exp]
 
-class ExpenditureBatch(BaseModel):
-    exps:List[Expenditure]
+class ExpForAnalytics(BaseModel):
+    category_id: int
+    amount: int
+
+class ExpsAnalytics(BaseModel):
+    exps:List[ExpForAnalytics]
 
 def classify_category(desc):
     prompt = f'''
@@ -35,7 +31,7 @@ def classify_category(desc):
     소비내역을 아래 카테고리 번호 중 하나로 분류하세요. 설명없이 카테고리 번호만 출력하세요.
     (카페/간식:1, 편의점:2, 식비:3, 택시:5, 쇼핑:6,
     술/유흥:7, 문화(영화관, 티켓, 공연, 스포츠):8,
-    의료(병원/약국):9, 생활(마트/생활/주거):10, 기타:11, 대중교통:12)
+    의료(병원/약국):9, 생활(마트/생활/주거):10, 대중교통:11, 기타:12)
     우아한형제들과 요기요만 4로 분류하세요.:
     '''
     response = client.chat.completions.create(
@@ -52,13 +48,13 @@ async def classify_category_async(desc):
 
 # 단일 분류 API
 @app.post("/classify")
-async def classify(exp: Expenditure):
+async def classify(exp: Exp):
     category = classify_category(exp.description)
     return {"expenditure_id": exp.expenditure_id, "category_id": int(category)}
 
 # 여러 개 한 번에 분류 (배치)
 @app.post("/classify_batch")
-async def classify_batch(batch: ExpenditureBatch):
+async def classify_batch(batch: ExpsBatch):
     tasks = [classify_category_async(e.description) for e in batch.exps]
     categories = await asyncio.gather(*tasks)
     results = [
@@ -68,7 +64,7 @@ async def classify_batch(batch: ExpenditureBatch):
     return {"results": results}
 
 @app.post("/analysis")
-async def analysis(batch: ExpenditureBatch):
+async def analysis(batch: ExpsAnalytics):
     simplified = [{"category_id": e.category_id, "amount": e.amount} for e in batch.exps]
     prompt = f'''
     소비내역:{simplified}

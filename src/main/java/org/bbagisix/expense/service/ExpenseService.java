@@ -17,6 +17,4 @@ public interface ExpenseService {
 	void deleteExpense(Long expenditureId);
 
 	List<ExpenseVO> getRecentExpenses(Long userId);
-
-	ExpenseVO updateExpenseCategory(Long expenditureId, Long categoryId);
 }
