@@ -19,6 +19,7 @@ public class UserVO {
 	private Long point;
 	private String nickname;
 	private boolean emailVerified;
+	private boolean assetConnected;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 }

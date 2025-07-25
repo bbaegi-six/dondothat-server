@@ -47,6 +47,7 @@ public class UserService {
 			.password(signUpRequest.getPassword())
 			.email(signUpRequest.getEmail())
 			.emailVerified(true)
+			.assetConnected(false)
 			.point(0L)
 			.build();
 
