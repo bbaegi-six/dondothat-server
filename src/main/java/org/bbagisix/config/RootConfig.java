@@ -15,12 +15,20 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 
 import javax.sql.DataSource;
+import javax.validation.Valid;
 
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,6 +58,58 @@ public class RootConfig {
 	String username;
 	@Value("${DB_PASSWORD:1234}")
 	String password;
+
+	@Value("${REDIS_HOST:localhost}")
+	private String redisHost;
+	@Value("${REDIS_PORT:6379}")
+	private int redisPort;
+
+	@Value("${spring.mail.host}")
+	private String mailHost;
+	@Value("${spring.mail.port}")
+	private int mailPort;
+	@Value("${spring.mail.username}")
+	private String mailUsername;
+	@Value("${spring.mail.password}")
+	private String mailPassword;
+
+	@Bean
+	public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
+		return new PropertySourcesPlaceholderConfigurer();
+	}
+
+	@Bean
+	public RedisConnectionFactory redisConnectionFactory() {
+		return new LettuceConnectionFactory(redisHost, redisPort);
+	}
+
+	@Bean
+	public StringRedisTemplate stringRedisTemplate() {
+		StringRedisTemplate stringRedisTemplate = new StringRedisTemplate();
+		stringRedisTemplate.setConnectionFactory(redisConnectionFactory());
+		return stringRedisTemplate;
+	}
+
+	@Bean
+	public JavaMailSender javaMailSender() {
+		JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+		mailSender.setHost(mailHost);
+		mailSender.setPort(mailPort);
+		mailSender.setUsername(mailUsername);
+		mailSender.setPassword(mailPassword);
+		mailSender.setDefaultEncoding("UTF-8");
+		mailSender.setJavaMailProperties(getMailProperties());
+
+		return mailSender;
+	}
+
+	private Properties getMailProperties() {
+		Properties properties = new Properties();
+		properties.put("mail.smtp.auth", "true");
+		properties.put("mail.smtp.starttls.enable", "true");
+
+		return properties;
+	}
 
 	@Bean
 	public DataSource dataSource() {
