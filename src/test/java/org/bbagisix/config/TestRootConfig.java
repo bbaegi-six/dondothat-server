@@ -1,7 +1,9 @@
 package org.bbagisix.config;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.sql.DataSource;
 
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.logging.log4j.LogManager;
@@ -19,10 +21,8 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 
-import javax.sql.DataSource;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 @Configuration
 @PropertySource({"classpath:/application-test.properties"})
@@ -30,8 +30,9 @@ import java.util.regex.Pattern;
 @ComponentScan(
 	basePackages = {
 		"org.bbagisix.expense",
-		"org.bbagisix.category", 
-		"org.bbagisix.user"
+		"org.bbagisix.category",
+		"org.bbagisix.user",
+		"org.bbagisix.analytics"
 	},
 	excludeFilters = {
 		@ComponentScan.Filter(type = org.springframework.context.annotation.FilterType.ANNOTATION, classes = {
