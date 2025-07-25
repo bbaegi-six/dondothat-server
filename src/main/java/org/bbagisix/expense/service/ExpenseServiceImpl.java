@@ -67,19 +67,6 @@ public class ExpenseServiceImpl implements ExpenseService {
 		return expenseMapper.getRecentExpenses(userId);
 	}
 
-	@Override
-	public ExpenseVO updateExpenseCategory(Long expenditureId, Long categoryId) {
-		ExpenseVO vo = expenseMapper.findById(expenditureId);
-		if (vo == null) {
-			throw new RuntimeException("카테고리를 지정할 소비 내역이 없습니다. id=" + expenditureId);
-		}
-
-		vo.setCategoryId(categoryId);
-		expenseMapper.update(vo);
-
-		return vo;
-	}
-
 	private ExpenseVO dtoToVo(ExpenseDTO dto) {
 		if (dto == null)
 			return null;
