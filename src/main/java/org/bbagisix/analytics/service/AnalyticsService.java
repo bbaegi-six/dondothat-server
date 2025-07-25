@@ -1,4 +1,9 @@
 package org.bbagisix.analytics.service;
 
-public class AnalyticsService {
+import java.util.List;
+
+import org.bbagisix.category.dto.CategoryDTO;
+
+public interface AnalyticsService {
+	List<CategoryDTO> getTopCategories(Long userId);
 }
