@@ -54,4 +54,8 @@ public class UserService {
 		userMapper.insertUser(user);
 		verificationStorageService.removeCode(signUpRequest.getEmail());
 	}
+
+	public boolean checkNicknameDuplication(String nickname) {
+		return userMapper.countByNickname(nickname) > 0;
+	}
 }
