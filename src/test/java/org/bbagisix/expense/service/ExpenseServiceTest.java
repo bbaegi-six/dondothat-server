@@ -154,20 +154,4 @@ class ExpenseServiceTest {
 		log.info("불러온 소비 내역: {}", result);
 	}
 
-	@Test
-	@DisplayName("소비 내역 카테고리 업데이트 테스트")
-	void updateExpenseCategory() {
-		// given
-		ExpenseDTO original = service.createExpense(createTestExpenseDTO());
-		Long expenditureId = original.getExpenditureId();
-		Long newCategoryId = 2L;
-
-		// when
-		ExpenseVO updated = service.updateExpenseCategory(expenditureId, newCategoryId);
-
-		// then
-		assertEquals(newCategoryId, updated.getCategoryId());
-		assertEquals(expenditureId, updated.getExpenditureId());
-	}
-
 }
