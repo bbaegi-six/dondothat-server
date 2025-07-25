@@ -15,5 +15,8 @@ public interface UserMapper {
 	UserVO selectUserById(@Param("id") Long id);
 
 	// 이메일 중복 체크
+	int countByNickname(@Param("nickname") String nickname);
+
+	// 이메일 중복 체크
 	int countByEmail(@Param("email") String email);
 }
