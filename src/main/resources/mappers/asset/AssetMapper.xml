@@ -30,6 +30,7 @@
                  )
     </insert>
 
+
     <select id="selectAssetByUserId" resultType="org.bbagisix.asset.domain.AssetVO">
         select
             asset_id as assetId,
@@ -46,6 +47,19 @@
         where user_id = #{userId}
     </select>
 
+    <delete id="deleteUserAssetByUserId">
+        delete from user_asset
+        where user_id = #{userId}
+    </delete>
+
+    <!-- expense 쪽에 넣어야 할 것   -->
+
+    <delete id="deleteExpensesByUserId">
+        DELETE FROM expenditure
+        WHERE asset_id IN (
+            SELECT asset_id FROM user_asset WHERE user_id = #{userId}
+        )
+    </delete>
     <insert id="insertExpenses" parameterType="java.util.List">
         INSERT INTO expenditure (
         user_id,

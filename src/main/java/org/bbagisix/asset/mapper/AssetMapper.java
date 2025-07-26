@@ -10,7 +10,10 @@ import java.util.List;
 public interface AssetMapper {
 	void insertUserAsset(AssetVO assetVO);
 
-	int insertExpenses(List<ExpenseVO> expenseVO);
-
 	AssetVO selectAssetByUserId(Long userId);
+
+	int deleteUserAssetByUserId(Long userId);
+
+	int deleteExpensesByUserId(Long userId);
+	int insertExpenses(List<ExpenseVO> expenseVO);
 }
