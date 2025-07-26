@@ -5,6 +5,8 @@ import org.bbagisix.asset.dto.AssetDTO;
 import org.bbagisix.asset.mapper.AssetMapper;
 import org.bbagisix.codef.dto.CodefTransactionResDTO;
 import org.bbagisix.codef.service.CodefApiService;
+import org.bbagisix.exception.BusinessException;
+import org.bbagisix.exception.ErrorCode;
 import org.bbagisix.expense.domain.ExpenseVO;
 import org.bbagisix.expense.mapper.ExpenseMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,14 +42,22 @@ public class AssetService {
 	// 1 계좌 연동 + 3개월 소비내역 저장
 	// POST /api/assets/connect
 	@Transactional
-	public boolean connectAsset(Long userId, AssetDTO assetDTO){
+	public void connectAsset(Long userId, AssetDTO assetDTO){
+
 		try {
-			String connectedId = codefApiService.getConnectedId(assetDTO);
-			if(connectedId == null){
-				// 💥 에러 메시지 : 계좌 연동 실패 connectedId 가져올 수 없음
-				return false;
+			// 기존 연결된 계좌 확인
+			AssetVO existingAsset = assetMapper.selectAssetByUserId(userId);
+			if (existingAsset != null) {
+				throw new BusinessException(ErrorCode.ASSET_ALREADY_CONNECTED);
 			}
 
+			// Codef API를 통한 연결 ID 생성
+			String connectedId = codefApiService.getConnectedId(assetDTO);
+			if (connectedId == null) {
+				throw new BusinessException(ErrorCode.CODEF_CONNECTED_ID_NOT_FOUND);
+			}
+
+			// 거래내역 조회 기간 설정
 			LocalDate today = LocalDate.now();
 			LocalDate startMonth = today.minusMonths(MONTH);
 			LocalDate start = startMonth.withDayOfMonth(1);
@@ -55,47 +65,48 @@ public class AssetService {
 			String todayStr = today.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 			String startStr = start.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
-			CodefTransactionResDTO reqDTO = codefApiService.getTransactionList(assetDTO,connectedId,startStr,todayStr);
-
-			if(reqDTO == null) {
-				// 💥 에러 메시지 : 거래내역 조회 실패
-				return false;
+			// 거래 내역 조회
+			CodefTransactionResDTO reqDTO = codefApiService.getTransactionList(assetDTO, connectedId, startStr, todayStr);
+			if (reqDTO == null) {
+				throw new BusinessException(ErrorCode.TRANSACTION_FETCH_FAILED);
 			}
 
-			AssetVO assetVO = createUserAssetVO(userId,assetDTO,connectedId, reqDTO);
+			// 계좌 정보 저장
+			AssetVO assetVO = createUserAssetVO(userId, assetDTO, connectedId, reqDTO);
 			Long assetId = insertUserAsset(assetVO);
 
-			saveTransactionHistory(assetId,userId,reqDTO);
-			return true;
-		} catch (Exception e) {
-			// 💥 에러 메시지 : connectedAsset 실행 중 오류 발생
-			return false;
+			// 거래 내역 저장
+			saveTransactionHistory(assetId, userId, reqDTO);
+		} catch (Exception e){
+			throw new BusinessException(ErrorCode.ASSET_CONNECTION_FAILED);
 		}
+
 	}
 
-	public boolean deleteAsset(Long userId) {
+	public void deleteAsset(Long userId) {
 		try {
 
 			AssetVO asset = assetMapper.selectAssetByUserId(userId);
 			if (asset == null) {
-				// 💥 에러 메시지 : 사용자 {}의 연결된 계좌가 없습니다.
-				return false;
+				throw new BusinessException(ErrorCode.ASSET_NOT_FOUND);
 			}
 
 			// 1. Codef API 연결 해제
 			boolean codefDeleted = codefApiService.deleteConnectedId(userId);
 			if (!codefDeleted) {
-				// 💥 에러 메시지 : Codef API 연결 해제 실패
-				return false;
+				throw new BusinessException(ErrorCode.ASSET_DISCONNECTION_FAILED, "Codef API 연결 해제에 실패했습니다.");
 			}
+
+			// 2. 관련 거래내역 삭제
 			int deletedExpenses = assetMapper.deleteExpensesByUserId(userId);
 
+			// 3. 계좌 정보 삭제
 			int deletedAssets = assetMapper.deleteUserAssetByUserId(userId);
-
-			return deletedAssets > 0;
+			if (deletedAssets == 0) {
+				throw new BusinessException(ErrorCode.ASSET_DELETE_FAILED, "계좌 정보 삭제에 실패했습니다.");
+			}
 		} catch (Exception e){
-			// 💥 에러 메시지 : 계좌 삭제 실패
-			return false;
+			throw new BusinessException(ErrorCode.ASSET_DELETE_FAILED);
 		}
 	}
 
@@ -124,7 +135,7 @@ public class AssetService {
 
 		AssetVO insertedAsset = assetMapper.selectAssetByUserId(assetVO.getUserId());
 		if (insertedAsset == null || insertedAsset.getAssetId() == null) {
-			// 💥 에러 메시지 : 계좌 정보 저장 실패: 생성된 계좌를 찾을 수 없습니다
+			throw new BusinessException(ErrorCode.ASSET_SAVE_FAILED, "계좌 정보 저장에 실패했습니다.");
 		}
 		return insertedAsset.getAssetId();
 	}
@@ -135,11 +146,12 @@ public class AssetService {
 		if(!expenseVOList.isEmpty()){
 			int insertedCount = assetMapper.insertExpenses(expenseVOList);
 			if (insertedCount != expenseVOList.size()) {
-				// 💥 에러 메시지 : 거래내역 저장 중 일부 실패
+				throw new BusinessException(ErrorCode.TRANSACTION_SAVE_FAILED,
+					"일부 거래내역 저장에 실패했습니다. 예상: " + expenseVOList.size() + ", 실제: " + insertedCount);
 			}
 
 		} else{
-			//💥 에러 메시지 : 저장할 거래 내역이 없습니다
+			throw new BusinessException(ErrorCode.TRANSACTION_SAVE_FAILED);
 		}
 	}
 

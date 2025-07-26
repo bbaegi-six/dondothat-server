@@ -4,6 +4,8 @@ import java.util.Map;
 
 import org.bbagisix.asset.dto.AssetDTO;
 import org.bbagisix.asset.service.AssetService;
+import org.bbagisix.exception.BusinessException;
+import org.bbagisix.exception.ErrorCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,38 +30,30 @@ public class AssetController {
 		@RequestBody AssetDTO assetDTO,
 		@RequestParam Long userId
 		) {
-		boolean success = assetService.connectAsset(userId, assetDTO);
+		// Service 호출 - 예외는 GlobalExceptionHandler에서 처리
+		assetService.connectAsset(userId, assetDTO);
 
-		if (success) {
-			return ResponseEntity.ok(Map.of(
-				"success", true,
-				"message", "계좌 연결 완료"
-			));
-		} else {
-			return ResponseEntity.badRequest().body(Map.of(
-				"success", false,
-				"message", "계좌 연결 실패"
-			));
-		}
+		return ResponseEntity.ok(Map.of(
+			"success", true,
+			"message", "계좌 연결이 완료되었습니다."
+		));
 	}
 
 	@DeleteMapping
 	public ResponseEntity<Map<String, Object>> deleteAsset(
 		@RequestParam Long userId
 	) {
-		boolean success = assetService.deleteAsset(userId);
-
-		if (success) {
-			return ResponseEntity.ok(Map.of(
-				"success", true,
-				"message", "계좌 삭제 완료"
-			));
-		} else {
-			return ResponseEntity.badRequest().body(Map.of(
-				"success", false,
-				"message", "계좌 삭제 실패"
-			));
+		// 입력값 검증
+		if (userId == null) {
+			throw new BusinessException(ErrorCode.USER_ID_REQUIRED);
 		}
-	}
 
+		// Service 호출 - 예외는 GlobalExceptionHandler에서 처리
+		assetService.deleteAsset(userId);
+
+		return ResponseEntity.ok(Map.of(
+			"success", true,
+			"message", "계좌가 성공적으로 삭제되었습니다."
+		));
+	}
 }

@@ -20,6 +20,8 @@ import org.bbagisix.asset.mapper.AssetMapper;
 import org.bbagisix.codef.EncryptionUtil;
 import org.bbagisix.codef.dto.CodefTransactionReqDTO;
 import org.bbagisix.codef.dto.CodefTransactionResDTO;
+import org.bbagisix.exception.BusinessException;
+import org.bbagisix.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -72,7 +74,6 @@ public class CodefApiService {
 
 	// connected id 조회
 	public String getConnectedId(AssetDTO assetDTO) {
-		try {
 			String bankCode = BANK_CODES.get(assetDTO.getBankName());
 			String encryptedPw = encryptPw(assetDTO.getBankpw());
 
@@ -80,14 +81,11 @@ public class CodefApiService {
 			Map<String, Object> res = postCodefApi(CONNECTED_ID_URL, reqBody);
 
 			if(res == null){
-				// 💥 에러 메시지 : 들어온 메시지가 없음
+				throw new BusinessException(ErrorCode.CODEF_INVALID_RESPONSE);
 			}
 			return extractConnectedId(res);
 
-		} catch (Exception e) {
-			// 💥 connectedid 조회 실패
-			return null;
-		}
+
 	}
 
 	private Map<String, Object> connectedIdReqBody(String bankCode,String bankId, String encryptedPw){
@@ -160,13 +158,12 @@ public class CodefApiService {
 			Map<String, Object> res = postCodefApi(TRANSACTION_LIST_URL, requestBody);
 
 			if(res == null){
-				// 💥 에러메시지 : 거래내역 api 응답이 null 입니다
-				return null;
+				throw new BusinessException(ErrorCode.CODEF_INVALID_RESPONSE);
 			}
 
 			return toTransactionResDTO(res);
 		} catch (Exception e) {
-			// 💥 throw new RuntimeException("거래내역 조회 실패: " + e.getMessage(), e);
+			// 💥 거래내역 조회 실패
 			return null;
 		}
 	}
@@ -186,8 +183,7 @@ public class CodefApiService {
 			Map<String, Object> res = postCodefApi(DELETED_URL, reqBody);
 
 			if(res == null){
-				// 💥 에러 메시지 : 들어온 메시지가 없음
-				return false;
+				throw new BusinessException(ErrorCode.CODEF_INVALID_RESPONSE);
 			}
 
 			return true;
@@ -226,10 +222,10 @@ public class CodefApiService {
 	}
 
 	private CodefTransactionResDTO toTransactionResDTO(Map<String, Object> res){
-		try{
 			Map<String, Object> dataMap = (Map<String, Object>) res.get("data");
 			if(dataMap == null){
 				// 💥 에러 메시지 : 거래내역 응답 데이터가 없습니다.
+				throw new BusinessException(ErrorCode.CODEF_INVALID_RESPONSE);
 			}
 
 			CodefTransactionResDTO resDTO = new CodefTransactionResDTO();
@@ -244,10 +240,6 @@ public class CodefApiService {
 				resDTO.setResTrHistoryList(historyItems);
 			}
 			return resDTO;
-		} catch (Exception e){
-			// 💥 에러메시지 : 거래내역 응답 데이터 변환 실패
-			return null;
-		}
 	}
 	private CodefTransactionResDTO.HistoryItem toHistoryItem(Map<String, Object> itemMap){
 		CodefTransactionResDTO.HistoryItem item = new CodefTransactionResDTO.HistoryItem();
@@ -275,6 +267,10 @@ public class CodefApiService {
 			con.setRequestProperty("Content-Type", "application/json");
 
 			String accessToken = accessTokenService.getValidAccessToken();
+			if (accessToken == null) {
+				throw new BusinessException(ErrorCode.CODEF_AUTHENTICATION_FAILED,
+					"유효한 액세스 토큰을 가져올 수 없습니다.");
+			}
 			con.setRequestProperty("Authorization", "Bearer " + accessToken);
 
 			con.setDoInput(true);
@@ -291,9 +287,13 @@ public class CodefApiService {
 			int resCode = con.getResponseCode();
 			if (resCode == HttpURLConnection.HTTP_OK) {
 				br = new BufferedReader(new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8));
+			} else if (resCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+				throw new BusinessException(ErrorCode.CODEF_AUTHENTICATION_FAILED,
+					"Codef API 인증에 실패했습니다. (HTTP " + resCode + ")");
 			} else {
 				br = new BufferedReader(new InputStreamReader(con.getErrorStream(), StandardCharsets.UTF_8));
-				// 💥 에러 메시지 : 요청error
+				throw new BusinessException(ErrorCode.CODEF_CONNECTION_FAILED,
+					"Codef API 요청이 실패했습니다. (HTTP " + resCode + ")");
 			}
 
 			String inputLine;
@@ -323,7 +323,8 @@ public class CodefApiService {
 		} catch (IOException e) {
 			// 💥 에러 메시지 : I/O 오류
 		} catch (Exception e) {
-			// 💥 에러 메시지 : API 호출 실패
+			throw new BusinessException(ErrorCode.CODEF_CONNECTION_FAILED,
+				"Codef API 호출 중 오류가 발생했습니다.", e);
 		} finally {
 			// 리소스 정리
 			if (br != null) {

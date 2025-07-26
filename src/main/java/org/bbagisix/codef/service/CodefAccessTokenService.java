@@ -13,6 +13,8 @@ import java.sql.Timestamp;
 
 import org.bbagisix.codef.domain.CodefAccessTokenVO;
 import org.bbagisix.codef.mapper.CodefAccessTokenMapper;
+import org.bbagisix.exception.BusinessException;
+import org.bbagisix.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -54,7 +56,7 @@ public class CodefAccessTokenService {
 			return this.accessToken;
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new RuntimeException("유효한 액세스 토큰을 가져오는 데 실패");
+			throw new BusinessException(ErrorCode.CODEF_ACCCESS_TOKEN_FAILED);
 		}
 	}
 
@@ -81,7 +83,8 @@ public class CodefAccessTokenService {
 
 			System.out.println(tokenMap);
 			if (tokenMap == null) {
-				throw new RuntimeException("액세스 토큰 발급 실패");
+				throw new BusinessException(ErrorCode.CODEF_AUTHENTICATION_FAILED,
+					"Codef API로부터 토큰을 받지 못했습니다.");
 			}
 
 			accessToken = tokenMap.get("access_token").toString();
@@ -102,7 +105,7 @@ public class CodefAccessTokenService {
 				codefAccessTokenMapper.insertToken(vo);
 			}
 		} catch (Exception err) {
-			err.printStackTrace();
+			// err.printStackTrace();
 		}
 	}
 
@@ -157,7 +160,7 @@ public class CodefAccessTokenService {
 			});
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			return null;
 		} finally {
 			if (br != null) {
