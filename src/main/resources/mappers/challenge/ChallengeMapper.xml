@@ -1,9 +1,30 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="org.bbagisix.challenge.mapper.ChallengeMapper">
 
+    <!-- 1. 챌린지 ID로 단일 챌린지 조회 -->
+    <select id="findByChallengeId" parameterType="long" resultType="org.bbagisix.challenge.domain.ChallengeVO">
+        SELECT
+            challenge_id,
+            category_id,
+            title,
+            summary,
+            description
+        FROM challenge
+        WHERE challenge_id = #{challengeId}
+    </select>
+
+    <!-- 2. 유저가 해당 챌린지에 참여 중인지 확인 -->
+    <select id="existsUserChallenge" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+            FROM user_challenge
+            WHERE challenge_id = #{challengeId}
+              AND user_id = #{userId}
+        )
+    </select>
 
 </mapper>
