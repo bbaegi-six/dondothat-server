@@ -26,7 +26,7 @@ public class ChatSessionService {
 		challengeParticipantCount.merge(challengeId, 1, Integer::sum);
 		int currentCount = challengeParticipantCount.get(challengeId);
 
-		log.info("챌린지 {} 접속사 증가: {} 명", challengeId, currentCount);
+		log.info("챌린지 {} 접속자 증가: {} 명", challengeId, currentCount);
 
 		// 접속자 수 변경을 모든 클라이언트에게 브로드캐스트
 		broadcastParticipantCount(challengeId, currentCount);
@@ -36,14 +36,14 @@ public class ChatSessionService {
 	 * 사용자 퇴장 - 접속자 수 감소
 	 */
 	public void removeParticipant(Long challengeId) {
-		challengeParticipantCount.computeIfPresent(challengeId, (key, count) -> {
-			int newCount = Math.max(0, count - 1);
+		challengeParticipantCount.computeIfPresent(challengeId, (key, count) -> {    // challengeId가 존재할 때만 실행
+			int newCount = Math.max(0, count - 1);    // 음수 방지 (비정상적 퇴장 방지)
 			log.info("챌린지 {} 접속자 감소: {} 명", challengeId, newCount);
 
 			// 접속자 수 변경을 모든 클라이언트에게 브로드캐스트
 			broadcastParticipantCount(challengeId, newCount);
 
-			return newCount == 0 ? null : newCount;        // 0이면 맵에서 제거
+			return newCount == 0 ? null : newCount;        // 0이면 맵에서 제거 -> 메모리 효율성
 		});
 	}
 
