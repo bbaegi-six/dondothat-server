@@ -1,9 +1,16 @@
 package org.bbagisix.chat.controller;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.bbagisix.chat.dto.ChatMessageDTO;
+import org.bbagisix.chat.dto.response.ChatRoomInfoResponse;
+import org.bbagisix.chat.dto.response.ParticipantCountResponse;
+import org.bbagisix.chat.dto.response.ParticipantResponse;
+import org.bbagisix.chat.dto.response.UserChatRoomResponse;
 import org.bbagisix.exception.BusinessException;
 import org.bbagisix.exception.ErrorCode;
 import org.bbagisix.chat.service.ChatService;
@@ -37,44 +44,61 @@ public class ChatController {
 	 * 참여중인 채팅방 목록 조회
 	 */
 	@GetMapping("/api/chat/user/{userId}")
-	public Map<String, Object> getUserCurrentChatRoom(@PathVariable Long userId) {
-		return chatService.getUserCurrentChatRoom(userId);
+	public UserChatRoomResponse getUserCurrentChatRoom(@PathVariable Long userId) {
+		Map<String, Object> chatRoomMap = chatService.getUserCurrentChatRoom(userId);
+
+		return UserChatRoomResponse.builder()
+			.userId(getLongFromMap(chatRoomMap, "userId"))
+			.challengeId(getLongFromMap(chatRoomMap, "challengeId"))
+			.challengeName(getStringFromMap(chatRoomMap, "challengeName"))
+			.status(getStringFromMap(chatRoomMap, "status"))
+			.message(getStringFromMap(chatRoomMap, "message"))
+			.build();
 	}
 
 	/**
 	 * 특정 채팅방 정보 조회
 	 */
 	@GetMapping("/api/chat/{challengeId}/info")
-	public Map<String, Object> getChatRoomInfo(@PathVariable Long challengeId) {
+	public ChatRoomInfoResponse getChatRoomInfo(@PathVariable Long challengeId) {
 		int participantCount = chatSessionService.getParticipantCount(challengeId);
 
-		return Map.of(
-			"challengeId", challengeId,
-			"challengeName", "챌린지 " + challengeId,        // TODO: 실제 챌린지 이름 조회
-			"participantCount", participantCount,
-			"status", "active"
-		);
+		return ChatRoomInfoResponse.builder()
+			.challengeId(challengeId)
+			.challengeName("챌린지 " + challengeId)        // TODO: 실제 챌린지 이름으로 교체
+			.participantCount(participantCount)
+			.status("valid")
+			.build();
 	}
 
 	/**
 	 * 채팅방 참여자 목록 조회
 	 */
 	@GetMapping("/api/chat/{challengeId}/participants")
-	public List<Map<String, Object>> getParticipants(@PathVariable Long challengeId) {
-		return chatService.getParticipants(challengeId);
+	public List<ParticipantResponse> getParticipants(@PathVariable Long challengeId) {
+		List<Map<String, Object>> participantsMaps = chatService.getParticipants(challengeId);
+
+		return participantsMaps.stream()
+			.map(map -> ParticipantResponse.builder()
+				.userId(getLongFromMap(map, "userId"))
+				.userName(getStringFromMap(map, "userName"))
+				.joinedAt(getLocalDateTimeFromMap(map, "joinedAt"))
+				.isActive(getBooleanFromMap(map, "isActive"))
+				.build())
+			.collect(Collectors.toList());
 	}
 
 	/**
 	 * 현재 접속자 수 조회
 	 */
 	@GetMapping("/api/chat/{challengeId}/participants/count")
-	public Map<String, Object> getParticipantCount(@PathVariable Long challengeId) {
+	public ParticipantCountResponse getParticipantCount(@PathVariable Long challengeId) {
 		int count = chatSessionService.getParticipantCount(challengeId);
 
-		return Map.of(
-			"challengeId", challengeId,
-			"participantCount", count
-		);
+		return ParticipantCountResponse.builder()
+			.challengeId(challengeId)
+			.participantCount(count)
+			.build();
 	}
 
 	/**
@@ -244,5 +268,51 @@ public class ChatController {
 			log.error("세션 저장 중 오류: ", e);
 			throw new BusinessException(ErrorCode.SESSION_EXPIRED, e);
 		}
+	}
+
+	/**
+	 * 유틸리티 메서드들
+	 */
+	private Long getLongFromMap(Map<String, Object> map, String key) {
+		Object value = map.get(key);
+		if (value == null)
+			return null;
+		if (value instanceof Long)
+			return (Long)value;
+		if (value instanceof Integer)
+			return ((Integer)value).longValue();
+		if (value instanceof String)
+			return Long.parseLong((String)value);
+		return null;
+	}
+
+	private String getStringFromMap(Map<String, Object> map, String key) {
+		Object value = map.get(key);
+		return value != null ? value.toString() : null;
+	}
+
+	private Boolean getBooleanFromMap(Map<String, Object> map, String key) {
+		Object value = map.get(key);
+		if (value == null)
+			return null;
+		if (value instanceof Boolean)
+			return (Boolean)value;
+		if (value instanceof Integer)
+			return ((Integer)value) == 1;
+		if (value instanceof String)
+			return Boolean.parseBoolean((String)value);
+		return false;
+	}
+
+	private LocalDateTime getLocalDateTimeFromMap(Map<String, Object> map, String key) {
+		Object value = map.get(key);
+		if (value == null)
+			return null;
+		if (value instanceof LocalDateTime)
+			return (LocalDateTime)value;
+		if (value instanceof Timestamp)
+			return ((Timestamp)value).toLocalDateTime();
+		// 필요에 따라 다른 타입 변환 추가
+		return null;
 	}
 }
