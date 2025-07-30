@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,8 @@ public class ChatMessageSubscriber implements MessageListener {
 
 	private final SimpMessagingTemplate messagingTemplate;
 	private final ObjectMapper objectMapper = new ObjectMapper()
-		.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+		.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)    // 알 수 없는 필드 무시
+		.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)    // ISO 문자열로 직렬화
 		.findAndRegisterModules();
 
 	@Override
