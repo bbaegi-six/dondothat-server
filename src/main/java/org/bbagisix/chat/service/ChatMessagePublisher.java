@@ -3,6 +3,7 @@ package org.bbagisix.chat.service;
 import org.bbagisix.chat.dto.ChatMessageDTO;
 import org.bbagisix.exception.BusinessException;
 import org.bbagisix.exception.ErrorCode;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ChatMessagePublisher {
 
+	@Qualifier("chatRedisTemplate")
 	private final RedisTemplate<String, Object> redisTemplate;    // pub/sub 메시지 발행 및 데이터 저장/조회
 
 	private static final String CHAT_CHANNEL_PREFIX = "chat:channel:";    // 채팅방 별 격리와 패턴 매칭 위해 사용
