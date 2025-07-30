@@ -26,12 +26,10 @@ public class ChatMessagePublisher {
 	public void publishMessage(Long challengeId, ChatMessageDTO message) {
 		try {
 			String channel = CHAT_CHANNEL_PREFIX + challengeId;
-
 			log.debug("Redis로 메시지 발행: channel={}, message={}", channel, message.getMessage());
 
 			// Redis pub/sub로 메시지 발행
 			redisTemplate.convertAndSend(channel, message);
-
 			log.debug("메시지 발행 완료: challengeId={}", challengeId);
 		} catch (Exception e) {
 			log.error("Redis 메시지 발행 중 오류: challengeId={}", challengeId, e);
@@ -43,11 +41,24 @@ public class ChatMessagePublisher {
 	 * 접속자 수 변경 브로드캐스트
 	 */
 	public void publishParticipantCount(Long challengeId, int count) {
-		ChatMessageDTO countMessage = ChatMessageDTO.builder()
-			.challengeId(challengeId)
-			.messageType("PARTICIPANT_COUNT")
-			.userId(0L)        // 시스템 메시지
-			.message(String.valueOf(count))
-			.build();
+		try {
+			String channel = CHAT_CHANNEL_PREFIX + challengeId;
+
+			ChatMessageDTO countMessage = ChatMessageDTO.builder()
+				.challengeId(challengeId)
+				.messageType("PARTICIPANT_COUNT")
+				.userId(0L)        // 시스템 메시지
+				.message(String.valueOf(count))
+				.build();
+
+			log.debug("Redis로 접속자 수 발행: channel={}, count={}", channel, count);
+
+			// Redis 발행
+			redisTemplate.convertAndSend(channel, countMessage);
+			log.debug("접속자 수 발행 완료: challengeId={}, count={}", challengeId, count);
+		} catch (Exception e) {
+			log.error("접속자 수 Redis 발행 중 오류: challengeId={}, count={}", challengeId, count, e);
+			throw new BusinessException(ErrorCode.WEBSOCKET_SEND_FAILED, e);
+		}
 	}
 }

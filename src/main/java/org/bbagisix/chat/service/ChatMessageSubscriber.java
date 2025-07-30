@@ -1,5 +1,7 @@
 package org.bbagisix.chat.service;
 
+import java.util.Map;
+
 import org.bbagisix.chat.dto.ChatMessageDTO;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
@@ -61,9 +63,18 @@ public class ChatMessageSubscriber implements MessageListener {
 		try {
 			if ("PARTICIPANT_COUNT".equals(chatMessage.getMessageType())) {
 				int count = Integer.parseInt(chatMessage.getMessage());
-				// 접속자 수 업데이트 메시지
-				messagingTemplate.convertAndSend("/topic/userCount/" + challengeId, count);
+
+				// 접속자 수 업데이트 메시지 - Map
+				Map<String, Object> countMessage = Map.of(
+					"type", "PARTICIPANT_COUNT",
+					"challengeId", challengeId,
+					"count", count
+				);
+
+				// 채팅 채널로 통합 전송 (프론트엔드에서 하나의 구독으로 처리)
+				messagingTemplate.convertAndSend("/topic/chat/" + challengeId, countMessage);
 				log.debug("접속자 수 업데이트 전송: challengeId={}, count={}", challengeId, count);
+
 			} else {
 				// 일반 채팅 메시지
 				messagingTemplate.convertAndSend("/topic/chat/" + challengeId, chatMessage);
