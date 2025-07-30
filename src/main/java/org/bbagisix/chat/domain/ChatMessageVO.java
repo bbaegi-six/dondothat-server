@@ -1,6 +1,6 @@
 package org.bbagisix.chat.domain;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -12,7 +12,7 @@ public class ChatMessageVO {
 	private final Long userId;
 	private final String message;
 	private final String messageType;
-	private final Timestamp sentAt;
+	private final LocalDateTime sentAt;
 	private final String userName;
 
 	// 비즈니스 로직 메서드

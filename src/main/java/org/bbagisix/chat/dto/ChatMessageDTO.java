@@ -1,6 +1,6 @@
 package org.bbagisix.chat.dto;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -30,7 +30,7 @@ public class ChatMessageDTO {
 	@Size(min = 1, max = 255, message = "메시지는 1자 이상 255자 이하여야 합니다")
 	private String message;      // message (VARCHAR)
 
-	private Timestamp sentAt;    // sent_at (DATETIME)
+	private LocalDateTime sentAt;    // sent_at (DATETIME)
 	private String messageType;  // message_type (VARCHAR)
 
 	// 추가 필드 (Join)
@@ -42,6 +42,6 @@ public class ChatMessageDTO {
 		this.userId = userId;
 		this.message = message;
 		this.messageType = messageType;
-		this.sentAt = new Timestamp(System.currentTimeMillis());
+		this.sentAt = LocalDateTime.now();
 	}
 }

@@ -1,6 +1,6 @@
 package org.bbagisix.chat.entity;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +16,7 @@ public class ChatMessage {
 	private Long challengeId;
 	private Long userId;
 	private String message;
-	private Timestamp sentAt;
+	private LocalDateTime sentAt;
 	private String messageType;
 
 	// DB 조인 결과용 (사용자 정보)
