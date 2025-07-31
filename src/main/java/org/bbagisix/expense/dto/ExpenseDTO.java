@@ -2,6 +2,8 @@ package org.bbagisix.expense.dto;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -32,5 +34,6 @@ public class ExpenseDTO {
 	private Long assetId;
 	private Long amount;
 	private String description;
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
 	private Date expenditureDate;
 }

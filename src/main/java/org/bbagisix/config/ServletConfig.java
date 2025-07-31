@@ -55,5 +55,11 @@ public class ServletConfig implements WebMvcConfigurer {
 		registry.addMapping("/api/**").allowedOrigins("http://localhost:5173", // 로컬에서 테스트 할 Vue 개발 서버 주소
 			"https://dondothat.netlify.app" // 실제 배포된 프론트엔드 주소
 		).allowedMethods("GET", "POST", "PUT", "DELETE").allowCredentials(true).allowedHeaders("*");
+
+		registry.addMapping("/ws/**") // '/ws/'로 시작하는 모든 경로를 허용
+			.allowedOrigins("http://localhost:5173", "https://dondothat.netlify.app")
+			.allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+			.allowCredentials(true)
+			.allowedHeaders("*");
 	}
 }
