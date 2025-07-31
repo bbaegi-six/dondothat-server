@@ -1,7 +1,6 @@
 package org.bbagisix.oauth2.config;
 
 import org.bbagisix.oauth2.service.CustomOAuth2UserService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
@@ -10,13 +9,18 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
-import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -33,6 +37,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
+
+		// CORS 설정
+		http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 		
 		// csrf disable
 		http.csrf().disable();
@@ -50,7 +57,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		// 경로별 인가 작업 (OAuth2 경로 허용)
 		http.authorizeRequests()
 			.antMatchers("/", "/oauth2-login", "/oauth2-success", "/error", "/resources/**", 
-						"/oauth2/**", "/login/oauth2/**", "/debug/**").permitAll()
+						"/oauth2/**", "/login/oauth2/**", "/debug/**", "/api/**", "/ws/**").permitAll()
 			.anyRequest().authenticated();
 
 		// OAuth2 로그인 설정 - 이것이 필터를 자동 등록해야 함
@@ -62,6 +69,20 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 			.defaultSuccessUrl("/oauth2-success", true)
 			.failureUrl("/oauth2-login?error");
 	}
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "https://dondothat.netlify.app"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration); // 모든 경로에 대해 위 설정 적용
+        return source;
+    }
 
 	@Bean
 	public static ClientRegistrationRepository clientRegistrationRepository(Environment environment) {
