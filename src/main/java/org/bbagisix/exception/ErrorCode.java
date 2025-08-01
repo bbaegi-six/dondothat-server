@@ -46,31 +46,21 @@ public enum ErrorCode {
 	LLM_CLASSIFY_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "L001", "카테고리 분류에 실패했습니다."),
 	LLM_ANALYTICS_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "L002", "과소비 카테고리 분석에 실패했습니다."),
 
-	// 자산/계좌 관련 에러
-	ASSET_NOT_FOUND(HttpStatus.NOT_FOUND, "A001", "연결된 계좌가 없습니다."),
-	ASSET_CONNECTION_FAILED(HttpStatus.BAD_REQUEST, "A002", "계좌 연결에 실패했습니다."),
-	ASSET_DISCONNECTION_FAILED(HttpStatus.BAD_REQUEST, "A003", "계좌 연결 해제에 실패했습니다."),
-	ASSET_ALREADY_CONNECTED(HttpStatus.CONFLICT, "A004", "이미 연결된 계좌입니다."),
-	ASSET_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "A005", "계좌 정보 저장에 실패했습니다."),
-	ASSET_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "A006", "계좌 삭제에 실패했습니다."),
-	ASSET_INVALID_CREDENTIALS(HttpStatus.BAD_REQUEST, "A007", "계좌 인증 정보가 올바르지 않습니다."),
-	ASSET_UNSUPPORTED_BANK(HttpStatus.BAD_REQUEST, "A008", "지원하지 않는 은행입니다."),
+	// 자산/계좌 관련 에러 - 간단한 공통 메시지로 변경
+	ASSET_FAIL(HttpStatus.BAD_REQUEST, "A001", "계좌 처리 중 오류가 발생했습니다."),
+	ASSET_NOT_FOUND(HttpStatus.NOT_FOUND, "A002", "계좌를 찾을 수 없습니다."),
+	ASSET_ALREADY_EXISTS(HttpStatus.CONFLICT, "A003", "이미 존재하는 계좌입니다."),
 
-	// 거래내역 관련 에러
-	TRANSACTION_FETCH_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "T001", "거래내역 조회에 실패했습니다."),
-	TRANSACTION_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "T002", "거래내역 저장에 실패했습니다."),
-	TRANSACTION_NO_DATA(HttpStatus.NOT_FOUND, "T003", "조회할 거래내역이 없습니다."),
-	TRANSACTION_DATE_PARSE_FAILED(HttpStatus.BAD_REQUEST, "T004", "거래 날짜 형식이 올바르지 않습니다."),
-	TRANSACTION_AMOUNT_PARSE_FAILED(HttpStatus.BAD_REQUEST, "T005", "거래 금액 형식이 올바르지 않습니다."),
+	// 거래내역 관련 에러 - 간단한 공통 메시지로 변경
+	TRANSACTION_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "T001", "거래내역 처리 중 오류가 발생했습니다."),
+	TRANSACTION_NOT_FOUND(HttpStatus.NOT_FOUND, "T002", "거래내역을 찾을 수 없습니다."),
 
-	// Codef API 관련 에러
-	CODEF_CONNECTION_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "CF001", "Codef API 연결에 실패했습니다."),
-	CODEF_AUTHENTICATION_FAILED(HttpStatus.UNAUTHORIZED, "CF002", "Codef API 인증에 실패했습니다."),
-	CODEF_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "CF003", "Codef API 토큰이 만료되었습니다."),
-	CODEF_INVALID_RESPONSE(HttpStatus.BAD_GATEWAY, "CF004", "Codef API로부터 잘못된 응답을 받았습니다."),
-	CODEF_CONNECTED_ID_NOT_FOUND(HttpStatus.NOT_FOUND, "CF005", "Codef 연결 ID를 찾을 수 없습니다."),
-	CODEF_ENCRYPTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CF006", "암호화 처리에 실패했습니다."),
-	CODEF_ACCCESS_TOKEN_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CF007", "Codef Access Token 호출에 실패했습니다."),
+	// Codef API 관련 에러 - 간단한 공통 메시지로 변경
+	CODEF_FAIL(HttpStatus.SERVICE_UNAVAILABLE, "CF001", "Codef API 처리 중 오류가 발생했습니다."),
+	CODEF_AUTH_FAIL(HttpStatus.UNAUTHORIZED, "CF002", "Codef API 인증에 실패했습니다."),
+
+	// 암호화 관련 에러
+	ENCRYPTION_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "E001", "암호화 처리 중 오류가 발생했습니다."),
 
 
 	// 일반적인 시스템 에러

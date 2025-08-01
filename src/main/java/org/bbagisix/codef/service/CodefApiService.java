@@ -17,7 +17,7 @@ import java.util.Map;
 import org.bbagisix.asset.domain.AssetVO;
 import org.bbagisix.asset.dto.AssetDTO;
 import org.bbagisix.asset.mapper.AssetMapper;
-import org.bbagisix.codef.EncryptionUtil;
+import org.bbagisix.asset.encryption.EncryptionUtil;
 import org.bbagisix.codef.dto.CodefTransactionReqDTO;
 import org.bbagisix.codef.dto.CodefTransactionResDTO;
 import org.bbagisix.exception.BusinessException;
@@ -26,10 +26,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+
+@RequiredArgsConstructor
 @Service
+@Log4j2
 public class CodefApiService {
 
 	@Value("${CODEF_PUBLIC_KEY:}")
@@ -38,11 +46,17 @@ public class CodefApiService {
 	@Autowired(required = false)
 	private CodefAccessTokenService accessTokenService;
 
+	@Autowired
+	private EncryptionUtil encryptionUtil;
+
+	@Autowired
+	private AssetMapper assetMapper;
+
 	private static final String CONNECTED_ID_URL = "https://development.codef.io/v1/account/create";
 	private static final String TRANSACTION_LIST_URL = "https://development.codef.io/v1/kr/bank/p/account/transaction-list";
 	private static final String DELETED_URL = "https://development.codef.io/v1/account/delete";
-	private final ObjectMapper objectMapper = new ObjectMapper();
 
+	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	// 은행 코드 매핑
 	private static final Map<String, String> BANK_CODES = new HashMap<>();
@@ -69,25 +83,32 @@ public class CodefApiService {
 		BANK_CODES.put("K뱅크", "0089");
 	}
 
-	@Autowired
-	private AssetMapper assetMapper;
-
 	// connected id 조회
 	public String getConnectedId(AssetDTO assetDTO) {
-			String bankCode = BANK_CODES.get(assetDTO.getBankName());
-			String encryptedPw = encryptPw(assetDTO.getBankpw());
 
-			Map<String, Object> reqBody = connectedIdReqBody(bankCode, assetDTO.getBankId(), encryptedPw);
-			Map<String, Object> res = postCodefApi(CONNECTED_ID_URL, reqBody);
+		// 은행 코드
+		String bankCode = BANK_CODES.get(assetDTO.getBankName());
+		// 비밀번호 암호화
+		String encryptedPw = encryptPw(assetDTO.getBankpw());
 
-			if(res == null){
-				throw new BusinessException(ErrorCode.CODEF_INVALID_RESPONSE);
-			}
-			return extractConnectedId(res);
+		// 요청 본문 생성
+		Map<String, Object> reqBody = connectedIdReqBody(bankCode, assetDTO.getBankId(), encryptedPw);
 
+		// API 호출
+		Map<String, Object> res = postCodefApi(CONNECTED_ID_URL, reqBody);
+		if(res == null){
+			throw new BusinessException(ErrorCode.CODEF_FAIL, "Codef API로부터 응답을 받지 못했습니다.");
+		}
 
+		// connected id 추출
+		String connectedId = extractConnectedId(res);
+		if(connectedId == null){
+			throw new BusinessException(ErrorCode.CODEF_FAIL,"응답에서 Connected ID를 찾을 수 없습니다.");
+		}
+		return connectedId;
 	}
 
+	// Connected ID 요청 본문 생성
 	private Map<String, Object> connectedIdReqBody(String bankCode,String bankId, String encryptedPw){
 		Map<String, Object> account = new HashMap<>();
 		account.put("countryCode", "KR");
@@ -105,29 +126,25 @@ public class CodefApiService {
 		return reqBody;
 	}
 
-	private String encryptPw(String password) {
-		EncryptionUtil encryptionUtil = new EncryptionUtil();
+	// 비밀번호 RSA 암호화
+	public String encryptPw(String password) {
+		if (password == null || password.trim().isEmpty()) {
+			throw new BusinessException(ErrorCode.INVALID_REQUEST, "암호화할 비밀번호가 비어있습니다.");
+		}
 
 		return encryptionUtil.encryptRSA(password, publicKey);
 	}
 
+	// 응답에서 Connected ID 추출
 	private String extractConnectedId(Map<String, Object> res) {
-		try{
-			Map<String,Object> dataMap = (Map<String, Object>) res.get("data");
-			if(dataMap == null || dataMap.get("connectedId") == null){
-				// 💥 에러 메시지 connectedid 찾을 수 없습니다
-				return null;
-			}
-			return dataMap.get("connectedId").toString();
-		} catch (Exception e) {
-			// 💥 에러 메시지
-			return null;
+		Map<String,Object> dataMap = (Map<String, Object>) res.get("data");
+		if(dataMap == null || dataMap.get("connectedId") == null){
+			throw new BusinessException(ErrorCode.CODEF_FAIL, "응답 데이터에서 Connected ID를 찾을 수 없습니다.");
 		}
-
+		return dataMap.get("connectedId").toString();
 	}
 
-
-
+	// 거래 내역 조회 요청 DTO 생성
 	private CodefTransactionReqDTO createTransactionReqDTO(AssetDTO assetDTO, String connectedId, String startDate, String endDate) {
 		CodefTransactionReqDTO requestDTO = new CodefTransactionReqDTO();
 
@@ -151,49 +168,50 @@ public class CodefApiService {
 
 	// 거래 내역 조회
 	public CodefTransactionResDTO getTransactionList(AssetDTO assetDTO, String connectedId, String startDate, String endDate) {
-		try {
-			CodefTransactionReqDTO requestDTO = createTransactionReqDTO(assetDTO, connectedId, startDate, endDate);
 
-			Map<String, Object> requestBody = transactionListReqBody(requestDTO);
-			Map<String, Object> res = postCodefApi(TRANSACTION_LIST_URL, requestBody);
+		CodefTransactionReqDTO requestDTO = createTransactionReqDTO(assetDTO, connectedId, startDate, endDate);
 
-			if(res == null){
-				throw new BusinessException(ErrorCode.CODEF_INVALID_RESPONSE);
-			}
+		Map<String, Object> requestBody = transactionListReqBody(requestDTO);
+		Map<String, Object> res = postCodefApi(TRANSACTION_LIST_URL, requestBody);
 
-			return toTransactionResDTO(res);
-		} catch (Exception e) {
-			// 💥 거래내역 조회 실패
-			return null;
+		if(res == null){
+			throw new BusinessException(ErrorCode.CODEF_FAIL, "거래내역 조회 API로부터 응답을 받지 못했습니다.");
 		}
+
+		CodefTransactionResDTO result = toTransactionResDTO(res);
+		return result;
 	}
 
-
+	// Connected ID 삭제
 	public boolean deleteConnectedId(Long userId) {
-		try {
-			// 은행 값과 connectedid 를 user_asset에서 userId 가 같은 것으로 가져옴
-			AssetVO assetVO = assetMapper.selectAssetByUserId(userId);
 
-			String bankName = assetVO.getBankName();
-			String connectedId = assetVO.getConnectedId();
-
-			String bankCode = BANK_CODES.get(bankName);
-
-			Map<String, Object> reqBody = deleteConnectedIdReqBody(bankCode, connectedId);
-			Map<String, Object> res = postCodefApi(DELETED_URL, reqBody);
-
-			if(res == null){
-				throw new BusinessException(ErrorCode.CODEF_INVALID_RESPONSE);
-			}
-
-			return true;
-
-		} catch (Exception e) {
-			// 💥 connectedid 조회 실패
-			return false;
+		// 사용자 계좌 정보 조회
+		AssetVO assetVO = assetMapper.selectAssetByUserId(userId);
+		if (assetVO == null) {
+			throw new BusinessException(ErrorCode.ASSET_NOT_FOUND);
 		}
+
+		String bankName = assetVO.getBankName();
+		String connectedId = assetVO.getConnectedId();
+
+		if (connectedId == null || connectedId.trim().isEmpty()) {
+			throw new BusinessException(ErrorCode.CODEF_FAIL, "삭제할 Connected ID가 없습니다.");
+		}
+
+		String bankCode = BANK_CODES.get(bankName);
+
+		// API 호출
+		Map<String, Object> reqBody = deleteConnectedIdReqBody(bankCode, connectedId);
+		Map<String, Object> res = postCodefApi(DELETED_URL, reqBody);
+
+		if(res == null){
+			throw new BusinessException(ErrorCode.CODEF_FAIL, "Connected ID 삭제 API로부터 응답을 받지 못했습니다.");
+		}
+
+		return true;
 	}
 
+	// Connected ID 삭제 요청 본문 생성
 	private Map<String, Object> deleteConnectedIdReqBody(String bankCode, String connectedId) {
 		Map<String, Object> account = new HashMap<>();
 		account.put("countryCode", "KR");
@@ -208,6 +226,7 @@ public class CodefApiService {
 		return reqBody;
 	}
 
+	// 거래내역 조회 요청 본문 생성
 	private Map<String, Object> transactionListReqBody(CodefTransactionReqDTO requestDTO) {
 		Map<String, Object> transaction = new HashMap<>();
 		transaction.put("organization", requestDTO.getBankCode());
@@ -221,26 +240,28 @@ public class CodefApiService {
 		return transaction;
 	}
 
+	// 응답을 CodefTransactionResDTO로 변환
 	private CodefTransactionResDTO toTransactionResDTO(Map<String, Object> res){
-			Map<String, Object> dataMap = (Map<String, Object>) res.get("data");
-			if(dataMap == null){
-				// 💥 에러 메시지 : 거래내역 응답 데이터가 없습니다.
-				throw new BusinessException(ErrorCode.CODEF_INVALID_RESPONSE);
-			}
+		Map<String, Object> dataMap = (Map<String, Object>) res.get("data");
+		if(dataMap == null){
+			throw new BusinessException(ErrorCode.CODEF_FAIL, "거래내역 응답 데이터가 없습니다.");
+		}
 
-			CodefTransactionResDTO resDTO = new CodefTransactionResDTO();
-			resDTO.setResAccountBalance((String) dataMap.get("resAccountBalance"));
-			resDTO.setResAccountName((String) dataMap.get("resAccountName"));
+		CodefTransactionResDTO resDTO = new CodefTransactionResDTO();
+		resDTO.setResAccountBalance((String) dataMap.get("resAccountBalance"));
+		resDTO.setResAccountName((String) dataMap.get("resAccountName"));
 
-			List<Map<String, Object>> historyList = (List<Map<String, Object>>) dataMap.get("resTrHistoryList");
-			if(historyList != null){
-				List<CodefTransactionResDTO.HistoryItem> historyItems = historyList.stream()
-					.map(this::toHistoryItem)
-					.toList();
-				resDTO.setResTrHistoryList(historyItems);
-			}
-			return resDTO;
+		List<Map<String, Object>> historyList = (List<Map<String, Object>>) dataMap.get("resTrHistoryList");
+		if(historyList != null){
+			List<CodefTransactionResDTO.HistoryItem> historyItems = historyList.stream()
+				.map(this::toHistoryItem)
+				.toList();
+			resDTO.setResTrHistoryList(historyItems);
+		}
+		return resDTO;
 	}
+
+	// Map을 HistoryItem으로 변환
 	private CodefTransactionResDTO.HistoryItem toHistoryItem(Map<String, Object> itemMap){
 		CodefTransactionResDTO.HistoryItem item = new CodefTransactionResDTO.HistoryItem();
 		item.setResAccountTrDate((String) itemMap.get("resAccountTrDate"));
@@ -256,6 +277,7 @@ public class CodefApiService {
 		return item;
 	}
 
+	// Codef API 공통 호출 메서드
 	private Map<String, Object> postCodefApi(String apiURL, Map<String, Object> requestBody) {
 		HttpURLConnection con = null;
 		BufferedReader br = null;
@@ -268,14 +290,14 @@ public class CodefApiService {
 
 			String accessToken = accessTokenService.getValidAccessToken();
 			if (accessToken == null) {
-				throw new BusinessException(ErrorCode.CODEF_AUTHENTICATION_FAILED,
-					"유효한 액세스 토큰을 가져올 수 없습니다.");
+				throw new BusinessException(ErrorCode.CODEF_AUTH_FAIL, "유효한 액세스 토큰을 가져올 수 없습니다.");
 			}
 			con.setRequestProperty("Authorization", "Bearer " + accessToken);
 
 			con.setDoInput(true);
 			con.setDoOutput(true);
 
+			// 요청 본문 전송
 			String jsonBody = objectMapper.writeValueAsString(requestBody);
 
 			try (OutputStream os = con.getOutputStream()) {
@@ -288,58 +310,59 @@ public class CodefApiService {
 			if (resCode == HttpURLConnection.HTTP_OK) {
 				br = new BufferedReader(new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8));
 			} else if (resCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
-				throw new BusinessException(ErrorCode.CODEF_AUTHENTICATION_FAILED,
-					"Codef API 인증에 실패했습니다. (HTTP " + resCode + ")");
+				throw new BusinessException(ErrorCode.CODEF_AUTH_FAIL);
 			} else {
 				br = new BufferedReader(new InputStreamReader(con.getErrorStream(), StandardCharsets.UTF_8));
-				throw new BusinessException(ErrorCode.CODEF_CONNECTION_FAILED,
-					"Codef API 요청이 실패했습니다. (HTTP " + resCode + ")");
+				String errorResponse = readResponse(br);
+				throw new BusinessException(ErrorCode.CODEF_FAIL, "Codef API 요청이 실패했습니다.");
 			}
 
-			String inputLine;
-			StringBuilder resStr = new StringBuilder();
-			while ((inputLine = br.readLine()) != null) {
-				resStr.append(inputLine);
-			}
+			String resString = readResponse(br);
 
-			String resString = resStr.toString();
-
-			String decodedRes; // 응답 디코딩
+			// URL 디코딩
+			String decodedRes;
 			try {
 				decodedRes = URLDecoder.decode(resString, StandardCharsets.UTF_8);
-				// System.out.println("디코딩된 응답: " + decodedRes); // 디버깅용
 			} catch (Exception e) {
-				// 💥 에러 메시지
-				// URL 디코딩 실패시 원본 사용
 				decodedRes = resString;
 			}
 
 			return objectMapper.readValue(decodedRes, new TypeReference<Map<String, Object>>() {});
-
 		} catch (ProtocolException e) {
-			// 💥 에러 메시지 : 프로토콜 오류
+			throw new BusinessException(ErrorCode.CODEF_FAIL, "프로토콜 오류가 발생했습니다: " + e.getMessage());
 		} catch (MalformedURLException e) {
-			// 💥 에러 메시지 : 잘못된 URL
+			throw new BusinessException(ErrorCode.CODEF_FAIL, "잘못된 URL입니다: " + e.getMessage());
+		} catch (JsonParseException e) {
+			throw new BusinessException(ErrorCode.CODEF_FAIL, "JSON 파싱 오류가 발생했습니다: " + e.getMessage());
+		} catch (JsonMappingException e) {
+			throw new BusinessException(ErrorCode.CODEF_FAIL, "JSON 매핑 오류가 발생했습니다: " + e.getMessage());
+		} catch (JsonProcessingException e) {
+			throw new BusinessException(ErrorCode.CODEF_FAIL, "JSON 처리 오류가 발생했습니다: " + e.getMessage());
 		} catch (IOException e) {
-			// 💥 에러 메시지 : I/O 오류
-		} catch (Exception e) {
-			throw new BusinessException(ErrorCode.CODEF_CONNECTION_FAILED,
-				"Codef API 호출 중 오류가 발생했습니다.", e);
-		} finally {
+			throw new BusinessException(ErrorCode.CODEF_FAIL, "네트워크 I/O 오류가 발생했습니다: " + e.getMessage());
+		}finally {
 			// 리소스 정리
 			if (br != null) {
 				try {
 					br.close();
 				} catch (IOException e) {
-					// 💥 에러 메시지 : BufferedReader 정리 실패
+					log.warn("BufferedReader 정리 실패: {}", e.getMessage());
 				}
 			}
 			if (con != null) {
 				con.disconnect();
 			}
 		}
-		return null;
 	}
 
+	// 응답 읽기 헬퍼 메서드
+	private String readResponse(BufferedReader br) throws IOException {
+		StringBuilder resStr = new StringBuilder();
+		String inputLine;
+		while ((inputLine = br.readLine()) != null) {
+			resStr.append(inputLine);
+		}
+		return resStr.toString();
+	}
 
 }

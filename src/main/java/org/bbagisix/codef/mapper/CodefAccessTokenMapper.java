@@ -7,7 +7,7 @@ import org.bbagisix.codef.domain.CodefAccessTokenVO;
 public interface CodefAccessTokenMapper {
 	CodefAccessTokenVO getCurrentToken();
 
-	void insertToken(CodefAccessTokenVO tokenVO);
+	int insertToken(CodefAccessTokenVO tokenVO);
 
-	void updateToken(CodefAccessTokenVO tokenVO);
+	int updateToken(CodefAccessTokenVO tokenVO);
 }
