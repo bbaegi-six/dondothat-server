@@ -20,7 +20,6 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,7 +37,6 @@ public class ChatController {
 
 	private final ChatService chatService;
 	private final ChatSessionService chatSessionService;
-	private final SimpMessagingTemplate messagingTemplate;
 
 	/**
 	 * 참여중인 채팅방 목록 조회
@@ -102,7 +100,7 @@ public class ChatController {
 	}
 
 	/**
-	 * 채팅 메시지 전송 (WebSocket)
+	 * 채팅 메시지 전송
 	 * /app/chat/{challengeId}/send 로 메시지를 받아서
 	 * /topic/chat/{challengeId} 로 브로드캐스트
 	 * DTO → VO → Entity
@@ -121,12 +119,11 @@ public class ChatController {
 			}
 
 			// 메시지를 VO → Entity 변환 후 DB에 저장
+			// Redis pub/sub 발행 (ChatService에서 처리)
 			ChatMessageDTO savedMessage = chatService.saveMessage(chatMessage);
 
 			log.info("메시지 저장 완료: ID {}", savedMessage.getMessageId());
 
-			// 해당 챌린지 구독자들에게 브로드캐스트
-			messagingTemplate.convertAndSend("/topic/chat/" + challengeId, savedMessage);
 		} catch (BusinessException e) {
 			log.warn("비즈니스 예외 발생: code={}, message={}", e.getCode(), e.getMessage());
 			// GlobalExceptionHandler 에서 처리
@@ -137,7 +134,7 @@ public class ChatController {
 	}
 
 	/**
-	 * 사용자가 채팅방에 입장 (WebSocket)
+	 * 사용자가 채팅방에 입장
 	 * 시스템이 제어하는 입장 처리
 	 */
 	@MessageMapping("/chat/{challengeId}/join")
@@ -153,19 +150,19 @@ public class ChatController {
 			log.info("📥 [입장 요청] 사용자 ID: {}, 챌린지 ID: {}", userId, challengeId);
 
 			// ChatService를 통해 사용자 정보와 함께 입장 메시지 생성
+			// Redis 발행
 			ChatMessageDTO systemMessage = chatService.handleJoin(challengeId, userId);
 
 			// userName 안전성 체크
-			if (systemMessage != null && systemMessage.getUserName() != null && !systemMessage.getUserName()
-				.trim()
-				.isEmpty()) {
+			if (systemMessage != null && systemMessage.getUserName() != null &&
+				!systemMessage.getUserName().trim().isEmpty()) {
 				userName = systemMessage.getUserName();
 			}
 
 			// 세션에 정보 저장 - null 값 완전 차단
 			saveToSession(headerAccessor, challengeId, userId, userName);
 
-			// 접속자 수 증가
+			// 접속자 수 증가 (Redis pub/sub로 브로드캐스팅)
 			chatSessionService.addParticipant(challengeId);
 			int currentCount = chatSessionService.getParticipantCount(challengeId);
 
@@ -175,12 +172,6 @@ public class ChatController {
 			if (systemMessage == null) {
 				throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "입장 메시지 생성에 실패했습니다.");
 			}
-
-			// 시스템 메시지는 DB에 저장하지 않고 바로 브로드캐스트
-			messagingTemplate.convertAndSend("/topic/chat/" + challengeId, systemMessage);
-
-			// 접속자 수 브로드캐스트
-			messagingTemplate.convertAndSend("/topic/userCount/" + challengeId, currentCount);
 
 			log.info("입장 처리 완료: 사용자 {}, 챌린지 {}", userName, challengeId);
 
@@ -214,20 +205,16 @@ public class ChatController {
 			if (challengeId != null) {
 				log.info("👋 [퇴장 시작] 사용자: {}, 챌린지: {}", userName, challengeId);
 
-				// 접속자 수 감소
+				// 접속자 수 감소 (Redis pub/sub로 브로드캐스트)
 				chatSessionService.removeParticipant(challengeId);
 				int currentCount = chatSessionService.getParticipantCount(challengeId);
 
 				log.info("✅ [퇴장 완료] 사용자: {}, 챌린지: {}, 현재 접속자 수: {}명", userName, challengeId, currentCount);
 
-				// 퇴장 메시지 전송 (VO 기반)
+				// 퇴장 메시지 생성 + Redis 발행
 				if (userName != null) {
 					ChatMessageDTO systemMessage = chatService.handleLeave(challengeId, userId, userName);
-					messagingTemplate.convertAndSend("/topic/chat/" + challengeId, systemMessage);
 				}
-
-				// 접속자 수 브로드캐스트
-				messagingTemplate.convertAndSend("/topic/userCount/" + challengeId, currentCount);
 			}
 		} catch (BusinessException e) {
 			log.warn("퇴장 처리 중 비즈니스 예외: code={}, message={}", e.getCode(), e.getMessage());

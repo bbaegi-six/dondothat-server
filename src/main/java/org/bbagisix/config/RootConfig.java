@@ -17,13 +17,16 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.web.client.RestTemplate;
 
 import javax.sql.DataSource;
 import javax.validation.Valid;
@@ -64,13 +67,13 @@ public class RootConfig {
 	@Value("${REDIS_PORT:6379}")
 	private int redisPort;
 
-	@Value("${spring.mail.host}")
+	@Value("${SPRING_MAIL_HOST}")
 	private String mailHost;
-	@Value("${spring.mail.port}")
+	@Value("${SPRING_MAIL_PORT}")
 	private int mailPort;
-	@Value("${spring.mail.username}")
+	@Value("${SPRING_MAIL_USERNAME}")
 	private String mailUsername;
-	@Value("${spring.mail.password}")
+	@Value("${SPRING_MAIL_PASSWORD}")
 	private String mailPassword;
 
 	// OAuth 환경 변수
@@ -84,6 +87,8 @@ public class RootConfig {
 	private String naverClientSecret;
 	@Value("${BASE_URL:}")
 	private String baseUrl;
+	@Value("${JWT_SECRET}")
+	private String jwtSecret;
 
 	// CODEF 환경 변수
 	@Value("${CODEF_CLIENT_ID:}")
@@ -129,6 +134,14 @@ public class RootConfig {
 		properties.put("mail.smtp.starttls.enable", "true");
 
 		return properties;
+	}
+
+	@Bean
+	public RedisTemplate<String, Object> redisTemplate() {
+		RedisTemplate<String, Object> template = new RedisTemplate<>();
+		template.setConnectionFactory(redisConnectionFactory());
+		template.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
+		return template;
 	}
 
 	@Bean
@@ -197,5 +210,10 @@ public class RootConfig {
 		DataSourceTransactionManager manager = new DataSourceTransactionManager(dataSource());
 
 		return manager;
+	}
+
+	@Bean
+	public RestTemplate restTemplate() {
+		return new RestTemplate();
 	}
 }

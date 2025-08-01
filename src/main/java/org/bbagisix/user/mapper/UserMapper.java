@@ -12,7 +12,10 @@ public interface UserMapper {
 
 	// 조회 메서드
 	UserVO selectUserByEmail(@Param("email") String email);
-	UserVO selectUserById(@Param("id") Long id);
+	UserVO selectUserById(@Param("userId") Long userId);
+	UserVO findByName(@Param("name") String name);
+	UserVO findBySocialId(@Param("socialId") String socialId);
+	UserVO findByEmail(@Param("email") String email);
 
 	// 이메일 중복 체크
 	int countByEmail(@Param("email") String email);

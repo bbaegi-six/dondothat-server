@@ -83,6 +83,7 @@ jobs:
             export NAVER_CLIENT_ID="${{ secrets.NAVER_CLIENT_ID }}"
             export NAVER_CLIENT_SECRET="${{ secrets.NAVER_CLIENT_SECRET }}"
             export BASE_URL="${{ secrets.BASE_URL }}"
+            export JWT_SECRET="${{ secrets.JWT_SECRET }}"
             export CODEF_CLIENT_ID="${{ secrets.CODEF_CLIENT_ID }}"
             export CODEF_CLIENT_SECRET="${{ secrets.CODEF_CLIENT_SECRET }}"
             export CODEF_PUBLIC_KEY="${{ secrets.CODEF_PUBLIC_KEY }}"
@@ -124,6 +125,7 @@ jobs:
                   - NAVER_CLIENT_ID=$NAVER_CLIENT_ID
                   - NAVER_CLIENT_SECRET=$NAVER_CLIENT_SECRET
                   - BASE_URL=$BASE_URL
+                  - JWT_SECRET=$JWT_SECRET
                   - CODEF_CLIENT_ID=$CODEF_CLIENT_ID
                   - CODEF_CLIENT_SECRET=$CODEF_CLIENT_SECRET
                   - CODEF_PUBLIC_KEY=$CODEF_PUBLIC_KEY

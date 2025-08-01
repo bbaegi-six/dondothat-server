@@ -5,9 +5,9 @@
 
 <mapper namespace="org.bbagisix.user.mapper.UserMapper">
 
-    <insert id="insertUser" parameterType="org.bbagisix.user.domain.UserVO" useGeneratedKeys="true" keyProperty="id">
-        insert into user (name, nickname, password, email, email_verified, point)
-        values (#{name}, #{nickname}, #{password}, #{email}, #{emailVerified}, #{point})
+    <insert id="insertUser" parameterType="org.bbagisix.user.domain.UserVO" useGeneratedKeys="true" keyProperty="userId">
+        insert into user (name, nickname, password, email, email_verified, role, social_id)
+        values (#{name}, #{nickname}, #{password}, #{email}, #{emailVerified}, #{role}, #{socialId})
     </insert>
 
     <select id="selectUserByEmail" resultType="org.bbagisix.user.domain.UserVO">
@@ -15,10 +15,22 @@
     </select>
 
     <select id="selectUserById" resultType="org.bbagisix.user.domain.UserVO">
-        select * from user where user_id = #{Id}
+        select * from user where user_id = #{userId}
     </select>
 
     <select id="countByEmail" resultType="int">
         select count(*) from user where email = #{email}
+    </select>
+
+    <select id="findByName" resultType="org.bbagisix.user.domain.UserVO">
+        select * from user where name = #{name}
+    </select>
+
+    <select id="findBySocialId" resultType="org.bbagisix.user.domain.UserVO">
+        select * from user where social_id = #{socialId}
+    </select>
+
+    <select id="findByEmail" resultType="org.bbagisix.user.domain.UserVO">
+        select * from user where email = #{email}
     </select>
 </mapper>

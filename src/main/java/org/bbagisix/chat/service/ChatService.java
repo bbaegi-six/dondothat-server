@@ -3,6 +3,7 @@ package org.bbagisix.chat.service;
 import java.util.List;
 import java.util.Map;
 
+import org.bbagisix.category.mapper.CategoryMapper;
 import org.bbagisix.chat.converter.ChatMessageConverter;
 import org.bbagisix.chat.domain.ChatMessageVO;
 import org.bbagisix.chat.dto.ChatMessageDTO;
@@ -24,28 +25,31 @@ public class ChatService {
 
 	private final ChatMapper chatMapper;
 	private final ChatMessageConverter converter;
+	private final ChatMessagePublisher chatMessagePublisher;
+	private final CategoryMapper categoryMapper;
 
 	/**
 	 * 채팅 메시지 저장
+	 * Redis 발행(pub)
 	 */
 	public ChatMessageDTO saveMessage(ChatMessageDTO dto) {
 		log.debug("채팅 메시지 저장 요청: challengeId={}, userId={}, message={}",
 			dto.getChallengeId(), dto.getUserId(), dto.getMessage());
 
 		try {
-			// 1. DTO → VO 변환
+			// 1. DTO -> VO 변환
 			ChatMessageVO vo = converter.toVO(dto);
 
 			// 2. 비즈니스 로직 검증
 			validateMessage(vo);
 
-			// 3. VO → Entity 변환
+			// 3. VO -> Entity 변환
 			ChatMessage entity = converter.toEntity(vo);
 
 			// 4. DB 저장
 			int result = chatMapper.insertMessage(entity);
 			if (result != 1) {
-				throw new BusinessException(ErrorCode.MESSAGE_SAVE_FAILED);
+				throw new BusinessException(ErrorCode.WEBSOCKET_SEND_FAILED);
 			}
 
 			// 5. 저장된 메시지 조회 (사용자 정보 포함)
@@ -54,9 +58,16 @@ public class ChatService {
 				throw new BusinessException(ErrorCode.MESSAGE_LOAD_FAILED);
 			}
 
-			// 6. Entity → DTO 변환하여 반환
+			// 6. Entity -> DTO 변환하여 반환
 			ChatMessageDTO resultDTO = converter.toDTO(savedEntity);
 
+			// 7. Redis pub/sub로 메시지 발행 (새로 추가된 부분)
+			try {
+				chatMessagePublisher.publishMessage(dto.getChallengeId(), resultDTO);
+				log.debug("메시지 Redis 발행 완료: messageId={}", resultDTO.getMessageId());
+			} catch (Exception e) {
+				log.error("Redis 메시지 발행 실패 (DB 저장은 성공): messageId={}", resultDTO.getMessageId(), e);
+			}
 			log.debug("메시지 저장 완료: messageId={}", resultDTO.getMessageId());
 			return resultDTO;
 
@@ -96,6 +107,15 @@ public class ChatService {
 				.sentAt(systemVO.getSentAt())
 				.build();
 
+			// Redis pub/sub로 입장 메시지 발행
+			try {
+				chatMessagePublisher.publishMessage(challengeId, resultDTO);
+				log.debug("입장 메시지 Redis 발행 완료: userId={}, userName={}", userId, userName);
+			} catch (Exception e) {
+				log.error("입장 메시지 Redis 발행 실패: userId={}, userName={}", userId, userName, e);
+				// 입장 메시지 발행 실패해도 입장 처리는 계속 진행
+			}
+
 			log.debug("입장 처리 완료: userId={}, userName={}", userId, userName);
 			return resultDTO;
 		} catch (Exception e) {
@@ -133,6 +153,14 @@ public class ChatService {
 				.sentAt(systemVO.getSentAt())
 				.build();
 
+			// Redis pub/sub로 퇴장 메시지 발행
+			try {
+				chatMessagePublisher.publishMessage(challengeId, resultDTO);
+				log.debug("퇴장 메시지 Redis 발행 완료: userName={}", displayName);
+			} catch (Exception e) {
+				log.error("퇴장 메시지 Redis 발행 실패: userName={}", displayName, e);
+				// 퇴장 메시지 발행 실패해도 퇴장 처리는 계속 진행
+			}
 			log.debug("퇴장 처리 완료: userName={}", displayName);
 			return resultDTO;
 		} catch (Exception e) {
@@ -265,4 +293,5 @@ public class ChatService {
 			return defaultName;
 		}
 	}
+
 }

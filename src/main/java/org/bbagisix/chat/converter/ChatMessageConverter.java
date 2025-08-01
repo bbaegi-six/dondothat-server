@@ -1,6 +1,6 @@
 package org.bbagisix.chat.converter;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 import org.bbagisix.chat.domain.ChatMessageVO;
 import org.bbagisix.chat.dto.ChatMessageDTO;
@@ -23,7 +23,7 @@ public class ChatMessageConverter {
 			.userId(dto.getUserId())
 			.message(dto.getMessage())
 			.messageType(dto.getMessageType() != null ? dto.getMessageType() : "MESSAGE")
-			.sentAt(dto.getSentAt() != null ? dto.getSentAt() : new Timestamp(System.currentTimeMillis()))
+			.sentAt(dto.getSentAt() != null ? dto.getSentAt() : LocalDateTime.now())
 			.userName(dto.getUserName())
 			.build();
 	}
@@ -63,7 +63,7 @@ public class ChatMessageConverter {
 			.userName(entity.getUserName())
 			.build();
 	}
-	
+
 	/**
 	 * VO → DTO 변환 (응답용)
 	 */
@@ -112,7 +112,7 @@ public class ChatMessageConverter {
 			.userName(userName != null ? userName : "사용자" + userId)
 			.message(message)
 			.messageType("SYSTEM")
-			.sentAt(new Timestamp(System.currentTimeMillis()))
+			.sentAt(LocalDateTime.now())
 			.build();
 	}
 
@@ -124,7 +124,7 @@ public class ChatMessageConverter {
 			.challengeId(challengeId)
 			.message(message)
 			.messageType("ERROR")
-			.sentAt(new Timestamp(System.currentTimeMillis()))
+			.sentAt(LocalDateTime.now())
 			.build();
 	}
 }

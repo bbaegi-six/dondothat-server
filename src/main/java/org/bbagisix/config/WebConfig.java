@@ -22,7 +22,7 @@ public class WebConfig extends AbstractAnnotationConfigDispatcherServletInitiali
 
 	@Override
 	protected Class<?>[] getRootConfigClasses() {
-		return new Class[] {RootConfig.class};
+		return new Class[] {RootConfig.class, SecurityConfig.class};
 	}
 
 	@Override
@@ -39,11 +39,14 @@ public class WebConfig extends AbstractAnnotationConfigDispatcherServletInitiali
 	// POST body 문자 인코딩 필터 설정 - UTF-8 설정
 	protected Filter[] getServletFilters() {
 		CharacterEncodingFilter characterEncodingFilter = new CharacterEncodingFilter();
-
 		characterEncodingFilter.setEncoding("UTF-8");
 		characterEncodingFilter.setForceEncoding(true);
 
-		return new Filter[] {characterEncodingFilter};
+		// Spring Security Filter
+		org.springframework.web.filter.DelegatingFilterProxy securityFilter = 
+			new org.springframework.web.filter.DelegatingFilterProxy("springSecurityFilterChain");
+		
+		return new Filter[] {characterEncodingFilter, securityFilter};
 	}
 
 	@Override
