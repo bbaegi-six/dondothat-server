@@ -5,6 +5,28 @@
 
 <mapper namespace="org.bbagisix.asset.mapper.AssetMapper">
 
+    <!-- ResultMap 정의 - 암호화 필드들에 TypeHandler 적용 -->
+    <resultMap id="AssetResultMap" type="org.bbagisix.asset.domain.AssetVO">
+        <id property="assetId" column="asset_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="assetName" column="asset_name"/>
+        <result property="bankName" column="bank_name"/>
+
+        <!-- 암호화 필드들 - AES TypeHandler -->
+        <result property="bankAccount" column="bank_account"
+                typeHandler="org.bbagisix.asset.encryption.AESEncryptedTypeHandler"/>
+        <result property="bankId" column="bank_id"
+                typeHandler="org.bbagisix.asset.encryption.AESEncryptedTypeHandler"/>
+        <result property="connectedId" column="connected_id"
+                typeHandler="org.bbagisix.asset.encryption.AESEncryptedTypeHandler"/>
+
+        <!-- 은행 비밀번호 - AES TypeHandler -->
+        <result property="bankPw" column="bank_pw"
+                typeHandler="org.bbagisix.asset.encryption.AESEncryptedTypeHandler"/>
+
+        <result property="balance" column="balance"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
 
     <insert id="insertUserAsset" parameterType="org.bbagisix.asset.domain.AssetVO">
         INSERT INTO user_asset (
@@ -21,28 +43,27 @@
                      #{userId},
                      #{assetName},
                      #{bankName},
-                     #{bankAccount},
-                     #{bankId},
-                     #{bankPw},
-                     #{connectedId},
+                     #{bankAccount, typeHandler=org.bbagisix.asset.encryption.AESEncryptedTypeHandler},
+                     #{bankId, typeHandler=org.bbagisix.asset.encryption.AESEncryptedTypeHandler},
+                     #{bankPw, typeHandler=org.bbagisix.asset.encryption.AESEncryptedTypeHandler},
+                     #{connectedId, typeHandler=org.bbagisix.asset.encryption.AESEncryptedTypeHandler},
                      #{balance},
                      NOW()
                  )
     </insert>
 
-
-    <select id="selectAssetByUserId" resultType="org.bbagisix.asset.domain.AssetVO">
+    <select id="selectAssetByUserId" resultMap="AssetResultMap">
         select
-            asset_id as assetId,
-            user_id as userId,
-            asset_name as assetName,
-            bank_name as bankName,
-            bank_account as bankAccount,
-            bank_id as bankId,
-            bank_pw as bankPw,
-            connected_id as connectedId,
+            asset_id,
+            user_id,
+            asset_name,
+            bank_name,
+            bank_account,
+            bank_id,
+            bank_pw,
+            connected_id,
             balance,
-            created_at as createdAt
+            created_at
         from user_asset
         where user_id = #{userId}
     </select>
@@ -53,13 +74,13 @@
     </delete>
 
     <!-- expense 쪽에 넣어야 할 것   -->
-
     <delete id="deleteExpensesByUserId">
         DELETE FROM expenditure
         WHERE asset_id IN (
             SELECT asset_id FROM user_asset WHERE user_id = #{userId}
         )
     </delete>
+
     <insert id="insertExpenses" parameterType="java.util.List">
         INSERT INTO expenditure (
         user_id,
@@ -82,4 +103,5 @@
             )
         </foreach>
     </insert>
+
 </mapper>
