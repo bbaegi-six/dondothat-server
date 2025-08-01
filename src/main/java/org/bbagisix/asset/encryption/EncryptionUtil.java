@@ -65,6 +65,8 @@ public class EncryptionUtil {
 			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "RSA 암호화 키가 유효하지 않습니다: " + err.getMessage());
 		} catch (BadPaddingException err) {
 			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "RSA 암호화 패딩 처리 중 오류가 발생했습니다: " + err.getMessage());
+		} catch (Exception err) {
+			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "RSA 암호화 중 예상치 못한 오류가 발생했습니다: " + err.getMessage());
 		}
 	}
 
@@ -125,20 +127,22 @@ public class EncryptionUtil {
 
 			// 접두사 붙여서 반환
 			return ENCRYPTION_PREFIX + Base64.getEncoder().encodeToString(encryptedWithIv);
-		} catch (NoSuchAlgorithmException err) {
-			throw new RuntimeException(err);
+		}  catch (NoSuchAlgorithmException err) {
+			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "AES 알고리즘을 찾을 수 없습니다: " + err.getMessage());
 		} catch (NoSuchPaddingException err) {
-			throw new RuntimeException(err);
-		} catch (IllegalBlockSizeException err) {
-			throw new RuntimeException(err);
-		} catch (UnsupportedEncodingException err) {
-			throw new RuntimeException(err);
-		} catch (InvalidAlgorithmParameterException err) {
-			throw new RuntimeException(err);
-		} catch (BadPaddingException err) {
-			throw new RuntimeException(err);
+			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "AES 패딩 방식을 찾을 수 없습니다: " + err.getMessage());
 		} catch (InvalidKeyException err) {
-			throw new RuntimeException(err);
+			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "AES 암호화 키가 유효하지 않습니다: " + err.getMessage());
+		} catch (InvalidAlgorithmParameterException err) {
+			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "AES 암호화 알고리즘 파라미터가 유효하지 않습니다: " + err.getMessage());
+		} catch (IllegalBlockSizeException err) {
+			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "AES 암호화 블록 크기가 유효하지 않습니다: " + err.getMessage());
+		} catch (BadPaddingException err) {
+			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "AES 암호화 패딩 처리 중 오류가 발생했습니다: " + err.getMessage());
+		} catch (UnsupportedEncodingException err) {
+			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "UTF-8 인코딩을 지원하지 않습니다: " + err.getMessage());
+		} catch (Exception err) {
+			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "AES 암호화 중 예상치 못한 오류가 발생했습니다: " + err.getMessage());
 		}
 	}
 
@@ -172,20 +176,24 @@ public class EncryptionUtil {
 
 			byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
 			return new String(decryptedBytes, "UTF-8");
-		} catch (InvalidAlgorithmParameterException err) {
-			throw new RuntimeException(err);
-		} catch (NoSuchPaddingException err) {
-			throw new RuntimeException(err);
-		} catch (IllegalBlockSizeException err) {
-			throw new RuntimeException(err);
-		} catch (UnsupportedEncodingException err) {
-			throw new RuntimeException(err);
+		} catch (IllegalArgumentException err) {
+			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "Base64 디코딩에 실패했습니다. 잘못된 암호화 데이터 형식입니다: " + err.getMessage());
 		} catch (NoSuchAlgorithmException err) {
-			throw new RuntimeException(err);
-		} catch (BadPaddingException err) {
-			throw new RuntimeException(err);
+			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "AES 알고리즘을 찾을 수 없습니다: " + err.getMessage());
+		} catch (NoSuchPaddingException err) {
+			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "AES 패딩 방식을 찾을 수 없습니다: " + err.getMessage());
 		} catch (InvalidKeyException err) {
-			throw new RuntimeException(err);
+			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "AES 복호화 키가 유효하지 않습니다: " + err.getMessage());
+		} catch (InvalidAlgorithmParameterException err) {
+			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "AES 복호화 알고리즘 파라미터가 유효하지 않습니다: " + err.getMessage());
+		} catch (IllegalBlockSizeException err) {
+			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "AES 복호화 블록 크기가 유효하지 않습니다: " + err.getMessage());
+		} catch (BadPaddingException err) {
+			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "AES 복호화 중 패딩 오류가 발생했습니다. 잘못된 키이거나 손상된 데이터일 수 있습니다: " + err.getMessage());
+		} catch (UnsupportedEncodingException err) {
+			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "UTF-8 인코딩을 지원하지 않습니다: " + err.getMessage());
+		} catch (Exception err) {
+			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "AES 복호화 중 예상치 못한 오류가 발생했습니다: " + err.getMessage());
 		}
 	}
 }
