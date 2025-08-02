@@ -70,7 +70,7 @@ public class UserService {
 	}
 
 	@Transactional
-	public SignUpResponse signUp(SignUpRequest signUpRequest, HttpServletResponse response) {
+	public void signUp(SignUpRequest signUpRequest, HttpServletResponse response) {
 		if (isEmailDuplicate(signUpRequest.getEmail())) {
 			throw new RuntimeException("이미 사용 중인 이메일입니다.");
 		}
@@ -87,30 +87,18 @@ public class UserService {
 
 		userMapper.insertUser(user);
 		
-		// 회원가입 후 사용자 정보 생성
-		SignUpResponse userInfo = SignUpResponse.builder()
-			.userId(user.getUserId())
-			.name(user.getName())
-			.email(user.getEmail())
-			.nickname(user.getNickname())
-			.role(user.getRole())
-			.assetConnected(user.isAssetConnected())
-			.build();
-
 		// JWT 토큰 생성 및 쿠키 설정 (자동 로그인)
 		String token = jwtUtil.createToken(
-			userInfo.getEmail(), 
-			userInfo.getRole(), 
-			userInfo.getName(), 
-			userInfo.getNickname(),
-			userInfo.getUserId(),
+			user.getEmail(), 
+			user.getRole(), 
+			user.getName(), 
+			user.getNickname(),
+			user.getUserId(),
 			24 * 60 * 60 * 1000L
 		);
 		
 		CookieUtil.addJwtCookie(response, token);
-		log.info("회원가입 및 자동 로그인 완료: {}", userInfo.getEmail());
-		
-		return userInfo;
+		log.info("회원가입 및 자동 로그인 완료: {}", user.getEmail());
 	}
 
 	public void logout(HttpServletResponse response) {
@@ -118,7 +106,7 @@ public class UserService {
 		CookieUtil.deleteJwtCookie(response);
 	}
 
-	public SignUpResponse login(String email, String password, HttpServletResponse response) {
+	public void login(String email, String password, HttpServletResponse response) {
 		log.info("로그인 처리 시작: {}", email);
 		
 		// 사용자 조회
@@ -132,23 +120,13 @@ public class UserService {
 			throw new RuntimeException("비밀번호가 일치하지 않습니다.");
 		}
 		
-		// 사용자 정보 생성
-		SignUpResponse userInfo = SignUpResponse.builder()
-			.userId(user.getUserId())
-			.name(user.getName())
-			.email(user.getEmail())
-			.nickname(user.getNickname())
-			.role(user.getRole())
-			.assetConnected(user.isAssetConnected())
-			.build();
-		
 		// JWT 토큰 생성 (24시간 유효)
 		String token = jwtUtil.createToken(
-			userInfo.getEmail(), 
-			userInfo.getRole(), 
-			userInfo.getName(), 
-			userInfo.getNickname(),
-			userInfo.getUserId(),
+			user.getEmail(), 
+			user.getRole(), 
+			user.getName(), 
+			user.getNickname(),
+			user.getUserId(),
 			24 * 60 * 60 * 1000L
 		);
 		
@@ -156,7 +134,6 @@ public class UserService {
 		CookieUtil.addJwtCookie(response, token);
 		
 		log.info("로그인 성공: {}", email);
-		return userInfo;
 	}
 
 	public void processOAuth2Login(String email, String role, String name, String nickname, Long userId, HttpServletResponse response) {

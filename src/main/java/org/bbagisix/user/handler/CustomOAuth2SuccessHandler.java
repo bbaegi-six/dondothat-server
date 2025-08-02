@@ -3,7 +3,7 @@ package org.bbagisix.user.handler;
 import lombok.RequiredArgsConstructor;
 
 import org.bbagisix.user.dto.CustomOAuth2User;
-import org.bbagisix.user.util.JwtUtil;
+import org.bbagisix.user.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -23,7 +23,7 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
 
     private static final Logger logger = LoggerFactory.getLogger(CustomOAuth2SuccessHandler.class);
 
-    private final JwtUtil jwtUtil;
+    private final UserService userService;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -32,24 +32,30 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
             logger.info("CustomOAuth2SuccessHandler: onAuthenticationSuccess 호출됨.");
             CustomOAuth2User oAuth2User = (CustomOAuth2User)authentication.getPrincipal();
             logger.info("CustomOAuth2SuccessHandler: OAuth2User Principal: {}", oAuth2User);
+            
             String email = oAuth2User.getEmail();
             String role = oAuth2User.getRole();
             String name = oAuth2User.getName();
             String nickname = oAuth2User.getNickname();
-            logger.info("CustomOAuth2SuccessHandler: 추출된 사용자 정보 - Email: {}, Role: {}, Name: {}, Nickname: {}", email,
-                role, name, nickname);
-            if (email == null || role == null || name == null || nickname == null) {
-                logger.error("CustomOAuth2SuccessHandler: 필수 사용자 정보(email, role, name, nickname) 중 일부가 null입니다.");
+            Long userId = oAuth2User.getUserId();
+            
+            logger.info("CustomOAuth2SuccessHandler: 추출된 사용자 정보 - Email: {}, Role: {}, Name: {}, Nickname: {}, UserId: {}", 
+                email, role, name, nickname, userId);
+            
+            if (email == null || role == null || name == null || nickname == null || userId == null) {
+                logger.error("CustomOAuth2SuccessHandler: 필수 사용자 정보 중 일부가 null입니다.");
+                response.sendRedirect("/error?message=missing_user_info");
+                return;
             }
-            String token = jwtUtil.createToken(email, role, name, nickname, 60 * 60 * 1000L); // 1시간 유효
-            logger.info("CustomOAuth2SuccessHandler: JWT 토큰 생성 완료. 토큰 길이: {}", token.length());
+            
+            // 비즈니스 로직을 Service로 위임
+            userService.processOAuth2Login(email, role, name, nickname, userId, response);
             
             // 동적 리다이렉트 URL 결정
             String redirectUrl = determineRedirectUrl(request);
             
+            // 쿠키로 토큰을 설정했으므로 URL 파라미터에서는 제거
             String targetUrl = UriComponentsBuilder.fromUriString(redirectUrl)
-
-                .queryParam("token", token)
                 .build()
                 .encode(StandardCharsets.UTF_8)
                 .toUriString();

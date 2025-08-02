@@ -20,7 +20,7 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
-    public String createToken(String email, String role, String name, String nickname, long expirationTime) {
+    public String createToken(String email, String role, String name, String nickname, Long userId, long expirationTime) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expirationTime);
 
@@ -30,6 +30,7 @@ public class JwtUtil {
             .claim("name", name)
             .claim("email", email)
             .claim("nickname", nickname)
+            .claim("userId", userId)
             .setIssuedAt(now)
             .setExpiration(expiryDate)
             .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -54,6 +55,10 @@ public class JwtUtil {
 
     public String getNickname(String token) {
         return getClaims(token).get("nickname", String.class);
+    }
+
+    public Long getUserId(String token) {
+        return getClaims(token).get("userId", Long.class);
     }
 
     public boolean isExpired(String token) {

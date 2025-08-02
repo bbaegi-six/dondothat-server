@@ -35,42 +35,35 @@ public class UserController {
 	}
 
 	@PostMapping("/signup")
-	public ResponseEntity<SignUpResponse> signUp(@Valid @RequestBody SignUpRequest request, HttpServletResponse response) {
-		SignUpResponse userInfo = userService.signUp(request, response);
-		return ResponseEntity.status(HttpStatus.CREATED).body(userInfo);
+	public ResponseEntity<String> signUp(@Valid @RequestBody SignUpRequest request, HttpServletResponse response) {
+		userService.signUp(request, response);
+		return ResponseEntity.status(HttpStatus.CREATED).body("회원가입이 성공적으로 완료되었습니다.");
 	}
 
 	@PostMapping("/login")
-	public ResponseEntity<SignUpResponse> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
-		SignUpResponse userInfo = userService.login(request.getEmail(), request.getPassword(), response);
-		return ResponseEntity.ok(userInfo);
+	public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
+		userService.login(request.getEmail(), request.getPassword(), response);
+		return ResponseEntity.ok("로그인이 완료되었습니다.");
 	}
 
 	@GetMapping("/check-email")
-	public ResponseEntity<Boolean> checkUsername(@Param("email") String email) {
+	public ResponseEntity<Boolean> checkEmail(@Param("email") String email) {
 		return ResponseEntity.ok(userService.isEmailDuplicate(email));
 	}
 
 	@GetMapping("/me")
 	public ResponseEntity<SignUpResponse> getCurrentUser(Authentication authentication) {
-		SignUpResponse signUpResponse = userService.findByEmail(authentication.getName());
-		return ResponseEntity.ok(signUpResponse);
-	}
-
-	@GetMapping("/profile")
-	public ResponseEntity<SignUpResponse> getUserProfile(Authentication authentication) {
-		// 인증된 사용자의 userId를 JWT에서 추출
+		// JWT에서 userId 추출하여 최신 정보 조회
 		CustomOAuth2User currentUser = (CustomOAuth2User) authentication.getPrincipal();
 		Long userId = currentUser.getUserId();
 		
-		// userId로 최신 사용자 정보 조회
-		SignUpResponse userProfile = userService.findByUserId(userId);
+		SignUpResponse userInfo = userService.findByUserId(userId);
 		
-		if (userProfile == null) {
+		if (userInfo == null) {
 			return ResponseEntity.notFound().build();
 		}
 		
-		return ResponseEntity.ok(userProfile);
+		return ResponseEntity.ok(userInfo);
 	}
 
 	@PostMapping("/logout")
