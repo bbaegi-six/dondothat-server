@@ -28,31 +28,45 @@ public class JWTFilter extends OncePerRequestFilter {
 		FilterChain filterChain) throws
 		ServletException, IOException {
 
+		String requestURI = request.getRequestURI();
+		System.out.println("=== JWT Filter Debug ===");
+		System.out.println("Request URI: " + requestURI);
+		System.out.println("Request Method: " + request.getMethod());
+
 		String token = null;
 		
 		// 1. Authorization 헤더에서 토큰 확인
 		String authorizationHeader = request.getHeader("Authorization");
 		if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
 			token = authorizationHeader.split(" ")[1];
+			System.out.println("Token found in Authorization header");
 		}
 		
 		// 2. Authorization 헤더에 토큰이 없다면 쿠키에서 확인
 		if (token == null) {
 			token = getTokenFromCookie(request);
+			if (token != null) {
+				System.out.println("Token found in cookie");
+			} else {
+				System.out.println("No token found");
+			}
 		}
 
 		// 토큰이 없으면 다음 필터로 넘어감
 		if (token == null) {
+			System.out.println("No token - proceeding without authentication");
 			filterChain.doFilter(request, response);
 			return;
 		}
 
 		// 토큰 만료 확인
 		if (jwtUtil.isExpired(token)) {
-			System.out.println("token expired");
+			System.out.println("Token expired");
 			filterChain.doFilter(request, response);
 			return;
 		}
+
+		System.out.println("Token valid - setting authentication");
 
 		// JWT에서 사용자 정보 추출
 		String name = jwtUtil.getName(token);
@@ -76,6 +90,7 @@ public class JWTFilter extends OncePerRequestFilter {
 			customOAuth2User.getAuthorities());
 
 		SecurityContextHolder.getContext().setAuthentication(authToken);
+		System.out.println("Authentication set for user: " + email);
 		filterChain.doFilter(request, response);
 	}
 	

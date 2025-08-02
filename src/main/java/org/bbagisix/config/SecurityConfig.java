@@ -58,15 +58,23 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		http.sessionManagement()
 			.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED);
 
-		// 경로별 인가 작업 (OAuth2 경로 허용)
+		// 경로별 인가 작업
 		http.authorizeRequests()
-			.antMatchers("/", "/oauth2-login", "/oauth2-success", "/error", "/resources/**", 
-						"/oauth2/**", "/login/oauth2/**", "/debug/**", "/**").permitAll()
+			// 정적 리소스 허용
+			.antMatchers("/", "/error", "/resources/**", "/static/**", "/css/**", "/js/**", "/images/**").permitAll()
+			// OAuth2 관련 경로 허용
+			.antMatchers("/oauth2-login", "/oauth2-success", "/oauth2/**", "/login/oauth2/**").permitAll()
+			// API 회원가입/로그인 경로 허용
+			.antMatchers("/api/user/signup", "/api/user/login", "/api/user/send-verification", 
+						"/api/user/check-email", "/api/user/check-nickname").permitAll()
+			// 디버그 경로 허용 (개발용)
+			.antMatchers("/debug/**").permitAll()
+			// 나머지는 인증 필요
 			.anyRequest().authenticated();
 
 		http.addFilterBefore(new JWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
-		// OAuth2 로그인 설정 - 이것이 필터를 자동 등록해야 함
+		// OAuth2 로그인 설정
 		http.oauth2Login()
 			.clientRegistrationRepository(clientRegistrationRepository(environment))
 			.userInfoEndpoint()

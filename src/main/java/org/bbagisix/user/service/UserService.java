@@ -8,6 +8,7 @@ import org.bbagisix.user.dto.SignUpResponse;
 import org.bbagisix.user.mapper.UserMapper;
 import org.bbagisix.user.util.CookieUtil;
 import org.bbagisix.user.util.JwtUtil;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ public class UserService {
 	private final EmailService emailService;
 	private final VerificationStorageService verificationStorageService;
 	private final JwtUtil jwtUtil;
+	private final PasswordEncoder passwordEncoder;
 
 	public void sendVerificationCode(String email) {
 		if (userMapper.countByEmail(email) > 0) {
@@ -71,14 +73,20 @@ public class UserService {
 
 	@Transactional
 	public void signUp(SignUpRequest signUpRequest, HttpServletResponse response) {
+		// 이메일 중복 체크
 		if (isEmailDuplicate(signUpRequest.getEmail())) {
-			throw new RuntimeException("이미 사용 중인 이메일입니다.");
+			throw new RuntimeException("이미 가입된 이메일입니다.");
 		}
+
+		// 비밀번호 암호화
+		String encodedPassword = passwordEncoder.encode(signUpRequest.getPassword());
+		log.info("비밀번호 암호화 완료 - 원본 길이: {}, 암호화 후 길이: {}", 
+			signUpRequest.getPassword().length(), encodedPassword.length());
 
 		UserVO user = UserVO.builder()
 			.name(signUpRequest.getName())
 			.nickname(signUpRequest.getNickname())
-			.password(signUpRequest.getPassword())
+			.password(encodedPassword) // 암호화된 비밀번호 저장
 			.email(signUpRequest.getEmail())
 			.emailVerified(false)
 			.assetConnected(false)
@@ -115,10 +123,13 @@ public class UserService {
 			throw new RuntimeException("존재하지 않는 이메일입니다.");
 		}
 		
-		// 비밀번호 검증
-		if (!password.equals(user.getPassword())) {
+		// 암호화된 비밀번호와 비교
+		if (!passwordEncoder.matches(password, user.getPassword())) {
+			log.warn("비밀번호 불일치 - 이메일: {}", email);
 			throw new RuntimeException("비밀번호가 일치하지 않습니다.");
 		}
+		
+		log.info("비밀번호 검증 성공: {}", email);
 		
 		// JWT 토큰 생성 (24시간 유효)
 		String token = jwtUtil.createToken(
