@@ -3,6 +3,7 @@ package org.bbagisix.user.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.bbagisix.user.domain.UserVO;
+import org.bbagisix.user.dto.UserResponse;
 
 @Mapper
 public interface UserMapper {
@@ -11,6 +12,7 @@ public interface UserMapper {
 	int insertUser(UserVO user);
 
 	// 조회 메서드
+	UserVO findByUserId(@Param("userId") Long userId);
 	UserVO selectUserByEmail(@Param("email") String email);
 	UserVO selectUserById(@Param("userId") Long userId);
 	UserVO findByName(@Param("name") String name);

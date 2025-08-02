@@ -2,7 +2,6 @@ package org.bbagisix.user.service;
 
 import org.bbagisix.user.domain.UserVO;
 import org.bbagisix.user.dto.SignUpRequest;
-import org.bbagisix.user.dto.UserDTO;
 import org.bbagisix.user.dto.UserResponse;
 import org.bbagisix.user.mapper.UserMapper;
 import org.springframework.stereotype.Service;
@@ -34,6 +33,21 @@ public class UserService {
 		return userMapper.countByNickname(nickname) > 0;
 	}
 
+	public UserResponse findByUserId(Long userId) {
+		UserVO userVO = userMapper.findByUserId(userId);
+		if (userVO == null) {
+			return null;
+		}
+
+		return UserResponse.builder()
+			.name(userVO.getName())
+			.email(userVO.getEmail())
+			.nickname(userVO.getNickname())
+			.role(userVO.getRole())
+			.assetConnected(userVO.isAssetConnected())
+			.build();
+	}
+
 	public UserResponse findByEmail(String email) {
 		UserVO userVO = userMapper.findByEmail(email);
 		if (userVO == null) {
@@ -43,7 +57,7 @@ public class UserService {
 		return UserResponse.builder()
 			.name(userVO.getName())
 			.email(userVO.getEmail())
-			.username(userVO.getNickname())
+			.nickname(userVO.getNickname())
 			.role(userVO.getRole())
 			.assetConnected(userVO.isAssetConnected())
 			.build();
@@ -61,6 +75,8 @@ public class UserService {
 			.password(signUpRequest.getPassword())
 			.email(signUpRequest.getEmail())
 			.emailVerified(false)
+			.assetConnected(false)
+			.role("USER")
 			.build();
 
 		userMapper.insertUser(user);
