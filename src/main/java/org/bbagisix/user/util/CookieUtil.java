@@ -26,18 +26,19 @@ public class CookieUtil {
     }
 
     public static void deleteJwtCookie(HttpServletResponse response) {
-        Cookie cookie = new Cookie(JWT_COOKIE_NAME, null);
+        Cookie cookie = new Cookie(JWT_COOKIE_NAME, "");
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
         cookie.setPath("/");
         cookie.setMaxAge(0); // 즉시 만료
+        response.addCookie(cookie);
         
-        response.setHeader("Set-Cookie", 
-            cookie.getName() + "=" + 
-            "; Path=" + cookie.getPath() + 
+        response.setHeader("Set-Cookie",
+            JWT_COOKIE_NAME + "=" + 
+            "; Path=/" + 
             "; Max-Age=0" + 
             "; HttpOnly" +
-            (cookie.getSecure() ? "; Secure" : "") +
-            "; SameSite=Lax");
+            "; SameSite=Lax" +
+            "; Expires=Thu, 01 Jan 1970 00:00:00 GMT"); // 과거 날짜로 만료
     }
 }

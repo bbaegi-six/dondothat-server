@@ -1,6 +1,8 @@
 package org.bbagisix.user.controller;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.Cookie;
 import javax.validation.Valid;
 
 import org.apache.ibatis.annotations.Param;
@@ -52,7 +54,20 @@ public class UserController {
 	}
 
 	@GetMapping("/me")
-	public ResponseEntity<SignUpResponse> getCurrentUser(Authentication authentication) {
+	public ResponseEntity<SignUpResponse> getCurrentUser(Authentication authentication, HttpServletRequest request) {
+
+		if (request.getCookies() != null) {
+			for (Cookie cookie : request.getCookies()) {
+				System.out.println("Cookie: " + cookie.getName() + " = " + cookie.getValue());
+			}
+		} else {
+			System.out.println("No cookies found");
+		}
+		
+		if (authentication == null) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+		}
+		
 		// JWT에서 userId 추출하여 최신 정보 조회
 		CustomOAuth2User currentUser = (CustomOAuth2User) authentication.getPrincipal();
 		Long userId = currentUser.getUserId();
