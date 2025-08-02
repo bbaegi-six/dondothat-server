@@ -55,7 +55,16 @@ public class UserController {
 
 	@GetMapping("/me")
 	public ResponseEntity<SignUpResponse> getCurrentUser(Authentication authentication, HttpServletRequest request) {
-
+		System.out.println("=== /me 요청 디버깅 ===");
+		System.out.println("Authentication: " + authentication);
+		System.out.println("Authentication != null: " + (authentication != null));
+		
+		if (authentication != null) {
+			System.out.println("Authentication.getName(): " + authentication.getName());
+			System.out.println("Authentication.getPrincipal(): " + authentication.getPrincipal().getClass().getSimpleName());
+		}
+		
+		System.out.println("=== 쿠키 상태 ===");
 		if (request.getCookies() != null) {
 			for (Cookie cookie : request.getCookies()) {
 				System.out.println("Cookie: " + cookie.getName() + " = " + cookie.getValue());
@@ -65,6 +74,7 @@ public class UserController {
 		}
 		
 		if (authentication == null) {
+			System.out.println("Authentication is null - returning 401");
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 		}
 		
@@ -72,18 +82,33 @@ public class UserController {
 		CustomOAuth2User currentUser = (CustomOAuth2User) authentication.getPrincipal();
 		Long userId = currentUser.getUserId();
 		
+		System.out.println("User ID from JWT: " + userId);
+		
 		SignUpResponse userInfo = userService.findByUserId(userId);
 		
 		if (userInfo == null) {
+			System.out.println("User not found for ID: " + userId);
 			return ResponseEntity.notFound().build();
 		}
 		
+		System.out.println("Returning user info: " + userInfo.getEmail());
 		return ResponseEntity.ok(userInfo);
 	}
 
 	@PostMapping("/logout")
-	public ResponseEntity<String> logout(HttpServletResponse response) {
-		userService.logout(response);
+	public ResponseEntity<String> logout(HttpServletResponse response, HttpServletRequest request) {
+		System.out.println("=== 로그아웃 요청 ===");
+		
+		// 로그아웃 전 쿠키 상태
+		if (request.getCookies() != null) {
+			for (Cookie cookie : request.getCookies()) {
+				System.out.println("로그아웃 전 쿠키: " + cookie.getName() + " = " + cookie.getValue());
+			}
+		}
+		
+		userService.logout(response, request);
+		
+		System.out.println("로그아웃 처리 완료");
 		return ResponseEntity.ok("로그아웃이 완료되었습니다.");
 	}
 }

@@ -1,6 +1,8 @@
 package org.bbagisix.user.service;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.Cookie;
 
 import org.bbagisix.user.domain.UserVO;
 import org.bbagisix.user.dto.SignUpRequest;
@@ -109,9 +111,32 @@ public class UserService {
 		log.info("회원가입 및 자동 로그인 완료: {}", user.getEmail());
 	}
 
-	public void logout(HttpServletResponse response) {
-		log.info("로그아웃 처리 - JWT 쿠키 삭제");
+	public void logout(HttpServletResponse response, HttpServletRequest request) {
+		log.info("로그아웃 처리 시작");
+		
+		// JWT 쿠키 삭제
 		CookieUtil.deleteJwtCookie(response);
+		
+		// JSESSIONID 쿠키도 삭제
+		Cookie jsessionCookie = new Cookie("JSESSIONID", "");
+		jsessionCookie.setPath("/");
+		jsessionCookie.setMaxAge(0);
+		response.addCookie(jsessionCookie);
+		
+		// Set-Cookie 헤더로도 JSESSIONID 삭제
+		response.addHeader("Set-Cookie", 
+			"JSESSIONID=" + 
+			"; Path=/" + 
+			"; Max-Age=0" + 
+			"; Expires=Thu, 01 Jan 1970 00:00:00 GMT");
+		
+		// 세션 무효화 (혹시 세션이 있다면)
+		if (request.getSession(false) != null) {
+			request.getSession().invalidate();
+			log.info("세션 무효화 완료");
+		}
+		
+		log.info("로그아웃 처리 완료 - JWT 쿠키 및 세션 삭제");
 	}
 
 	public void login(String email, String password, HttpServletResponse response) {

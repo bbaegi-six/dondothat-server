@@ -33,12 +33,21 @@ public class CookieUtil {
         cookie.setMaxAge(0); // 즉시 만료
         response.addCookie(cookie);
         
-        response.setHeader("Set-Cookie",
+        response.addHeader("Set-Cookie",
             JWT_COOKIE_NAME + "=" + 
             "; Path=/" + 
             "; Max-Age=0" + 
             "; HttpOnly" +
             "; SameSite=Lax" +
-            "; Expires=Thu, 01 Jan 1970 00:00:00 GMT"); // 과거 날짜로 만료
+            "; Expires=Thu, 01 Jan 1970 00:00:00 GMT");
+            
+        response.addHeader("Set-Cookie",
+            JWT_COOKIE_NAME + "=deleted" + 
+            "; Path=/" + 
+            "; Max-Age=0" + 
+            "; HttpOnly" +
+            "; SameSite=Lax");
+            
+        System.out.println("쿠키 삭제 요청 전송됨: " + JWT_COOKIE_NAME);
     }
 }

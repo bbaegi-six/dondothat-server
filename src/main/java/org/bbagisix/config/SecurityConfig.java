@@ -54,9 +54,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		// HTTP basic 인증 방식 disable
 		http.httpBasic().disable();
 
-		// 세션 설정 (OAuth2에서는 세션 필요)
+		// 세션 설정 - JWT 기반이므로 STATELESS
 		http.sessionManagement()
-			.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED);
+			.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
 		// 경로별 인가 작업
 		http.authorizeRequests()
