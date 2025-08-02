@@ -19,4 +19,7 @@ public interface UserMapper {
 
 	// 이메일 중복 체크
 	int countByEmail(@Param("email") String email);
+
+	// 닉네임 중복 체크
+	int countByNickname(@Param("nickname") String nickname);
 }

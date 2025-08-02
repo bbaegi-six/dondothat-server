@@ -30,6 +30,10 @@ public class UserService {
 		emailService.sendVerificationCode(email, code);
 	}
 
+	public boolean isNicknameDuplicate(String nickname) {
+		return userMapper.countByNickname(nickname) > 0;
+	}
+
 	public UserResponse findByEmail(String email) {
 		UserVO userVO = userMapper.findByEmail(email);
 		if (userVO == null) {
@@ -39,7 +43,7 @@ public class UserService {
 		return UserResponse.builder()
 			.name(userVO.getName())
 			.email(userVO.getEmail())
-			.nickname(userVO.getNickname())
+			.username(userVO.getNickname())
 			.role(userVO.getRole())
 			.assetConnected(userVO.isAssetConnected())
 			.build();
@@ -47,15 +51,8 @@ public class UserService {
 
 	@Transactional
 	public void signUp(SignUpRequest signUpRequest) {
-		String storedCode = verificationStorageService.getCode(signUpRequest.getEmail());
-
-		log.info("Attempting to sign up for email: {}", signUpRequest.getEmail());
-		log.info("Code from Postman: '{}'", signUpRequest.getVerificationCode());
-		log.info("Code from Redis: '{}'", storedCode);
-
-		if (storedCode == null || !storedCode.equals(signUpRequest.getVerificationCode())) {
-			log.error("Verification code mismatch or not found.");
-			throw new RuntimeException("인증 코드가 유효하지 않습니다.");
+		if (isNicknameDuplicate(signUpRequest.getNickname())) {
+			throw new RuntimeException("이미 사용 중인 닉네임입니다.");
 		}
 
 		UserVO user = UserVO.builder()
@@ -63,10 +60,9 @@ public class UserService {
 			.nickname(signUpRequest.getNickname())
 			.password(signUpRequest.getPassword())
 			.email(signUpRequest.getEmail())
-			.emailVerified(true)
+			.emailVerified(false)
 			.build();
 
 		userMapper.insertUser(user);
-		verificationStorageService.removeCode(signUpRequest.getEmail());
 	}
 }

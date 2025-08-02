@@ -40,6 +40,11 @@ public class UserController {
 		return ResponseEntity.status(HttpStatus.CREATED).body("회원가입이 성공적으로 완료되었습니다.");
 	}
 
+	@GetMapping("/check-nickname")
+	public ResponseEntity<Boolean> checkUsername(@Param("nickname") String nickname) {
+		return ResponseEntity.ok(userService.isNicknameDuplicate(nickname));
+	}
+
 	@GetMapping("/me")
 	public ResponseEntity<UserResponse> getCurrentUser(Authentication authentication) {
 		UserResponse userResponse = userService.findByEmail(authentication.getName());

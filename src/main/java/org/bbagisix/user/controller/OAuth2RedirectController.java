@@ -1,4 +1,4 @@
-package org.bbagisix.oauth2.controller;
+package org.bbagisix.user.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
