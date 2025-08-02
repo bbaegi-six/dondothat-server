@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,7 +40,7 @@ public class UserController {
 	@PostMapping("/signup")
 	public ResponseEntity<String> signUp(@Valid @RequestBody SignUpRequest request, HttpServletResponse response) {
 		userService.signUp(request, response);
-		return ResponseEntity.status(HttpStatus.CREATED).body("회원가입이 성공적으로 완료되었습니다.");
+		return ResponseEntity.ok("회원가입이 완료되었습니다.");
 	}
 
 	@PostMapping("/login")
@@ -53,17 +54,20 @@ public class UserController {
 		return ResponseEntity.ok(userService.isEmailDuplicate(email));
 	}
 
+	@PutMapping("/modify-nickname")
+	public ResponseEntity<>
+
 	@GetMapping("/me")
 	public ResponseEntity<SignUpResponse> getCurrentUser(Authentication authentication, HttpServletRequest request) {
 		System.out.println("=== /me 요청 디버깅 ===");
 		System.out.println("Authentication: " + authentication);
 		System.out.println("Authentication != null: " + (authentication != null));
-		
+
 		if (authentication != null) {
 			System.out.println("Authentication.getName(): " + authentication.getName());
 			System.out.println("Authentication.getPrincipal(): " + authentication.getPrincipal().getClass().getSimpleName());
 		}
-		
+
 		System.out.println("=== 쿠키 상태 ===");
 		if (request.getCookies() != null) {
 			for (Cookie cookie : request.getCookies()) {
@@ -72,25 +76,25 @@ public class UserController {
 		} else {
 			System.out.println("No cookies found");
 		}
-		
+
 		if (authentication == null) {
 			System.out.println("Authentication is null - returning 401");
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 		}
-		
+
 		// JWT에서 userId 추출하여 최신 정보 조회
 		CustomOAuth2User currentUser = (CustomOAuth2User) authentication.getPrincipal();
 		Long userId = currentUser.getUserId();
-		
+
 		System.out.println("User ID from JWT: " + userId);
-		
+
 		SignUpResponse userInfo = userService.findByUserId(userId);
-		
+
 		if (userInfo == null) {
 			System.out.println("User not found for ID: " + userId);
 			return ResponseEntity.notFound().build();
 		}
-		
+
 		System.out.println("Returning user info: " + userInfo.getEmail());
 		return ResponseEntity.ok(userInfo);
 	}
