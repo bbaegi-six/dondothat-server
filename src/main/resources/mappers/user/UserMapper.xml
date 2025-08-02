@@ -34,11 +34,7 @@
         select * from user where email = #{email}
     </select>
 
-    <select id="countByNickname" resultType="int">
-        select count(*) from user where nickname = #{nickname}
-    </select>
-
     <select id="findByUserId" resultType="org.bbagisix.user.domain.UserVO">
-        select * from user where user_id = userId
+        select * from user where user_id = #{userId}
     </select>
 </mapper>
