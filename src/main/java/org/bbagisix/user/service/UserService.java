@@ -57,22 +57,6 @@ public class UserService {
 			.build();
 	}
 
-	public SignUpResponse findByEmail(String email) {
-		UserVO userVO = userMapper.findByEmail(email);
-		if (userVO == null) {
-			return null;
-		}
-
-		return SignUpResponse.builder()
-			.userId(userVO.getUserId())
-			.name(userVO.getName())
-			.email(userVO.getEmail())
-			.nickname(userVO.getNickname())
-			.role(userVO.getRole())
-			.assetConnected(userVO.isAssetConnected())
-			.build();
-	}
-
 	@Transactional
 	public void signUp(SignUpRequest signUpRequest, HttpServletResponse response) {
 		// 이메일 중복 체크
