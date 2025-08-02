@@ -3,7 +3,6 @@ package org.bbagisix.user.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.bbagisix.user.domain.UserVO;
-import org.bbagisix.user.dto.UserResponse;
 
 @Mapper
 public interface UserMapper {

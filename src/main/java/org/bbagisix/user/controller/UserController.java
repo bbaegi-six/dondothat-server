@@ -3,16 +3,13 @@ package org.bbagisix.user.controller;
 import javax.validation.Valid;
 
 import org.apache.ibatis.annotations.Param;
-import org.bbagisix.user.dto.CustomOAuth2User;
 import org.bbagisix.user.dto.SendCodeRequest;
 import org.bbagisix.user.dto.SignUpRequest;
-import org.bbagisix.user.dto.UserDTO;
-import org.bbagisix.user.dto.UserResponse;
+import org.bbagisix.user.dto.SignUpResponse;
 import org.bbagisix.user.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -46,8 +43,8 @@ public class UserController {
 	}
 
 	@GetMapping("/me")
-	public ResponseEntity<UserResponse> getCurrentUser(Authentication authentication) {
-		UserResponse userResponse = userService.findByEmail(authentication.getName());
-		return ResponseEntity.ok(userResponse);
+	public ResponseEntity<SignUpResponse> getCurrentUser(Authentication authentication) {
+		SignUpResponse signUpResponse = userService.findByEmail(authentication.getName());
+		return ResponseEntity.ok(signUpResponse);
 	}
 }

@@ -1,21 +1,16 @@
 package org.bbagisix.user.dto;
 
-import javax.validation.constraints.NotBlank;
-
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Builder
-@NotBlank
-@AllArgsConstructor
 public class SignUpResponse {
-	private Long id;
-	private String name;
-	private String email;
-	private String nickname;
-	private boolean emailVerified;
+    private String name;
+    private String email;
+    private String nickname;
+    private String role;
+	private boolean assetConnected;
 }
-
-

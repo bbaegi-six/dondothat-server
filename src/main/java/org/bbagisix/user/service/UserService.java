@@ -2,7 +2,7 @@ package org.bbagisix.user.service;
 
 import org.bbagisix.user.domain.UserVO;
 import org.bbagisix.user.dto.SignUpRequest;
-import org.bbagisix.user.dto.UserResponse;
+import org.bbagisix.user.dto.SignUpResponse;
 import org.bbagisix.user.mapper.UserMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,13 +33,13 @@ public class UserService {
 		return userMapper.countByNickname(nickname) > 0;
 	}
 
-	public UserResponse findByUserId(Long userId) {
+	public SignUpResponse findByUserId(Long userId) {
 		UserVO userVO = userMapper.findByUserId(userId);
 		if (userVO == null) {
 			return null;
 		}
 
-		return UserResponse.builder()
+		return SignUpResponse.builder()
 			.name(userVO.getName())
 			.email(userVO.getEmail())
 			.nickname(userVO.getNickname())
@@ -48,13 +48,13 @@ public class UserService {
 			.build();
 	}
 
-	public UserResponse findByEmail(String email) {
+	public SignUpResponse findByEmail(String email) {
 		UserVO userVO = userMapper.findByEmail(email);
 		if (userVO == null) {
 			return null;
 		}
 
-		return UserResponse.builder()
+		return SignUpResponse.builder()
 			.name(userVO.getName())
 			.email(userVO.getEmail())
 			.nickname(userVO.getNickname())

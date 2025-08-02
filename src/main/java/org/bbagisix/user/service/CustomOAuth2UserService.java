@@ -4,11 +4,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.bbagisix.user.dto.CustomOAuth2User;
-import org.bbagisix.user.dto.UserDTO;
 import org.bbagisix.user.dto.GoogleResponse;
 import org.bbagisix.user.dto.NaverResponse;
 import org.bbagisix.user.dto.OAuth2Response;
 import org.bbagisix.user.domain.UserVO;
+import org.bbagisix.user.dto.SignUpResponse;
 import org.bbagisix.user.mapper.UserMapper;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -63,12 +63,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             log.info("기존 사용자입니다.");
         }
 
-        UserDTO userDTO = new UserDTO();
-        userDTO.setName(userVO.getName());
-        userDTO.setNickname(userVO.getNickname());
-        userDTO.setRole(userVO.getRole());
-        userDTO.setEmail(userVO.getEmail());
+        SignUpResponse signUpResponse = SignUpResponse.builder()
+            .name(userVO.getName())
+            .nickname(userVO.getNickname())
+            .role(userVO.getRole())
+            .email(userVO.getEmail())
+            .assetConnected(false)
+            .build();
 
-        return new CustomOAuth2User(userDTO);
+        return new CustomOAuth2User(signUpResponse);
     }
 }
