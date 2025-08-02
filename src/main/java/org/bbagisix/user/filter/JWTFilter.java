@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.bbagisix.user.dto.CustomOAuth2User;
-import org.bbagisix.user.dto.SignUpResponse;
+import org.bbagisix.user.dto.UserResponse;
 import org.bbagisix.user.util.JwtUtil;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -75,7 +75,7 @@ public class JWTFilter extends OncePerRequestFilter {
 		String nickname = jwtUtil.getNickname(token);
 		Long userId = jwtUtil.getUserId(token);
 
-		SignUpResponse signUpResponse = SignUpResponse.builder()
+		UserResponse userResponse = UserResponse.builder()
 			.userId(userId)
 			.name(name)
 			.nickname(nickname)
@@ -84,7 +84,7 @@ public class JWTFilter extends OncePerRequestFilter {
 			.assetConnected(false)
 			.build();
 
-		CustomOAuth2User customOAuth2User = new CustomOAuth2User(signUpResponse);
+		CustomOAuth2User customOAuth2User = new CustomOAuth2User(userResponse);
 
 		Authentication authToken = new UsernamePasswordAuthenticationToken(customOAuth2User, null,
 			customOAuth2User.getAuthorities());

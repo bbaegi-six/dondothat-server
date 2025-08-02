@@ -1,112 +1,142 @@
 package org.bbagisix.user.handler;
 
-import lombok.RequiredArgsConstructor;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.bbagisix.user.dto.CustomOAuth2User;
+import org.bbagisix.user.service.OAuth2RedirectService;
 import org.bbagisix.user.service.UserService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(CustomOAuth2SuccessHandler.class);
-
     private final UserService userService;
+    private final OAuth2RedirectService oauth2RedirectService;
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) 
+            throws IOException, ServletException {
 
         try {
-            logger.info("CustomOAuth2SuccessHandler: onAuthenticationSuccess 호출됨.");
-            CustomOAuth2User oAuth2User = (CustomOAuth2User)authentication.getPrincipal();
-            logger.info("CustomOAuth2SuccessHandler: OAuth2User Principal: {}", oAuth2User);
+            log.info("OAuth2 로그인 성공 처리 시작");
             
-            String email = oAuth2User.getEmail();
-            String role = oAuth2User.getRole();
-            String name = oAuth2User.getName();
-            String nickname = oAuth2User.getNickname();
-            Long userId = oAuth2User.getUserId();
+            // 사용자 정보 추출 및 검증
+            CustomOAuth2User oAuth2User = extractAndValidateUser(authentication);
             
-            logger.info("CustomOAuth2SuccessHandler: 추출된 사용자 정보 - Email: {}, Role: {}, Name: {}, Nickname: {}, UserId: {}", 
-                email, role, name, nickname, userId);
+            // JWT 토큰 생성 및 설정
+            userService.processOAuth2Login(
+                oAuth2User.getEmail(), 
+                oAuth2User.getRole(), 
+                oAuth2User.getName(), 
+                oAuth2User.getNickname(), 
+                oAuth2User.getUserId(), 
+                response
+            );
             
-            if (email == null || role == null || name == null || nickname == null || userId == null) {
-                logger.error("CustomOAuth2SuccessHandler: 필수 사용자 정보 중 일부가 null입니다.");
-                response.sendRedirect("/error?message=missing_user_info");
-                return;
-            }
-            
-            // 비즈니스 로직을 Service로 위임
-            userService.processOAuth2Login(email, role, name, nickname, userId, response);
-            
-            // 동적 리다이렉트 URL 결정
+            // 리다이렉트 URL 결정 및 이동
             String redirectUrl = determineRedirectUrl(request);
+            redirectToTarget(request, response, redirectUrl);
             
-            // 쿠키로 토큰을 설정했으므로 URL 파라미터에서는 제거
-            String targetUrl = UriComponentsBuilder.fromUriString(redirectUrl)
-                .build()
-                .encode(StandardCharsets.UTF_8)
-                .toUriString();
-            logger.info("CustomOAuth2SuccessHandler: 리다이렉션할 URL: {}", targetUrl);
-            getRedirectStrategy().sendRedirect(request, response, targetUrl);
-            logger.info("CustomOAuth2SuccessHandler: 리다이렉션 요청 완료.");
+            log.info("OAuth2 로그인 성공 처리 완료");
+            
         } catch (Exception e) {
-            logger.error("CustomOAuth2SuccessHandler: 인증 성공 처리 중 예외 발생", e);
+            log.error("OAuth2 로그인 성공 처리 중 오류 발생", e);
             response.sendRedirect("/error?message=authentication_success_error");
         }
     }
     
+    /**
+     * 사용자 정보 추출 및 검증
+     */
+    private CustomOAuth2User extractAndValidateUser(Authentication authentication) {
+        CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
+        
+        log.info("OAuth2 사용자 정보 - Email: {}, Name: {}, UserId: {}", 
+            oAuth2User.getEmail(), oAuth2User.getName(), oAuth2User.getUserId());
+        
+        // 필수 정보 검증
+        if (oAuth2User.getEmail() == null || oAuth2User.getUserId() == null) {
+            throw new IllegalStateException("필수 사용자 정보가 누락되었습니다.");
+        }
+        
+        return oAuth2User;
+    }
+    
+    /**
+     * 리다이렉트 URL 결정
+     */
     private String determineRedirectUrl(HttpServletRequest request) {
-        // 1. URL 파라미터에서 직접 확인
+        // 1. URL 파라미터 확인
         String redirectUri = request.getParameter("redirect_uri");
-        if (redirectUri != null) {
-            logger.info("URL 파라미터에서 리다이렉트 URI 발견: {}", redirectUri);
+        if (isValidUrl(redirectUri)) {
+            log.info("URL 파라미터에서 리다이렉트 URI 발견: {}", redirectUri);
             return redirectUri;
         }
         
-        // 2. 세션에서 원본 URL 확인 (가장 정확)
-        String originalUrl = (String) request.getSession().getAttribute("OAUTH2_ORIGINAL_URL");
-        if (originalUrl != null) {
-            logger.info("세션에서 원본 URL 발견: {}", originalUrl);
+        // 2. 세션에서 원본 URL 확인
+        String originalUrl = oauth2RedirectService.getOriginalUrl(request.getSession());
+        if (isValidUrl(originalUrl)) {
+            // 세션 정보 사용 후 제거
+            oauth2RedirectService.clearOriginalUrl(request.getSession());
             return getRedirectUrlFromOrigin(originalUrl);
-        } else {
-            logger.info("세션에 OAUTH2_ORIGINAL_URL이 없습니다.");
         }
         
-        // 3. Referer 헤더에서 확인
+        // 3. Referer 헤더 확인
         String referer = request.getHeader("Referer");
-        if (referer != null) {
-            logger.info("Referer 헤더에서 URL 확인: {}", referer);
+        if (isValidUrl(referer)) {
+            log.info("Referer 헤더에서 URL 확인: {}", referer);
             return getRedirectUrlFromOrigin(referer);
-        } else {
-            logger.info("Referer 헤더가 없습니다.");
         }
         
-        // 4. 기본값 (로컬 개발)
-        logger.info("기본 리다이렉트 URL 사용");
-        return "http://dondothat.netlify.app/oauth-redirect";
+        // 4. 기본값
+        log.info("기본 리다이렉트 URL 사용");
+        return "https://dondothat.netlify.app/oauth-redirect";
     }
     
+    /**
+     * URL 유효성 검사
+     */
+    private boolean isValidUrl(String url) {
+        return url != null && !url.trim().isEmpty();
+    }
+    
+    /**
+     * 원본 URL에서 적절한 리다이렉트 URL 생성
+     */
     private String getRedirectUrlFromOrigin(String originUrl) {
         if (originUrl.contains("localhost:5173") || originUrl.contains("127.0.0.1:5173")) {
             return "http://localhost:5173/oauth-redirect";
         } else if (originUrl.contains("netlify.app")) {
             return "https://dondothat.netlify.app/oauth-redirect";
         } else {
-            // 기본값 (로컬 개발 우선)
-            return "http://localhost:5173/oauth-redirect";
+            return "https://dondothat.netlify.app/oauth-redirect";
         }
+    }
+    
+    /**
+     * 리다이렉트 실행
+     */
+    private void redirectToTarget(HttpServletRequest request, HttpServletResponse response, String redirectUrl) 
+            throws IOException {
+        String targetUrl = UriComponentsBuilder.fromUriString(redirectUrl)
+            .build()
+            .encode(StandardCharsets.UTF_8)
+            .toUriString();
+            
+        log.info("리다이렉트 대상 URL: {}", targetUrl);
+        getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 }

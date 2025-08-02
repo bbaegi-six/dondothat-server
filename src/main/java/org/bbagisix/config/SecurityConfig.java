@@ -69,7 +69,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 						"/api/user/check-email", "/api/user/check-nickname").permitAll()
 			// 디버그 경로 허용 (개발용)
 			.antMatchers("/debug/**").permitAll()
-			// 나머지는 인증 필요
+			// 나머지는 인증 필요 (닉네임 변경, /me 등)
 			.anyRequest().authenticated();
 
 		http.addFilterBefore(new JWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);

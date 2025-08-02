@@ -20,4 +20,7 @@ public interface UserMapper {
 
 	// 이메일 중복 체크
 	int countByEmail(@Param("email") String email);
+
+	// 닉네임 업데이트
+	int updateNickname(@Param("userId") Long userId, @Param("nickname") String nickname);
 }

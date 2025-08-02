@@ -2,17 +2,14 @@ package org.bbagisix.user.controller;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.Cookie;
 import javax.validation.Valid;
 
 import org.apache.ibatis.annotations.Param;
 import org.bbagisix.user.dto.LoginRequest;
 import org.bbagisix.user.dto.SendCodeRequest;
 import org.bbagisix.user.dto.SignUpRequest;
-import org.bbagisix.user.dto.SignUpResponse;
-import org.bbagisix.user.dto.CustomOAuth2User;
+import org.bbagisix.user.dto.UserResponse;
 import org.bbagisix.user.service.UserService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,20 +30,17 @@ public class UserController {
 
 	@PostMapping("/send-verification")
 	public ResponseEntity<String> sendCode(@Valid @RequestBody SendCodeRequest request) {
-		userService.sendVerificationCode(request.getEmail());
-		return ResponseEntity.ok("인증 코드가 이메일로 발송되었습니다.");
+		return ResponseEntity.ok(userService.sendVerificationCode(request.getEmail()));
 	}
 
 	@PostMapping("/signup")
 	public ResponseEntity<String> signUp(@Valid @RequestBody SignUpRequest request, HttpServletResponse response) {
-		userService.signUp(request, response);
-		return ResponseEntity.ok("회원가입이 완료되었습니다.");
+		return ResponseEntity.ok(userService.signUp(request, response));
 	}
 
 	@PostMapping("/login")
 	public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
-		userService.login(request.getEmail(), request.getPassword(), response);
-		return ResponseEntity.ok("로그인이 완료되었습니다.");
+		return ResponseEntity.ok(userService.login(request.getEmail(), request.getPassword(), response));
 	}
 
 	@GetMapping("/check-email")
@@ -54,65 +48,18 @@ public class UserController {
 		return ResponseEntity.ok(userService.isEmailDuplicate(email));
 	}
 
-	@PutMapping("/modify-nickname")
-	public ResponseEntity<>
+	@PutMapping("/update-nickname")
+	public ResponseEntity<String> updateNickname(@Param("nickname") String nickname, Authentication authentication) {
+		return ResponseEntity.ok(userService.updateNickname(authentication, nickname));
+	}
 
 	@GetMapping("/me")
-	public ResponseEntity<SignUpResponse> getCurrentUser(Authentication authentication, HttpServletRequest request) {
-		System.out.println("=== /me 요청 디버깅 ===");
-		System.out.println("Authentication: " + authentication);
-		System.out.println("Authentication != null: " + (authentication != null));
-
-		if (authentication != null) {
-			System.out.println("Authentication.getName(): " + authentication.getName());
-			System.out.println("Authentication.getPrincipal(): " + authentication.getPrincipal().getClass().getSimpleName());
-		}
-
-		System.out.println("=== 쿠키 상태 ===");
-		if (request.getCookies() != null) {
-			for (Cookie cookie : request.getCookies()) {
-				System.out.println("Cookie: " + cookie.getName() + " = " + cookie.getValue());
-			}
-		} else {
-			System.out.println("No cookies found");
-		}
-
-		if (authentication == null) {
-			System.out.println("Authentication is null - returning 401");
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-		}
-
-		// JWT에서 userId 추출하여 최신 정보 조회
-		CustomOAuth2User currentUser = (CustomOAuth2User) authentication.getPrincipal();
-		Long userId = currentUser.getUserId();
-
-		System.out.println("User ID from JWT: " + userId);
-
-		SignUpResponse userInfo = userService.findByUserId(userId);
-
-		if (userInfo == null) {
-			System.out.println("User not found for ID: " + userId);
-			return ResponseEntity.notFound().build();
-		}
-
-		System.out.println("Returning user info: " + userInfo.getEmail());
-		return ResponseEntity.ok(userInfo);
+	public ResponseEntity<UserResponse> getCurrentUser(Authentication authentication) {
+		return ResponseEntity.ok(userService.getCurrentUser(authentication));
 	}
 
 	@PostMapping("/logout")
 	public ResponseEntity<String> logout(HttpServletResponse response, HttpServletRequest request) {
-		System.out.println("=== 로그아웃 요청 ===");
-		
-		// 로그아웃 전 쿠키 상태
-		if (request.getCookies() != null) {
-			for (Cookie cookie : request.getCookies()) {
-				System.out.println("로그아웃 전 쿠키: " + cookie.getName() + " = " + cookie.getValue());
-			}
-		}
-		
-		userService.logout(response, request);
-		
-		System.out.println("로그아웃 처리 완료");
-		return ResponseEntity.ok("로그아웃이 완료되었습니다.");
+		return ResponseEntity.ok(userService.logout(response, request));
 	}
 }

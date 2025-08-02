@@ -8,7 +8,7 @@ import org.bbagisix.user.dto.GoogleResponse;
 import org.bbagisix.user.dto.NaverResponse;
 import org.bbagisix.user.dto.OAuth2Response;
 import org.bbagisix.user.domain.UserVO;
-import org.bbagisix.user.dto.SignUpResponse;
+import org.bbagisix.user.dto.UserResponse;
 import org.bbagisix.user.mapper.UserMapper;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -63,7 +63,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             log.info("기존 사용자입니다.");
         }
 
-        SignUpResponse signUpResponse = SignUpResponse.builder()
+        UserResponse userResponse = UserResponse.builder()
             .name(userVO.getName())
             .nickname(userVO.getNickname())
             .role(userVO.getRole())
@@ -71,6 +71,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             .assetConnected(false)
             .build();
 
-        return new CustomOAuth2User(signUpResponse);
+        return new CustomOAuth2User(userResponse);
     }
 }
