@@ -2,11 +2,15 @@ package org.bbagisix.chat.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.bbagisix.category.mapper.CategoryMapper;
 import org.bbagisix.chat.converter.ChatMessageConverter;
 import org.bbagisix.chat.domain.ChatMessageVO;
+import org.bbagisix.chat.dto.ChatHistoryDTO;
 import org.bbagisix.chat.dto.ChatMessageDTO;
+import org.bbagisix.chat.dto.UserChallengeInfoDTO;
+import org.bbagisix.chat.dto.response.UserChallengeStatusResponse;
 import org.bbagisix.chat.entity.ChatMessage;
 import org.bbagisix.exception.BusinessException;
 import org.bbagisix.exception.ErrorCode;
@@ -77,6 +81,140 @@ public class ChatService {
 		} catch (Exception e) {
 			log.error("메시지 저장 중 예상하지 못한 오류: ", e);
 			throw new BusinessException(ErrorCode.DATA_ACCESS_ERROR, e);
+		}
+	}
+
+	/**
+	 * 채팅 이력 조회 (사용자가 참여한 시점 이후)
+	 */
+	public List<ChatMessageDTO> getChatHistory(Long challengeId, Long userId, int limit) {
+		log.debug("채팅 이력 조회: challengeId={}, userId={}, limit={}", challengeId, userId, limit);
+
+		if (challengeId == null) {
+			throw new BusinessException(ErrorCode.CHALLENGE_ID_REQUIRED);
+		}
+		if (userId == null) {
+			throw new BusinessException(ErrorCode.USER_ID_REQUIRED);
+		}
+
+		try {
+			// 1. 먼저 사용자가 해당 챌린지에 참여 중인지 확인
+			if (!isUserParticipatingInChallenge(challengeId, userId)) {
+				throw new BusinessException(ErrorCode.CHALLENGE_ACCESS_DENIED);
+			}
+
+			// 2. 채팅 이력 조회
+			List<ChatHistoryDTO> historyList = chatMapper.selectChatHistoryByUserParticipation(
+				challengeId, userId, limit
+			);
+
+			// 3. ChatHistoryDTO를 ChatMessageDTO로 변환
+			return historyList.stream()
+				.map(this::convertHistoryToMessage)
+				.collect(Collectors.toList());
+
+		} catch (BusinessException e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("채팅 이력 조회 중 오류: ", e);
+			throw new BusinessException(ErrorCode.DATA_ACCESS_ERROR, "채팅 이력을 불러올 수 없습니다.", e);
+		}
+	}
+
+	/**
+	 * 사용자가 해당 챌린지에 참여 중인지 확인
+	 */
+	public boolean isUserParticipatingInChallenge(Long challengeId, Long userId) {
+		log.debug("챌린지 참여 상태 확인: challengeId={}, userId={}", challengeId, userId);
+
+		if (challengeId == null || userId == null) {
+			return false;
+		}
+
+		try {
+			UserChallengeInfoDTO challengeInfo = chatMapper.selectUserChallengeStatus(challengeId, userId);
+			return challengeInfo != null && challengeInfo.canAccessChatRoom();
+
+		} catch (Exception e) {
+			log.error("챌린지 참여 상태 확인 중 오류: challengeId={}, userId={}", challengeId, userId, e);
+			return false;
+		}
+	}
+
+	/**
+	 * 사용자의 현재 활성 챌린지 상태 조회
+	 */
+	public UserChallengeStatusResponse getUserChallengeStatus(Long userId) {
+		log.info("🔍 사용자 챌린지 상태 조회 시작: userId={}", userId);  // 추가
+
+		if (userId == null) {
+			log.warn("❌ userId가 null입니다");  // 추가
+			throw new BusinessException(ErrorCode.USER_ID_REQUIRED);
+		}
+
+		try {
+			log.warn("❌ userId가 null입니다");  // 추가
+			UserChallengeInfoDTO challengeInfo = chatMapper.selectUserActiveChallengeInfo(userId);
+			log.info("📊 DB 조회 결과: {}", challengeInfo);  // 추가
+
+			if (challengeInfo == null) {
+				// 참여 중인 챌린지가 없는 경우
+				return UserChallengeStatusResponse.builder()
+					.userId(userId)
+					.hasActiveChallenge(false)
+					.status("no_challenge")
+					.message("참여 중인 챌린지가 없습니다.")
+					.build();
+			}
+
+			// 참여 중인 챌린지가 있는 경우
+			return UserChallengeStatusResponse.builder()
+				.userId(userId)
+				.challengeId(challengeInfo.getChallengeId())
+				.challengeName(challengeInfo.getChallengeName())
+				.hasActiveChallenge(challengeInfo.canAccessChatRoom())
+				.status(challengeInfo.getStatus())
+				.message(getStatusMessage(challengeInfo.getStatus()))
+				.startDate(challengeInfo.getStartDate())
+				.endDate(challengeInfo.getEndDate())
+				.build();
+
+		} catch (BusinessException e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("사용자 챌린지 상태 조회 중 오류: userId={}", userId, e);
+			throw new BusinessException(ErrorCode.DATA_ACCESS_ERROR, "챌린지 상태를 확인할 수 없습니다.", e);
+		}
+	}
+
+	/**
+	 * ChatHistoryDTO를 ChatMessageDTO로 변환 (내부 유틸리티 메서드)
+	 */
+	private ChatMessageDTO convertHistoryToMessage(ChatHistoryDTO history) {
+		return ChatMessageDTO.builder()
+			.messageId(history.getMessageId())
+			.challengeId(history.getChallengeId())
+			.userId(history.getUserId())
+			.message(history.getMessage())
+			.sentAt(history.getSentAt())
+			.messageType(history.getMessageType())
+			.userName(history.getUserName())
+			.build();
+	}
+
+	/**
+	 * 상태별 메시지 생성 (내부 유틸리티 메서드)
+	 */
+	private String getStatusMessage(String status) {
+		switch (status) {
+			case "ongoing":
+				return "챌린지 진행 중입니다.";
+			case "completed":
+				return "챌린지를 완료했습니다.";
+			case "failed":
+				return "챌린지에 실패했습니다.";
+			default:
+				return "참여 중인 챌린지가 없습니다.";
 		}
 	}
 
