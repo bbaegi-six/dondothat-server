@@ -111,7 +111,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 			if (!vo.getUserId().equals(userId)) {
 				throw new BusinessException(ErrorCode.EXPENSE_ACCESS_DENIED);
 			}
-			int result = expenseMapper.delete(expenditureId);
+			int result = expenseMapper.delete(expenditureId, userId);
 			if (result != 1) {
 				throw new BusinessException(ErrorCode.EXPENSE_DELETE_FAILED, 
 					"예상 삭제 수: 1, 실제: " + result);
