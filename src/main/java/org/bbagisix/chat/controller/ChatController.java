@@ -10,6 +10,7 @@ import org.bbagisix.chat.dto.ChatMessageDTO;
 import org.bbagisix.chat.dto.response.ChatRoomInfoResponse;
 import org.bbagisix.chat.dto.response.ParticipantCountResponse;
 import org.bbagisix.chat.dto.response.ParticipantResponse;
+import org.bbagisix.chat.dto.response.UserChallengeStatusResponse;
 import org.bbagisix.chat.dto.response.UserChatRoomResponse;
 import org.bbagisix.exception.BusinessException;
 import org.bbagisix.exception.ErrorCode;
@@ -23,6 +24,7 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
@@ -187,9 +189,31 @@ public class ChatController {
 	}
 
 	/**
+	 * 채팅방 입장 시 이전 메시지 이력 조회
+	 */
+	@GetMapping("/api/chat/{challengeId}/messages")
+	public List<ChatMessageDTO> getChatHistory(@PathVariable Long challengeId,
+		@RequestParam Long userId,
+		@RequestParam(defaultValue = "50") int limit) {
+
+		// 사용자가 해당 챌린지에 참여 중인지 확인
+		if (!chatService.isUserParticipatingInChallenge(challengeId, userId)) {
+			throw new BusinessException(ErrorCode.CHALLENGE_ACCESS_DENIED);
+		}
+
+		// 사용자가 챌린지에 참여한 시점 이후의 메시지만 조회
+		return chatService.getChatHistory(challengeId, userId, limit);
+	}
+
+	/**
 	 * WebSocket 연결 해제 시 자동 호출
 	 * 시스템이 제어하는 퇴장 처리
 	 */
+	@GetMapping("/api/chat/status/{userId}")
+	public UserChallengeStatusResponse getUserChallengeStatus(@PathVariable Long userId) {
+		return chatService.getUserChallengeStatus(userId);
+	}
+
 	@EventListener
 	public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
 		try {
