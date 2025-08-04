@@ -2,6 +2,8 @@ package org.bbagisix.exception;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import lombok.Builder;
 import lombok.Getter;
 
@@ -40,6 +42,7 @@ public class ErrorResponse {
 		private final String code;             // 예: "CH001"
 		private final String message;          // 사용자에게 보여줄 메시지
 		private final Long challengeId;        // 관련 챌린지 ID
+		@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
 		private final LocalDateTime timestamp;
 
 		public static WebSocketErrorResponse of(ErrorCode errorCode, Long challengeId) {
