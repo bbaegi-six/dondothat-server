@@ -48,12 +48,14 @@
             description      = #{description},
             expenditure_date = #{expenditureDate}
         WHERE expenditure_id = #{expenditureId}
+          AND user_id = #{userId}
     </update>
 
-    <delete id="delete" parameterType="long">
+    <delete id="delete">
         DELETE
         FROM expenditure
-        WHERE expenditure_id = #{expenditureId}
+        WHERE expenditure_id = #{param1}
+          AND user_id = #{param2}
     </delete>
 
     <select id="getRecentExpenses" parameterType="long" resultType="org.bbagisix.expense.domain.ExpenseVO">
