@@ -16,6 +16,17 @@
         <result property="userName" column="user_name"/>
     </resultMap>
 
+    <!-- ChatHistoryDto ResultMap -->
+    <resultMap id="ChatHistoryResultMap" type="org.bbagisix.chat.dto.ChatHistoryDTO">
+        <result column="messageId" property="messageId"/>
+        <result column="challengeId" property="challengeId"/>
+        <result column="userId" property="userId"/>
+        <result column="message" property="message"/>
+        <result column="sentAt" property="sentAt" javaType="java.time.LocalDateTime"/>
+        <result column="messageType" property="messageType"/>
+        <result column="userName" property="userName"/>
+    </resultMap>
+
     <!-- 채팅 메시지 저장 -->
     <insert id="insertMessage" parameterType="org.bbagisix.chat.entity.ChatMessage"
             useGeneratedKeys="true" keyProperty="messageId">
@@ -82,4 +93,58 @@
           AND uc.status = 'ongoing'
         ORDER BY uc.start_date ASC
     </select>
+
+    <!-- 사용자가 참여한 시점 이후의 채팅 메시지 조회 -->
+    <select id="selectChatHistoryByUserParticipation" resultMap="ChatHistoryResultMap">
+        SELECT cm.message_id                               as messageId,
+               cm.challenge_id                             as challengeId,
+               cm.user_id                                  as userId,
+               cm.message,
+               cm.sent_at                                  as sentAt,
+               cm.message_type                             as messageType,
+               COALESCE(u.name, CONCAT('사용자', cm.user_id)) as userName
+        FROM chat_message cm
+                 LEFT JOIN user u ON cm.user_id = u.user_id
+        WHERE cm.challenge_id = #{challengeId}
+          AND cm.sent_at >= (SELECT uc.start_date
+                             FROM user_challenge uc
+                             WHERE uc.user_id = #{userId}
+                               AND uc.challenge_id = #{challengeId}
+                               AND uc.status = 'ongoing')
+        ORDER BY cm.sent_at ASC
+            LIMIT #{limit}
+    </select>
+
+    <!-- 사용자의 특정 챌린지 참여 상태 확인 -->
+    <select id="selectUserChallengeStatus" resultType="org.bbagisix.chat.dto.UserChallengeInfoDTO">
+        SELECT uc.user_challenge_id as userChallengeId,
+               uc.user_id           as userId,
+               uc.challenge_id      as challengeId,
+               c.title              as challengeName,
+               uc.status,
+               uc.start_date        as startDate,
+               uc.end_date          as endDate
+        FROM user_challenge uc
+                 JOIN challenge c ON uc.challenge_id = c.challenge_id
+        WHERE uc.user_id = #{userId}
+          AND uc.challenge_id = #{challengeId}
+          AND uc.status = 'ongoing'
+    </select>
+
+    <!-- 사용자의 현재 활성 챌린지 정보 조회 -->
+    <select id="selectUserActiveChallengeInfo" resultType="org.bbagisix.chat.dto.UserChallengeInfoDTO">
+        SELECT uc.user_challenge_id as userChallengeId,
+               uc.user_id           as userId,
+               uc.challenge_id      as challengeId,
+               c.title              as challengeName,
+               uc.status,
+               uc.start_date        as startDate,
+               uc.end_date          as endDate
+        FROM user_challenge uc
+                 JOIN challenge c ON uc.challenge_id = c.challenge_id
+        WHERE uc.user_id = #{userId}
+          AND uc.status = 'ongoing'
+        ORDER BY uc.start_date DESC LIMIT 1
+    </select>
+
 </mapper>
