@@ -30,8 +30,11 @@ public class ExpenseServiceImpl implements ExpenseService {
 	}
 
 	@Override
-	public ExpenseDTO getExpenseById(Long expenditureId) {
+	public ExpenseDTO getExpenseById(Long expenditureId, Long userId) {
 		ExpenseVO vo = expenseMapper.findById(expenditureId);
+		if (vo == null || !vo.getUserId().equals(userId)) {
+			throw new RuntimeException("소비 내역을 찾을 수 없거나 접근 권한이 없습니다. id=" + expenditureId);
+		}
 		return voToDto(vo);
 	}
 
@@ -41,10 +44,10 @@ public class ExpenseServiceImpl implements ExpenseService {
 	}
 
 	@Override
-	public ExpenseDTO updateExpense(Long expenditureId, ExpenseDTO expenseDTO) {
+	public ExpenseDTO updateExpense(Long expenditureId, ExpenseDTO expenseDTO, Long userId) {
 		ExpenseVO vo = expenseMapper.findById(expenditureId);
-		if (vo == null) {
-			throw new RuntimeException("수정할 소비 내역이 없습니다. id=" + expenditureId);
+		if (vo == null || !vo.getUserId().equals(userId)) {
+			throw new RuntimeException("수정할 소비 내역을 찾을 수 없거나 접근 권한이 없습니다. id=" + expenditureId);
 		}
 
 		vo.setCategoryId(expenseDTO.getCategoryId());
@@ -58,7 +61,11 @@ public class ExpenseServiceImpl implements ExpenseService {
 	}
 
 	@Override
-	public void deleteExpense(Long expenditureId) {
+	public void deleteExpense(Long expenditureId, Long userId) {
+		ExpenseVO vo = expenseMapper.findById(expenditureId);
+		if (vo == null || !vo.getUserId().equals(userId)) {
+			throw new RuntimeException("삭제할 소비 내역을 찾을 수 없거나 접근 권한이 없습니다. id=" + expenditureId);
+		}
 		expenseMapper.delete(expenditureId);
 	}
 
