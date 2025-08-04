@@ -8,13 +8,13 @@ import org.bbagisix.expense.dto.ExpenseDTO;
 public interface ExpenseService {
 	ExpenseDTO createExpense(ExpenseDTO expenseDTO);
 
-	ExpenseDTO getExpenseById(Long expenditureId);
+	ExpenseDTO getExpenseById(Long expenditureId, Long userId);
 
 	List<ExpenseDTO> getExpensesByUserId(Long userId);
 
-	ExpenseDTO updateExpense(Long expenditureId, ExpenseDTO expenseDTO);
+	ExpenseDTO updateExpense(Long expenditureId, ExpenseDTO expenseDTO, Long userId);
 
-	void deleteExpense(Long expenditureId);
+	void deleteExpense(Long expenditureId, Long userId);
 
 	List<ExpenseVO> getRecentExpenses(Long userId);
 }
