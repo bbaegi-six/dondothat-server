@@ -17,4 +17,8 @@ public interface ExpenseService {
 	void deleteExpense(Long expenditureId, Long userId);
 
 	List<ExpenseVO> getRecentExpenses(Long userId);
+
+	// 시스템 내부 호출용 메서드 (권한 검증 없음)
+	ExpenseDTO getExpenseByIdInternal(Long expenditureId);
+	ExpenseDTO updateExpenseInternal(Long expenditureId, ExpenseDTO expenseDTO);
 }

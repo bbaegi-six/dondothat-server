@@ -41,7 +41,7 @@ public class ClassifyServiceImpl implements ClassifyService {
 		Long expenseId = ((Number)response.get("expenditure_id")).longValue();
 		Long categoryId = ((Number)response.get("category_id")).longValue();
 		expense.setCategoryId(categoryId);
-		expenseService.updateExpense(expenseId, expense);
+		expenseService.updateExpenseInternal(expenseId, expense);
 	}
 
 	@Override
@@ -68,9 +68,9 @@ public class ClassifyServiceImpl implements ClassifyService {
 			Long expenseId = ((Number)res.get("expenditure_id")).longValue();
 			Long categoryId = ((Number)res.get("category_id")).longValue();
 
-			ExpenseDTO expense = expenseService.getExpenseById(expenseId);
+			ExpenseDTO expense = expenseService.getExpenseByIdInternal(expenseId);
 			expense.setCategoryId(categoryId);
-			expenseService.updateExpense(expenseId, expense);
+			expenseService.updateExpenseInternal(expenseId, expense);
 		}
 	}
 }
