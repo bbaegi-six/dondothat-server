@@ -6,15 +6,16 @@
 <mapper namespace="org.bbagisix.expense.mapper.ExpenseMapper">
     <insert id="insert" parameterType="org.bbagisix.expense.domain.ExpenseVO" useGeneratedKeys="true"
             keyProperty="expenditureId">
-        INSERT INTO expenditure (user_id, category_id, asset_id, amount, description, expenditure_date)
-        VALUES (#{userId}, #{categoryId}, #{assetId}, #{amount}, #{description}, #{expenditureDate})
+--          user_asset 테이블 구현 시 asset_id 추가해야함.
+        INSERT INTO expenditure (user_id, category_id, amount, description, expenditure_date)
+        VALUES (#{userId}, #{categoryId}, #{amount}, #{description}, #{expenditureDate})
     </insert>
 
     <select id="findById" parameterType="long" resultType="org.bbagisix.expense.domain.ExpenseVO">
         SELECT expenditure_id,
                user_id,
                category_id,
-               asset_id,
+--                asset_id,
                amount,
                description,
                expenditure_date,
@@ -28,7 +29,7 @@
         SELECT expenditure_id,
                user_id,
                category_id,
-               asset_id,
+--                asset_id,
                amount,
                description,
                expenditure_date,
@@ -42,7 +43,7 @@
     <update id="update" parameterType="org.bbagisix.expense.domain.ExpenseVO">
         UPDATE expenditure
         SET category_id      = #{categoryId},
-            asset_id         = #{assetId},
+--             asset_id         = #{assetId},
             amount           = #{amount},
             description      = #{description},
             expenditure_date = #{expenditureDate}
