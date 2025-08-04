@@ -1,6 +1,6 @@
 package org.bbagisix.user.dto;
 
-import org.apache.logging.log4j.core.config.plugins.validation.constraints.NotBlank;
+import javax.validation.constraints.NotBlank;
 
 import lombok.Getter;
 
