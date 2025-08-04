@@ -2,7 +2,7 @@ package org.bbagisix.user.dto;
 
 import javax.validation.constraints.Email;
 
-import org.apache.logging.log4j.core.config.plugins.validation.constraints.NotBlank;
+import javax.validation.constraints.NotBlank;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
