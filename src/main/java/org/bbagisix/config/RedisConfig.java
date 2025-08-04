@@ -1,10 +1,12 @@
 package org.bbagisix.config;
 
+import org.bbagisix.chat.service.ChatMessageSubscriber;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.PatternTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -45,6 +47,19 @@ public class RedisConfig {
 		template.setHashKeySerializer(serializer);
 
 		return template;
+	}
+
+	@Bean
+	public RedisMessageListenerContainer redisMessageListenerContainer(
+		ChatMessageSubscriber chatMessageSubscriber) {  // 의존성 주입 추가
+
+		RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+		container.setConnectionFactory(redisConnectionFactory);
+
+		container.addMessageListener(chatMessageSubscriber,
+			new PatternTopic("chat:channel:*"));
+
+		return container;
 	}
 
 	@Bean
