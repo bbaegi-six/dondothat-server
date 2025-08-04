@@ -15,8 +15,7 @@ public class OAuth2RedirectService {
     private static final String OAUTH2_BASE_PATH = "/oauth2/authorization/";
 
     public String prepareOAuth2Login(HttpServletRequest request, String provider, String redirectUrl) {
-        log.info("OAuth2 로그인 준비 시작 - provider: {}", provider);
-        
+
         // 원본 URL 저장
         saveOriginalUrl(request, redirectUrl);
         
@@ -53,6 +52,5 @@ public class OAuth2RedirectService {
 
     public void clearOriginalUrl(HttpSession session) {
         session.removeAttribute(OAUTH2_ORIGINAL_URL_KEY);
-        log.info("OAuth2 세션에서 원본 URL 제거");
     }
 }
