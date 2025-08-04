@@ -31,7 +31,7 @@ public class OAuth2ServiceImpl implements OAuth2Service {
 	// private String naverClientSecret;
 
 	private static final String GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token";
-	private static final String NAVER_TOKEN_URI = "https://nid.naver.com/oauth2.0/token";
+	// private static final String NAVER_TOKEN_URI = "https://nid.naver.com/oauth2.0/token";
 
 	@Override
 	public String getGoogleAccessToken(String code) {

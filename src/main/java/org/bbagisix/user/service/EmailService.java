@@ -1,5 +1,7 @@
 package org.bbagisix.user.service;
 
+import org.bbagisix.exception.BusinessException;
+import org.bbagisix.exception.ErrorCode;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -36,9 +38,8 @@ public class EmailService {
 			message.setText(emailContent);
 			mailSender.send(message);
 
-			log.info("인증코드 발송 완료", toEmail);
 		} catch (Exception e) {
-			throw new RuntimeException("이메일 발송에 실패했습니다.", e);
+			throw new BusinessException(ErrorCode.EMAIL_SEND_FAILED);
 		}
 	}
 

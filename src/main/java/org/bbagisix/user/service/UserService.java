@@ -1,9 +1,13 @@
 package org.bbagisix.user.service;
 
+import java.sql.BatchUpdateException;
+
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.Cookie;
 
+import org.bbagisix.exception.BusinessException;
+import org.bbagisix.exception.ErrorCode;
 import org.bbagisix.user.domain.UserVO;
 import org.bbagisix.user.dto.CustomOAuth2User;
 import org.bbagisix.user.dto.SignUpRequest;
@@ -34,6 +38,9 @@ public class UserService {
 	public UserResponse getCurrentUser(Authentication authentication) {
 		CustomOAuth2User currentUser = (CustomOAuth2User) authentication.getPrincipal();
 		UserVO userVO = userMapper.findByUserId(currentUser.getUserId());
+		if (userVO == null) {
+			throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+		}
 
 		return UserResponse.builder()
 			.userId(userVO.getUserId())
@@ -60,7 +67,7 @@ public class UserService {
 	@Transactional
 	public String signUp(SignUpRequest signUpRequest, HttpServletResponse response) {
 		if (isEmailDuplicate(signUpRequest.getEmail())) {
-			return "이미 사용 중인 이메일입니다.";
+			throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
 		}
 
 		String encodedPassword = passwordEncoder.encode(signUpRequest.getPassword());
@@ -68,7 +75,7 @@ public class UserService {
 		UserVO user = UserVO.builder()
 			.name(signUpRequest.getName())
 			.nickname(signUpRequest.getNickname())
-			.password(encodedPassword) // 암호화된 비밀번호 저장
+			.password(encodedPassword)
 			.email(signUpRequest.getEmail())
 			.emailVerified(false)
 			.assetConnected(false)
@@ -93,12 +100,8 @@ public class UserService {
 	@Transactional
 	public String login(String email, String password, HttpServletResponse response) {
 		UserVO user = userMapper.findByEmail(email);
-		if (user == null) {
-			return "존재하지 않는 이메일입니다.";
-		}
-
-		if (!passwordEncoder.matches(password, user.getPassword())) {
-			return "비밀번호가 일치하지 않습니다.";
+		if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
+			throw new BusinessException(ErrorCode.USER_NOT_FOUND);
 		}
 
 		// JWT 토큰 생성
@@ -151,7 +154,7 @@ public class UserService {
 	@Transactional
 	public String sendVerificationCode(String email) {
 		if (userMapper.countByEmail(email) > 0) {
-			return "이미 사용 중인 이메일입니다.";
+			throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
 		}
 		String code = emailService.generateVerificationCode();
 		verificationStorageService.saveCode(email, code);

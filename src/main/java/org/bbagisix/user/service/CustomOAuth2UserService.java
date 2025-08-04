@@ -3,6 +3,8 @@ package org.bbagisix.user.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.bbagisix.exception.BusinessException;
+import org.bbagisix.exception.ErrorCode;
 import org.bbagisix.user.dto.CustomOAuth2User;
 import org.bbagisix.user.dto.GoogleResponse;
 import org.bbagisix.user.dto.NaverResponse;
@@ -25,8 +27,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        log.info("OAuth2 로그인, DB 조회 및 가입 처리 시작");
-        
         // 기본 OAuth2UserService로 사용자 정보 가져오기
         OAuth2User oAuth2User = super.loadUser(userRequest);
         System.out.println(oAuth2User);
@@ -40,8 +40,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         } else if (registrationId.equals("google")) {
             oAuth2Response = new GoogleResponse(oAuth2User.getAttributes());
         } else {
-            log.error("지원하지 않는 소셜 로그인입니다.");
-            return null;
+            throw new BusinessException(ErrorCode.SOCIAL_NOT_FOUND);
         }
         String socialId = oAuth2Response.getProvider() + "_" + oAuth2Response.getProviderId();
         String email = oAuth2Response.getEmail();
