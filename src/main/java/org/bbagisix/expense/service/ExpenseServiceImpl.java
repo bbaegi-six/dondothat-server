@@ -8,6 +8,8 @@ import org.bbagisix.category.mapper.CategoryMapper;
 import org.bbagisix.expense.domain.ExpenseVO;
 import org.bbagisix.expense.dto.ExpenseDTO;
 import org.bbagisix.expense.mapper.ExpenseMapper;
+import org.bbagisix.exception.BusinessException;
+import org.bbagisix.exception.ErrorCode;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -24,77 +26,156 @@ public class ExpenseServiceImpl implements ExpenseService {
 
 	@Override
 	public ExpenseDTO createExpense(ExpenseDTO expenseDTO) {
-		ExpenseVO vo = dtoToVo(expenseDTO);
-		expenseMapper.insert(vo);
-		return voToDto(vo);
+		try {
+			ExpenseVO vo = dtoToVo(expenseDTO);
+			expenseMapper.insert(vo);
+			if (vo.getExpenditureId() == null) {
+				throw new BusinessException(ErrorCode.EXPENSE_CREATE_FAILED);
+			}
+			return voToDto(vo);
+		} catch (BusinessException e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("소비내역 생성 중 예상치 못한 오류 발생: {}", e.getMessage(), e);
+			throw new BusinessException(ErrorCode.EXPENSE_CREATE_FAILED, e);
+		}
 	}
 
 	@Override
 	public ExpenseDTO getExpenseById(Long expenditureId, Long userId) {
-		ExpenseVO vo = expenseMapper.findById(expenditureId);
-		if (vo == null || !vo.getUserId().equals(userId)) {
-			throw new RuntimeException("소비 내역을 찾을 수 없거나 접근 권한이 없습니다. id=" + expenditureId);
+		try {
+			ExpenseVO vo = expenseMapper.findById(expenditureId);
+			if (vo == null) {
+				throw new BusinessException(ErrorCode.EXPENSE_NOT_FOUND);
+			}
+			if (!vo.getUserId().equals(userId)) {
+				throw new BusinessException(ErrorCode.EXPENSE_ACCESS_DENIED);
+			}
+			return voToDto(vo);
+		} catch (BusinessException e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("소비내역 조회 중 예상치 못한 오류 발생: expenditureId={}, userId={}, error={}", expenditureId, userId, e.getMessage(), e);
+			throw new BusinessException(ErrorCode.DATA_ACCESS_ERROR, e);
 		}
-		return voToDto(vo);
 	}
 
 	@Override
 	public List<ExpenseDTO> getExpensesByUserId(Long userId) {
-		return expenseMapper.findAllByUserId(userId).stream().map(this::voToDto).collect(Collectors.toList());
+		try {
+			return expenseMapper.findAllByUserId(userId).stream().map(this::voToDto).collect(Collectors.toList());
+		} catch (Exception e) {
+			log.error("사용자 소비내역 목록 조회 중 오류 발생: userId={}, error={}", userId, e.getMessage(), e);
+			throw new BusinessException(ErrorCode.DATA_ACCESS_ERROR, e);
+		}
 	}
 
 	@Override
 	public ExpenseDTO updateExpense(Long expenditureId, ExpenseDTO expenseDTO, Long userId) {
-		ExpenseVO vo = expenseMapper.findById(expenditureId);
-		if (vo == null || !vo.getUserId().equals(userId)) {
-			throw new RuntimeException("수정할 소비 내역을 찾을 수 없거나 접근 권한이 없습니다. id=" + expenditureId);
+		try {
+			ExpenseVO vo = expenseMapper.findById(expenditureId);
+			if (vo == null) {
+				throw new BusinessException(ErrorCode.EXPENSE_NOT_FOUND);
+			}
+			if (!vo.getUserId().equals(userId)) {
+				throw new BusinessException(ErrorCode.EXPENSE_ACCESS_DENIED);
+			}
+
+			vo.setCategoryId(expenseDTO.getCategoryId());
+			vo.setAssetId(expenseDTO.getAssetId());
+			vo.setAmount(expenseDTO.getAmount());
+			vo.setDescription(expenseDTO.getDescription());
+			vo.setExpenditureDate(expenseDTO.getExpenditureDate());
+
+			int result = expenseMapper.update(vo);
+			if (result != 1) {
+				throw new BusinessException(ErrorCode.EXPENSE_UPDATE_FAILED, 
+					"예상 업데이트 수: 1, 실제: " + result);
+			}
+			return voToDto(expenseMapper.findById(expenditureId));
+		} catch (BusinessException e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("소비내역 수정 중 예상치 못한 오류 발생: expenditureId={}, userId={}, error={}", expenditureId, userId, e.getMessage(), e);
+			throw new BusinessException(ErrorCode.EXPENSE_UPDATE_FAILED, e);
 		}
-
-		vo.setCategoryId(expenseDTO.getCategoryId());
-		vo.setAssetId(expenseDTO.getAssetId());
-		vo.setAmount(expenseDTO.getAmount());
-		vo.setDescription(expenseDTO.getDescription());
-		vo.setExpenditureDate(expenseDTO.getExpenditureDate());
-
-		expenseMapper.update(vo);
-		return voToDto(expenseMapper.findById(expenditureId));
 	}
 
 	@Override
 	public void deleteExpense(Long expenditureId, Long userId) {
-		ExpenseVO vo = expenseMapper.findById(expenditureId);
-		if (vo == null || !vo.getUserId().equals(userId)) {
-			throw new RuntimeException("삭제할 소비 내역을 찾을 수 없거나 접근 권한이 없습니다. id=" + expenditureId);
+		try {
+			ExpenseVO vo = expenseMapper.findById(expenditureId);
+			if (vo == null) {
+				throw new BusinessException(ErrorCode.EXPENSE_NOT_FOUND);
+			}
+			if (!vo.getUserId().equals(userId)) {
+				throw new BusinessException(ErrorCode.EXPENSE_ACCESS_DENIED);
+			}
+			int result = expenseMapper.delete(expenditureId);
+			if (result != 1) {
+				throw new BusinessException(ErrorCode.EXPENSE_DELETE_FAILED, 
+					"예상 삭제 수: 1, 실제: " + result);
+			}
+		} catch (BusinessException e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("소비내역 삭제 중 예상치 못한 오류 발생: expenditureId={}, userId={}, error={}", expenditureId, userId, e.getMessage(), e);
+			throw new BusinessException(ErrorCode.EXPENSE_DELETE_FAILED, e);
 		}
-		expenseMapper.delete(expenditureId);
 	}
 
 	@Override
 	public List<ExpenseVO> getRecentExpenses(Long userId) {
-		return expenseMapper.getRecentExpenses(userId);
+		try {
+			return expenseMapper.getRecentExpenses(userId);
+		} catch (Exception e) {
+			log.error("최근 소비내역 조회 중 오류 발생: userId={}, error={}", userId, e.getMessage(), e);
+			throw new BusinessException(ErrorCode.DATA_ACCESS_ERROR, e);
+		}
 	}
 
 	@Override
 	public ExpenseDTO getExpenseByIdInternal(Long expenditureId) {
-		ExpenseVO vo = expenseMapper.findById(expenditureId);
-		return voToDto(vo);
+		try {
+			ExpenseVO vo = expenseMapper.findById(expenditureId);
+			if (vo == null) {
+				throw new BusinessException(ErrorCode.EXPENSE_NOT_FOUND);
+			}
+			return voToDto(vo);
+		} catch (BusinessException e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("소비내역 내부 조회 중 오류 발생: expenditureId={}, error={}", expenditureId, e.getMessage(), e);
+			throw new BusinessException(ErrorCode.DATA_ACCESS_ERROR, e);
+		}
 	}
 
 	@Override
 	public ExpenseDTO updateExpenseInternal(Long expenditureId, ExpenseDTO expenseDTO) {
-		ExpenseVO vo = expenseMapper.findById(expenditureId);
-		if (vo == null) {
-			throw new RuntimeException("수정할 소비 내역이 없습니다. id=" + expenditureId);
+		try {
+			ExpenseVO vo = expenseMapper.findById(expenditureId);
+			if (vo == null) {
+				throw new BusinessException(ErrorCode.EXPENSE_NOT_FOUND);
+			}
+
+			vo.setCategoryId(expenseDTO.getCategoryId());
+			vo.setAssetId(expenseDTO.getAssetId());
+			vo.setAmount(expenseDTO.getAmount());
+			vo.setDescription(expenseDTO.getDescription());
+			vo.setExpenditureDate(expenseDTO.getExpenditureDate());
+
+			int result = expenseMapper.update(vo);
+			if (result != 1) {
+				throw new BusinessException(ErrorCode.EXPENSE_UPDATE_FAILED, 
+					"예상 업데이트 수: 1, 실제: " + result);
+			}
+			return voToDto(expenseMapper.findById(expenditureId));
+		} catch (BusinessException e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("소비내역 내부 업데이트 중 오류 발생: expenditureId={}, error={}", expenditureId, e.getMessage(), e);
+			throw new BusinessException(ErrorCode.EXPENSE_UPDATE_FAILED, e);
 		}
-
-		vo.setCategoryId(expenseDTO.getCategoryId());
-		vo.setAssetId(expenseDTO.getAssetId());
-		vo.setAmount(expenseDTO.getAmount());
-		vo.setDescription(expenseDTO.getDescription());
-		vo.setExpenditureDate(expenseDTO.getExpenditureDate());
-
-		expenseMapper.update(vo);
-		return voToDto(expenseMapper.findById(expenditureId));
 	}
 
 	private ExpenseVO dtoToVo(ExpenseDTO dto) {
