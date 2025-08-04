@@ -6,8 +6,8 @@
 <mapper namespace="org.bbagisix.user.mapper.UserMapper">
 
     <insert id="insertUser" parameterType="org.bbagisix.user.domain.UserVO" useGeneratedKeys="true" keyProperty="userId">
-        insert into user (name, nickname, password, email, email_verified, role, social_id)
-        values (#{name}, #{nickname}, #{password}, #{email}, #{emailVerified}, #{role}, #{socialId})
+        insert into user (name, nickname, password, email, age, email_verified, role, social_id)
+        values (#{name}, #{nickname}, #{password}, #{email}, #{age}, #{emailVerified}, #{role}, #{socialId})
     </insert>
 
     <select id="selectUserByEmail" resultType="org.bbagisix.user.domain.UserVO">

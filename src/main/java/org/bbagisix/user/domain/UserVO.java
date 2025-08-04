@@ -17,6 +17,7 @@ public class UserVO {
 	private String email;
 	private String password;
 	private String nickname;
+	private Integer age;
 	private String socialId;
 	private String role;
 	private boolean emailVerified;
