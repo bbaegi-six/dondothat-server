@@ -43,7 +43,6 @@
     <update id="update" parameterType="org.bbagisix.expense.domain.ExpenseVO">
         UPDATE expenditure
         SET category_id      = #{categoryId},
---             asset_id         = #{assetId},
             amount           = #{amount},
             description      = #{description},
             expenditure_date = #{expenditureDate}

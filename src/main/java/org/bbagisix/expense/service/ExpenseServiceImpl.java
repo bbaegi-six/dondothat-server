@@ -82,10 +82,11 @@ public class ExpenseServiceImpl implements ExpenseService {
 			}
 
 			vo.setCategoryId(expenseDTO.getCategoryId());
-			vo.setAssetId(expenseDTO.getAssetId());
+			vo.setAssetId(null); // asset 패키지 구현 전까지 null 처리
 			vo.setAmount(expenseDTO.getAmount());
 			vo.setDescription(expenseDTO.getDescription());
 			vo.setExpenditureDate(expenseDTO.getExpenditureDate());
+			vo.setUserId(userId); // WHERE 조건을 위해 필요
 
 			int result = expenseMapper.update(vo);
 			if (result != 1) {
@@ -159,7 +160,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 			}
 
 			vo.setCategoryId(expenseDTO.getCategoryId());
-			vo.setAssetId(expenseDTO.getAssetId());
+			vo.setAssetId(null); // asset 패키지 구현 전까지 null 처리
 			vo.setAmount(expenseDTO.getAmount());
 			vo.setDescription(expenseDTO.getDescription());
 			vo.setExpenditureDate(expenseDTO.getExpenditureDate());
