@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.bbagisix.user.dto.CustomOAuth2User;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -30,35 +32,39 @@ public class ExpenseController {
 	private final CategoryService categoryService;
 
 	@GetMapping
-	public ResponseEntity<List<ExpenseDTO>> getAllExpenses(@RequestParam Long userId) {
-		List<ExpenseDTO> expenses = expenseService.getExpensesByUserId(userId);
+	public ResponseEntity<List<ExpenseDTO>> getAllExpenses(Authentication authentication) {
+		CustomOAuth2User currentUser = (CustomOAuth2User) authentication.getPrincipal();
+		List<ExpenseDTO> expenses = expenseService.getExpensesByUserId(currentUser.getUserId());
 		return ResponseEntity.ok(expenses);
 	}
 
 	@PostMapping
-	public ResponseEntity<ExpenseDTO> createExpense(@RequestBody ExpenseDTO expenseDTO) {
-		// user 패키지 구현 시 수정
-		expenseDTO.setUserId(1L);
+	public ResponseEntity<ExpenseDTO> createExpense(@RequestBody ExpenseDTO expenseDTO, Authentication authentication) {
+		CustomOAuth2User currentUser = (CustomOAuth2User) authentication.getPrincipal();
+		expenseDTO.setUserId(currentUser.getUserId());
 		ExpenseDTO createdExpense = expenseService.createExpense(expenseDTO);
 		return new ResponseEntity<>(createdExpense, HttpStatus.CREATED);
 	}
 
 	@GetMapping("/{expenditureId}")
-	public ResponseEntity<ExpenseDTO> getExpenseById(@PathVariable Long expenditureId) {
-		ExpenseDTO expense = expenseService.getExpenseById(expenditureId);
+	public ResponseEntity<ExpenseDTO> getExpenseById(@PathVariable Long expenditureId, Authentication authentication) {
+		CustomOAuth2User currentUser = (CustomOAuth2User) authentication.getPrincipal();
+		ExpenseDTO expense = expenseService.getExpenseById(expenditureId, currentUser.getUserId());
 		return ResponseEntity.ok(expense);
 	}
 
 	@PutMapping("/{expenditureId}")
 	public ResponseEntity<ExpenseDTO> updateExpense(@PathVariable Long expenditureId,
-		@RequestBody ExpenseDTO expenseDTO) {
-		ExpenseDTO updatedExpense = expenseService.updateExpense(expenditureId, expenseDTO);
+		@RequestBody ExpenseDTO expenseDTO, Authentication authentication) {
+		CustomOAuth2User currentUser = (CustomOAuth2User) authentication.getPrincipal();
+		ExpenseDTO updatedExpense = expenseService.updateExpense(expenditureId, expenseDTO, currentUser.getUserId());
 		return ResponseEntity.ok(updatedExpense);
 	}
 
 	@DeleteMapping("/{expenditureId}")
-	public ResponseEntity<ExpenseDTO> deleteExpense(@PathVariable Long expenditureId) {
-		expenseService.deleteExpense(expenditureId);
+	public ResponseEntity<ExpenseDTO> deleteExpense(@PathVariable Long expenditureId, Authentication authentication) {
+		CustomOAuth2User currentUser = (CustomOAuth2User) authentication.getPrincipal();
+		expenseService.deleteExpense(expenditureId, currentUser.getUserId());
 		return ResponseEntity.noContent().build();
 	}
 
