@@ -16,11 +16,13 @@ import org.bbagisix.exception.BusinessException;
 import org.bbagisix.exception.ErrorCode;
 import org.bbagisix.chat.service.ChatService;
 import org.bbagisix.chat.service.ChatSessionService;
+import org.bbagisix.user.dto.CustomOAuth2User;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,7 +43,33 @@ public class ChatController {
 	private final ChatSessionService chatSessionService;
 
 	/**
-	 * 참여중인 채팅방 목록 조회
+	 * 현재 로그인한 사용자의 챌린지 상태 조회 (JWT 기반)
+	 */
+	@GetMapping("/api/chat/status/me")
+	public UserChallengeStatusResponse getCurrentUserChallengeStatus(Authentication authentication) {
+		CustomOAuth2User currentUser = (CustomOAuth2User)authentication.getPrincipal();
+		return chatService.getUserChallengeStatus(currentUser.getUserId());
+	}
+
+	/**
+	 * 현재 로그인한 사용자가 참여중인 채팅방 목록 조회 (JWT 기반)
+	 */
+	@GetMapping("/api/chat/user/me")
+	public UserChatRoomResponse getCurrentUserChatRoom(Authentication authentication) {
+		CustomOAuth2User currentUser = (CustomOAuth2User)authentication.getPrincipal();
+		Map<String, Object> chatRoomMap = chatService.getUserCurrentChatRoom(currentUser.getUserId());
+
+		return UserChatRoomResponse.builder()
+			.userId(getLongFromMap(chatRoomMap, "userId"))
+			.challengeId(getLongFromMap(chatRoomMap, "challengeId"))
+			.challengeName(getStringFromMap(chatRoomMap, "challengeName"))
+			.status(getStringFromMap(chatRoomMap, "status"))
+			.message(getStringFromMap(chatRoomMap, "message"))
+			.build();
+	}
+
+	/**
+	 * 참여중인 채팅방 목록 조회 (기존 - 호환성 유지)
 	 */
 	@GetMapping("/api/chat/user/{userId}")
 	public UserChatRoomResponse getUserCurrentChatRoom(@PathVariable Long userId) {
@@ -99,6 +127,33 @@ public class ChatController {
 			.challengeId(challengeId)
 			.participantCount(count)
 			.build();
+	}
+
+	/**
+	 * 채팅 메시지 이력 조회 (JWT 기반)
+	 */
+	@GetMapping("/api/chat/{challengeId}/messages")
+	public List<ChatMessageDTO> getChatHistory(@PathVariable Long challengeId,
+		Authentication authentication,
+		@RequestParam(defaultValue = "50") int limit) {
+
+		CustomOAuth2User currentUser = (CustomOAuth2User)authentication.getPrincipal();
+
+		// 사용자가 해당 챌린지에 참여 중인지 확인
+		if (!chatService.isUserParticipatingInChallenge(challengeId, currentUser.getUserId())) {
+			throw new BusinessException(ErrorCode.CHALLENGE_ACCESS_DENIED);
+		}
+
+		// 사용자가 챌린지에 참여한 시점 이후의 메시지만 조회
+		return chatService.getChatHistory(challengeId, currentUser.getUserId(), limit);
+	}
+
+	/**
+	 * 사용자 챌린지 상태 조회 (기존 - 호환성 유지)
+	 */
+	@GetMapping("/api/chat/status/{userId}")
+	public UserChallengeStatusResponse getUserChallengeStatus(@PathVariable Long userId) {
+		return chatService.getUserChallengeStatus(userId);
 	}
 
 	/**
@@ -191,29 +246,24 @@ public class ChatController {
 	/**
 	 * 채팅방 입장 시 이전 메시지 이력 조회
 	 */
-	@GetMapping("/api/chat/{challengeId}/messages")
-	public List<ChatMessageDTO> getChatHistory(@PathVariable Long challengeId,
-		@RequestParam Long userId,
-		@RequestParam(defaultValue = "50") int limit) {
-
-		// 사용자가 해당 챌린지에 참여 중인지 확인
-		if (!chatService.isUserParticipatingInChallenge(challengeId, userId)) {
-			throw new BusinessException(ErrorCode.CHALLENGE_ACCESS_DENIED);
-		}
-
-		// 사용자가 챌린지에 참여한 시점 이후의 메시지만 조회
-		return chatService.getChatHistory(challengeId, userId, limit);
-	}
+	// @GetMapping("/api/chat/{challengeId}/messages")
+	// public List<ChatMessageDTO> getChatHistory(@PathVariable Long challengeId,
+	// 	@RequestParam Long userId,
+	// 	@RequestParam(defaultValue = "50") int limit) {
+	//
+	// 	// 사용자가 해당 챌린지에 참여 중인지 확인
+	// 	if (!chatService.isUserParticipatingInChallenge(challengeId, userId)) {
+	// 		throw new BusinessException(ErrorCode.CHALLENGE_ACCESS_DENIED);
+	// 	}
+	//
+	// 	// 사용자가 챌린지에 참여한 시점 이후의 메시지만 조회
+	// 	return chatService.getChatHistory(challengeId, userId, limit);
+	// }
 
 	/**
 	 * WebSocket 연결 해제 시 자동 호출
 	 * 시스템이 제어하는 퇴장 처리
 	 */
-	@GetMapping("/api/chat/status/{userId}")
-	public UserChallengeStatusResponse getUserChallengeStatus(@PathVariable Long userId) {
-		return chatService.getUserChallengeStatus(userId);
-	}
-
 	@EventListener
 	public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
 		try {
