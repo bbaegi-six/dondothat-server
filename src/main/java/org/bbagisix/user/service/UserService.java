@@ -47,6 +47,7 @@ public class UserService {
 			.name(userVO.getName())
 			.email(userVO.getEmail())
 			.nickname(userVO.getNickname())
+			.age(userVO.getAge())
 			.role(userVO.getRole())
 			.assetConnected(userVO.isAssetConnected())
 			.build();
@@ -77,6 +78,7 @@ public class UserService {
 			.nickname(signUpRequest.getNickname())
 			.password(encodedPassword)
 			.email(signUpRequest.getEmail())
+			.age(signUpRequest.getAge())
 			.emailVerified(false)
 			.assetConnected(false)
 			.role("USER")
