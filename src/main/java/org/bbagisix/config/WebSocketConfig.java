@@ -35,11 +35,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		// STOMP 엔드포인트 등록
-		registry.addEndpoint("/ws/chat")
+		registry.addEndpoint("/api/ws/chat")
 			.setAllowedOriginPatterns("*")        // CORS 설정 (구체적인 도메인으로 추후 변경)
 			.withSockJS();                // SockJS fallback 옵션
 
-		registry.addEndpoint("/ws/chat")
+		registry.addEndpoint("/api/ws/chat")
 			.setAllowedOriginPatterns(
 				"http://localhost:*",
 				"http://127.0.0.1:*",
