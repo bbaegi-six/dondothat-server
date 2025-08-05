@@ -15,15 +15,16 @@ import org.bbagisix.codef.domain.CodefAccessTokenVO;
 import org.bbagisix.codef.mapper.CodefAccessTokenMapper;
 import org.bbagisix.exception.BusinessException;
 import org.bbagisix.exception.ErrorCode;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
+@RequiredArgsConstructor
 @Service
 @Log4j2
 public class CodefAccessTokenService {
@@ -35,8 +36,7 @@ public class CodefAccessTokenService {
 	@Value("${CODEF_CLIENT_SECRET:}")
 	private String clientSecret;
 
-	@Autowired
-	private CodefAccessTokenMapper codefAccessTokenMapper;
+	private final CodefAccessTokenMapper codefAccessTokenMapper;
 
 	private String accessToken;
 	private long expiresTime;

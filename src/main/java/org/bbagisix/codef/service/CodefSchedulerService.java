@@ -13,31 +13,28 @@ import org.bbagisix.asset.service.AssetService;
 import org.bbagisix.codef.dto.CodefTransactionResDTO;
 import org.bbagisix.expense.domain.ExpenseVO;
 import org.bbagisix.expense.mapper.ExpenseMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 @Service
 @Log4j2
+@RequiredArgsConstructor
 public class CodefSchedulerService {
 
-	@Autowired
-	private AssetMapper assetMapper;
+	private final AssetMapper assetMapper;
 
-	@Autowired
-	private ExpenseMapper expenseMapper;
+	private final ExpenseMapper expenseMapper;
 
-	@Autowired
-	private CodefApiService codefApiService;
+	private final CodefApiService codefApiService;
 
 	private static final Long TBC = 14L; // 카테고리 id : TBC 미지정
 	private static final Long INCOME = 13L; // 카테고리 id : 수입
 
-	@Autowired
-	private AssetService assetService;
+	private final AssetService assetService;
 
 	// 10분마다 실행 (cron: 초 분 시 일 월 요일)
 	@Scheduled(cron = "0 */10 * * * *")

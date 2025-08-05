@@ -9,7 +9,6 @@ import org.bbagisix.exception.BusinessException;
 import org.bbagisix.exception.ErrorCode;
 import org.bbagisix.expense.domain.ExpenseVO;
 import org.bbagisix.expense.mapper.ExpenseMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,17 +27,15 @@ import lombok.extern.log4j.Log4j2;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 @Log4j2
 public class AssetService {
 
-	@Autowired
-	private AssetMapper assetMapper;
+	private final AssetMapper assetMapper;
 
-	@Autowired
-	private CodefApiService codefApiService;
+	private final CodefApiService codefApiService;
 
-	@Autowired
-	private ExpenseMapper expenseMapper;
+	private final ExpenseMapper expenseMapper;
 
 
 	private static final int MONTH = 3; // 처음 3개월 소비내역 조회

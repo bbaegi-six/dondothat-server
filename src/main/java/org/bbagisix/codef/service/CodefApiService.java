@@ -22,7 +22,6 @@ import org.bbagisix.codef.dto.CodefTransactionReqDTO;
 import org.bbagisix.codef.dto.CodefTransactionResDTO;
 import org.bbagisix.exception.BusinessException;
 import org.bbagisix.exception.ErrorCode;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -43,14 +42,11 @@ public class CodefApiService {
 	@Value("${CODEF_PUBLIC_KEY:}")
 	private String publicKey;
 
-	@Autowired(required = false)
-	private CodefAccessTokenService accessTokenService;
+	private final CodefAccessTokenService accessTokenService;
 
-	@Autowired
-	private EncryptionUtil encryptionUtil;
+	private final EncryptionUtil encryptionUtil;
 
-	@Autowired
-	private AssetMapper assetMapper;
+	private final AssetMapper assetMapper;
 
 	private static final String CONNECTED_ID_URL = "https://development.codef.io/v1/account/create";
 	private static final String TRANSACTION_LIST_URL = "https://development.codef.io/v1/kr/bank/p/account/transaction-list";
