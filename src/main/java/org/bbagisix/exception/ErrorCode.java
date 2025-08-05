@@ -54,22 +54,24 @@ public enum ErrorCode {
 	LLM_CLASSIFY_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "L001", "카테고리 분류에 실패했습니다."),
 	LLM_ANALYTICS_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "L002", "과소비 카테고리 분석에 실패했습니다."),
 
-	// 자산/계좌 관련 에러 - 간단한 공통 메시지로 변경
+	// 자산/계좌 관련 에러
 	ASSET_FAIL(HttpStatus.BAD_REQUEST, "A001", "계좌 처리 중 오류가 발생했습니다."),
 	ASSET_NOT_FOUND(HttpStatus.NOT_FOUND, "A002", "계좌를 찾을 수 없습니다."),
 	ASSET_ALREADY_EXISTS(HttpStatus.CONFLICT, "A003", "이미 존재하는 계좌입니다."),
 
-	// 거래내역 관련 에러 - 간단한 공통 메시지로 변경
+	// 거래내역 관련 에러
 	TRANSACTION_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "T001", "거래내역 처리 중 오류가 발생했습니다."),
 	TRANSACTION_NOT_FOUND(HttpStatus.NOT_FOUND, "T002", "거래내역을 찾을 수 없습니다."),
 
-	// Codef API 관련 에러 - 간단한 공통 메시지로 변경
+	// Codef API 관련 에러
 	CODEF_FAIL(HttpStatus.SERVICE_UNAVAILABLE, "CF001", "Codef API 처리 중 오류가 발생했습니다."),
 	CODEF_AUTH_FAIL(HttpStatus.UNAUTHORIZED, "CF002", "Codef API 인증에 실패했습니다."),
 
 	// 암호화 관련 에러
 	ENCRYPTION_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "E001", "암호화 처리 중 오류가 발생했습니다."),
 
+	// Authentication 관련 에러
+	AUTHENTICATION_REQUIRED(HttpStatus.INTERNAL_SERVER_ERROR,"AU01", "Authentication인증이 필요합니다."),
 
 	// 일반적인 시스템 에러
 	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S001", "서버 내부 오류가 발생했습니다."),
