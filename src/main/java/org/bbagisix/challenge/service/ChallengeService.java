@@ -1,6 +1,12 @@
 package org.bbagisix.challenge.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
+
+import org.bbagisix.analytics.service.AnalyticsService;
+import org.bbagisix.category.dto.CategoryDTO;
 import org.bbagisix.challenge.domain.ChallengeVO;
 import org.bbagisix.challenge.dto.ChallengeDTO;
 import org.bbagisix.challenge.mapper.ChallengeMapper;
@@ -13,6 +19,7 @@ import org.springframework.stereotype.Service;
 public class ChallengeService {
 
 	private final ChallengeMapper challengeMapper;
+	private final AnalyticsService analyticsService;
 
 	public ChallengeDTO getChallengeById(Long challengeId) {
 		if (challengeId == null) {
@@ -25,6 +32,28 @@ public class ChallengeService {
 		}
 
 		return ChallengeDTO.from(vo);
+	}
+
+	public List<ChallengeDTO> getRecommendedChallenges(Long userId) {
+		if (userId == null) {
+			throw new BusinessException(ErrorCode.USER_ID_REQUIRED);
+		}
+
+		// 사용자 존재 여부 확인
+		if (!challengeMapper.existsUser(userId)) {
+			throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+		}
+
+		// AnalyticsService에서 LLM 기반 추천 카테고리 3개 조회
+		List<Long> categoryIds = analyticsService.getTopCategories(userId);
+
+		// 추천 카테고리에 해당하는 챌린지들 조회
+		List<ChallengeVO> recommendedChallenges = challengeMapper.findChallengesByCategoryIds(categoryIds, userId);
+
+		// VO를 DTO로 변환하여 반환
+		return recommendedChallenges.stream()
+			.map(ChallengeDTO::from)
+			.collect(Collectors.toList());
 	}
 
 	public void joinChallenge(Long challengeId, Long userId) {

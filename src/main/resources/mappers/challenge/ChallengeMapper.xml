@@ -74,5 +74,27 @@
           AND user_id = #{userId}
     </delete>
 
-
+    <!-- 7. 추천 카테고리에 해당하는 챌린지들 조회 -->
+    <select id="findChallengesByCategoryIds" resultType="org.bbagisix.challenge.domain.ChallengeVO">
+        SELECT
+        c.challenge_id,
+        c.category_id,
+        c.title,
+        c.summary,
+        c.description
+        FROM challenge c
+        WHERE c.category_id IN
+        <foreach collection="categoryIds" item="categoryId" open="(" separator="," close=")">
+            #{categoryId}
+        </foreach>
+        AND NOT EXISTS (
+        SELECT 1
+        FROM user_challenge uc
+        WHERE uc.challenge_id = c.challenge_id
+        AND uc.user_id = #{userId}
+        AND uc.status = 'ongoing'
+        )
+        ORDER BY c.challenge_id
+        LIMIT 3
+    </select>
 </mapper>
