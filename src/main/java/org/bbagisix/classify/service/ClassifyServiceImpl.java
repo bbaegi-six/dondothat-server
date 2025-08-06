@@ -24,17 +24,31 @@ public class ClassifyServiceImpl implements ClassifyService {
 
 	@Override
 	public List<ExpenseVO> classify(List<ExpenseVO> expenses) {
-
 		AtomicLong counter = new AtomicLong(1);
 
-		List<Map<String, Object>> exps = expenses.stream()
-			.map(e -> Map.<String, Object>of(
-				"expenditure_id", counter.getAndIncrement(),
-				"description", e.getDescription()
-			))
+		// categoryId == 14인 것만 분류 대상
+		List<ExpenseVO> toClassify = expenses.stream()
+			.filter(e -> e.getCategoryId() != null && e.getCategoryId() == 14)
 			.collect(Collectors.toList());
 
-		Map<String, Object> payload = Map.<String, Object>of("exps", exps);
+		// 분류 요청에 쓸 payload 구성
+		List<Map<String, Object>> exps = toClassify.stream()
+			.map(e -> {
+				long id = counter.getAndIncrement();
+				e.setExpenditureId(id);
+				return Map.<String, Object>of(
+					"expenditure_id", id,
+					"description", e.getDescription()
+				);
+			})
+			.collect(Collectors.toList());
+
+		// 아무것도 보낼 게 없다면 바로 리턴
+		if (exps.isEmpty()) {
+			return expenses;
+		}
+
+		Map<String, Object> payload = Map.of("exps", exps);
 
 		Map<String, Object> response = restTemplate.postForObject(URL, payload, Map.class);
 		if (response == null || !response.containsKey("results")) {
@@ -43,18 +57,20 @@ public class ClassifyServiceImpl implements ClassifyService {
 
 		List<Map<String, Object>> results = (List<Map<String, Object>>)response.get("results");
 
+		// ID 매칭용 map
 		Map<Long, Long> idToCategory = results.stream()
 			.collect(Collectors.toMap(
 				r -> ((Number)r.get("expenditure_id")).longValue(),
 				r -> ((Number)r.get("category_id")).longValue()
 			));
 
-		// 각 ExpenseVO에 categoryId 설정
-		for (ExpenseVO expense : expenses) {
-			Long categoryId = idToCategory.get(expense.getExpenditureId());
+		// 다시 카테고리 업데이트
+		for (ExpenseVO expense : toClassify) {
+			Long id = expense.getExpenditureId();
+			Long categoryId = idToCategory.get(id);
 			if (categoryId != null) {
 				expense.setCategoryId(categoryId);
-				expense.setExpenditureId(null);
+				expense.setExpenditureId(null); // 임시 ID 초기화
 			}
 		}
 
