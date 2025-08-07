@@ -6,7 +6,7 @@
 <mapper namespace="org.bbagisix.expense.mapper.ExpenseMapper">
     <insert id="insert" parameterType="org.bbagisix.expense.domain.ExpenseVO" useGeneratedKeys="true"
             keyProperty="expenditureId">
---          user_asset 테이블 구현 시 asset_id 추가해야함.
+        --          user_asset 테이블 구현 시 asset_id 추가해야함.
         INSERT INTO expenditure (user_id, category_id, amount, description, expenditure_date)
         VALUES (#{userId}, #{categoryId}, #{amount}, #{description}, #{expenditureDate})
     </insert>
@@ -61,7 +61,7 @@
         SELECT *
         FROM expenditure
         WHERE user_id = #{userId}
-          AND expenditure_date >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)
+          AND expenditure_date >= DATE_SUB(CURDATE(), INTERVAL 2 MONTH)
         ORDER BY expenditure_date DESC
     </select>
 

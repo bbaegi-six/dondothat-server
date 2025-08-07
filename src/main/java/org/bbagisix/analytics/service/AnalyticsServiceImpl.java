@@ -1,11 +1,9 @@
 package org.bbagisix.analytics.service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.bbagisix.category.dto.CategoryDTO;
 import org.bbagisix.category.service.CategoryService;
 import org.bbagisix.exception.BusinessException;
 import org.bbagisix.exception.ErrorCode;
@@ -27,18 +25,18 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 	private final RestTemplate restTemplate = new RestTemplate();
 	private static final String URL = "http://llm-server:8000/analysis";
 
-
 	@Override
-	public List<CategoryDTO> getTopCategories(Long userId) {
+	public List<Long> getTopCategories(Long userId) {
 
 		try {
-			List<ExpenseVO> expenses = expenseService.getRecentExpenses(userId);
+			List<ExpenseVO> expenses = expenseService.getRecentExpenses(userId); // 최근 2달 소비내역
 
 			// FastAPI 서버가 요구하는 형태로 변환
 			List<Map<String, Object>> expsForAnalytics = expenses.stream()
 				.map(e -> Map.<String, Object>of(
 					"category_id", e.getCategoryId(),
-					"amount", e.getAmount()
+					"amount", e.getAmount(),
+					"expenditure_date", e.getExpenditureDate()
 				))
 				.collect(Collectors.toList());
 
@@ -54,14 +52,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 				.map(Number::longValue)
 				.toList();
 
-			List<CategoryDTO> categories = new ArrayList<>();
-			for (Long id : results) {
-				CategoryDTO dto = categoryService.getCategoryById(id);
-				if (dto != null) {
-					categories.add(dto);
-				}
-			}
-			return categories;
+			return results;
 
 		} catch (BusinessException e) {
 			log.warn("비즈니스 예외 발생: code={}, message={}", e.getCode(), e.getMessage());

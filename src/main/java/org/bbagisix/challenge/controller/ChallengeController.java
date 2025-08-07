@@ -1,5 +1,7 @@
 package org.bbagisix.challenge.controller;
 
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import org.bbagisix.challenge.dto.ChallengeDTO;
 import org.bbagisix.challenge.service.ChallengeService;
@@ -32,6 +34,14 @@ public class ChallengeController {
 		} catch (NumberFormatException e) {
 			throw new BusinessException(ErrorCode.CHALLENGE_ID_REQUIRED);
 		}
+	}
+
+	// 2-1. 추천 챌린지 3개 조회 API
+	@GetMapping("/recommendations")
+	public ResponseEntity<List<ChallengeDTO>> getRecommendedChallenges(Authentication authentication) {
+		CustomOAuth2User currentUser = (CustomOAuth2User) authentication.getPrincipal();
+		List<ChallengeDTO> recommendedChallenges = challengeService.getRecommendedChallenges(currentUser.getUserId());
+		return ResponseEntity.ok(recommendedChallenges);
 	}
 
 	// 3. 챌린지 참여 API (ExpenseController 패턴 적용)

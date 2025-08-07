@@ -21,6 +21,7 @@ class ExpsList(BaseModel):
 class ExpForAnalytics(BaseModel):
     category_id: int
     amount: int
+    expenditure_date:datetime
 
 class ExpsAnalytics(BaseModel):
     exps:List[ExpForAnalytics]
@@ -86,14 +87,19 @@ async def classify(list: ExpsList):
 # 분석 API
 @app.post("/analysis")
 async def analysis(list: ExpsAnalytics):
-    simplified = [{"category_id": e.category_id, "amount": e.amount} for e in list.exps]
+    simplified = [
+        {"category_id": e.category_id, 
+        "amount": e.amount, 
+        "expenditure_date":e.expenditure_date.strftime("%Y-%m-%d")
+        } for e in list.exps]
     prompt = f'''
-    소비내역:{simplified}
-    아래 조건을 기준으로 '과소비' 카테고리 상위 3개를 선정하세요:
-    1. 전체 소비 중 비율이 높은 카테고리.
-    2.  배달음식(1), 카페/간식(2), 쇼핑(3), 택시(4), 편의점(5), 문화(6), 술/유흥(7), 등 사치성 소비에 가중치를 둠.
-    3. 절대 지출 금액이 높을 경우 우선 고려.
-    설명 없이 과소비 카테고리 번호만 쉼표로 구분하여 출력하세요. 
+    소비내역: {simplified}
+    아래 조건으로 '과소비' 카테고리 상위 3개를 선정하세요:
+    1. 지난 60~30일 대비 최근 30일 지출 급증한 카테고리.
+    2. 배달음식(1), 카페/간식(2), 쇼핑(3), 택시(4), 편의점(5), 문화(6), 술/유흥(7) 등 사치성 소비에 가중치를 둠.
+    3. 절대 금액이 큰 카테고리 우선.
+    4. 이전 지출이 없던 새로운 카테고리도 고려.
+    상위 3개 카테고리 번호만 쉼표로 구분하여 출력:
     '''
     response = client.chat.completions.create(
         model="gpt-4o",

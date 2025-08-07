@@ -1,6 +1,7 @@
 package org.bbagisix.user.service;
 
 import java.sql.BatchUpdateException;
+import java.util.Currency;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -63,6 +64,13 @@ public class UserService {
 		CustomOAuth2User currentUser = (CustomOAuth2User) authentication.getPrincipal();
 		userMapper.updateNickname(currentUser.getUserId(), nickname);
 		return "닉네임 변경 완료";
+	}
+
+	@Transactional
+	public String updateAssetConnected(Boolean assetConnected, Authentication authentication) {
+		CustomOAuth2User currentUser = (CustomOAuth2User)authentication.getPrincipal();
+		userMapper.updateAssetConnected(currentUser.getUserId(), assetConnected);
+		return "계좌 연동 여부 업데이트 완료: " + assetConnected;
 	}
 
 	@Transactional

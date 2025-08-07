@@ -1,5 +1,7 @@
 package org.bbagisix.challenge.mapper;
 
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.bbagisix.challenge.domain.ChallengeVO;
@@ -11,5 +13,6 @@ public interface ChallengeMapper {
 	boolean existsUser(@Param("userId") Long userId);
 	boolean existsUserChallenge(@Param("challengeId") Long challengeId, @Param("userId") Long userId);
 	void joinChallenge(@Param("challengeId") Long challengeId, @Param("userId") Long userId);
-	void leaveChallenge(@Param("challengeId") Long challengeId, @Param("userId") Long userId);  // 새로 추가
+	void leaveChallenge(@Param("challengeId") Long challengeId, @Param("userId") Long userId);
+	List<ChallengeVO> findChallengesByCategoryIds(@Param("categoryIds") List<Long> categoryIds, @Param("userId") Long userId);
 }

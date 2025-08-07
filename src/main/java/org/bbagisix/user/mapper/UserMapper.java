@@ -23,4 +23,7 @@ public interface UserMapper {
 
 	// 닉네임 업데이트
 	int updateNickname(@Param("userId") Long userId, @Param("nickname") String nickname);
+
+	// 계좌 연동 여부 업데이트
+	void updateAssetConnected(@Param("userId") Long userId, @Param("assetConnected") Boolean assetConnected);
 }
