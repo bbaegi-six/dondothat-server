@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.bbagisix.finproduct.mapper.FinProductMapper">
+
+    <insert id="insertOrUpdateBase" parameterType="org.bbagisix.finproduct.domain.SavingBaseVO">
+        INSERT INTO saving_base (
+            dcls_month, fin_co_no, fin_prdt_cd, kor_co_nm, fin_prdt_nm, 
+            join_way, mtrt_int, spcl_cnd, join_deny, join_member, 
+            etc_note, max_limit, dcls_strt_day, dcls_end_day, fin_co_subm_day
+        )
+        VALUES (
+            #{dclsMonth}, #{finCoNo}, #{finPrdtCd}, #{korCoNm}, #{finPrdtNm}, 
+            #{joinWay}, #{mtrtInt}, #{spclCnd}, #{joinDeny}, #{joinMember}, 
+            #{etcNote}, #{maxLimit}, #{dclsStrtDay}, #{dclsEndDay}, #{finCoSubmDay}
+        )
+        ON DUPLICATE KEY UPDATE
+            kor_co_nm = VALUES(kor_co_nm),
+            fin_prdt_nm = VALUES(fin_prdt_nm),
+            join_way = VALUES(join_way),
+            mtrt_int = VALUES(mtrt_int),
+            spcl_cnd = VALUES(spcl_cnd),
+            join_deny = VALUES(join_deny),
+            join_member = VALUES(join_member),
+            etc_note = VALUES(etc_note),
+            max_limit = VALUES(max_limit),
+            dcls_strt_day = VALUES(dcls_strt_day),
+            dcls_end_day = VALUES(dcls_end_day),
+            fin_co_subm_day = VALUES(fin_co_subm_day);
+    </insert>
+
+    <insert id="insertOrUpdateOption" parameterType="org.bbagisix.finproduct.domain.SavingOptionVO">
+        INSERT INTO saving_option (
+            saving_base_id, dcls_month, fin_co_no, fin_prdt_cd, intr_rate_type, 
+            intr_rate_type_nm, rsrv_type, rsrv_type_nm, save_trm, intr_rate, intr_rate2
+        )
+        VALUES (
+            #{savingBaseId}, #{dclsMonth}, #{finCoNo}, #{finPrdtCd}, #{intrRateType}, 
+            #{intrRateTypeNm}, #{rsrvType}, #{rsrvTypeNm}, #{saveTrm}, #{intrRate}, #{intrRate2}
+        )
+        ON DUPLICATE KEY UPDATE
+            intr_rate_type = VALUES(intr_rate_type),
+            intr_rate_type_nm = VALUES(intr_rate_type_nm),
+            intr_rate = VALUES(intr_rate),
+            intr_rate2 = VALUES(intr_rate2);
+    </insert>
+
+    <select id="findSavingBaseId" parameterType="org.bbagisix.finproduct.domain.SavingBaseVO" resultType="long">
+        SELECT saving_base_id
+        FROM saving_base
+        WHERE fin_co_no = #{finCoNo}
+          AND fin_prdt_cd = #{finPrdtCd}
+          AND dcls_month = #{dclsMonth};
+    </select>
+
+</mapper>
