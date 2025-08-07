@@ -8,6 +8,7 @@ import org.bbagisix.asset.service.AssetService;
 import org.bbagisix.exception.BusinessException;
 import org.bbagisix.exception.ErrorCode;
 import org.bbagisix.user.dto.CustomOAuth2User;
+import org.bbagisix.user.mapper.UserMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,15 +29,17 @@ public class AssetController {
 
 	private final AssetService assetService;
 
+	private final UserMapper userMapper;
+
 	@PostMapping("/connect")
 	public ResponseEntity<Map<String, Object>> connectMainAsset(
 		@RequestBody AssetDTO assetDTO,
 		Authentication authentication
 	) {
 		try{
-			Long userId = getcurUser(authentication).getUserId();
+			Long userId = getUserId(authentication);
 
-			String userName = getcurUser(authentication).getName();
+			String userName = userMapper.getNameByUserId(userId);
 
 			String accountName = assetService.connectMainAsset(userId, assetDTO);
 
@@ -62,9 +65,11 @@ public class AssetController {
 		Authentication authentication
 	) {
 		try {
-			Long userId = getcurUser(authentication).getUserId();
+			Long userId = getUserId(authentication);
+
 			assetService.connectSubAsset(userId, assetDTO);
-			String userName = getcurUser(authentication).getName();
+
+			String userName = userMapper.getNameByUserId(userId);
 			return ResponseEntity.ok(Map.of(
 				"success", true,
 				"message", "서브 계좌 연결이 완료되었습니다.",
@@ -85,7 +90,7 @@ public class AssetController {
 		Authentication authentication
 	) {
 		try{
-			Long userId = getcurUser(authentication).getUserId();
+			Long userId = getUserId(authentication);
 			// 입력값 검증
 			if (userId == null) {
 				throw new BusinessException(ErrorCode.USER_ID_REQUIRED);
@@ -106,8 +111,9 @@ public class AssetController {
 		}
 
 	}
-	// 사용자 추출 및 검증
-	private CustomOAuth2User getcurUser(Authentication authentication) {
+
+	// 사용자 ID 추출 및 검증
+	private Long getUserId(Authentication authentication) {
 		if (authentication == null || authentication.getPrincipal() == null) {
 			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
 		}
@@ -118,7 +124,9 @@ public class AssetController {
 			throw new BusinessException(ErrorCode.USER_ID_REQUIRED);
 		}
 
-		return curUser;
+		Long userId = curUser.getUserId();
+
+		return userId;
 	}
 
 }
