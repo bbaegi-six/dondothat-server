@@ -17,6 +17,7 @@ public interface UserMapper {
 	UserVO findByName(@Param("name") String name);
 	UserVO findBySocialId(@Param("socialId") String socialId);
 	UserVO findByEmail(@Param("email") String email);
+	String getNameByUserId(@Param("userId") Long userId);
 
 	// 이메일 중복 체크
 	int countByEmail(@Param("email") String email);
