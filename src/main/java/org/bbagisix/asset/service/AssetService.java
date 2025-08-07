@@ -45,7 +45,7 @@ public class AssetService {
 	// 1. 계좌 연동 + 3개월 소비내역 저장
 	// POST /api/assets/connect
 	@Transactional
-	public void connectMainAsset(Long userId, AssetDTO assetDTO) {
+	public String connectMainAsset(Long userId, AssetDTO assetDTO) {
 		// 정보 누락
 		if (assetDTO.getBankpw() == null || assetDTO.getBankId() == null || assetDTO.getBankAccount() == null) {
 			throw new BusinessException(ErrorCode.ASSET_FAIL, "필수 계좌 정보가 누락되었습니다.");
@@ -84,7 +84,8 @@ public class AssetService {
 		Long assetId = insertUserAsset(assetVO, "main");
 
 		saveTransactionHistory(assetId, userId, reqDTO);
-
+		String accountName = reqDTO.getResAccountName();
+		return accountName;
 	}
 
 	// 1-2. 서브 계좌 입력
@@ -107,7 +108,7 @@ public class AssetService {
 	}
 
 	// 2. 계좌 삭제
-	public void deleteMainAsset(Long userId, String status) {
+	public void deleteAsset(Long userId, String status) {
 		AssetVO asset = assetMapper.selectAssetByUserIdAndStatus(userId, status);
 		if (asset == null) {
 			throw new BusinessException(ErrorCode.ASSET_NOT_FOUND);
@@ -183,7 +184,9 @@ public class AssetService {
 		List<ExpenseVO> expenseVOList = toExpenseVOList(assetId, userId, resDTO);
 
 		if (!expenseVOList.isEmpty()) {
+			// log.info("llm start.." + expenseVOList.stream().toList());
 			expenseVOList = classifyService.classify(expenseVOList);
+			// log.info("llm end.." + expenseVOList.stream().toList());
 			int insertedCount = assetMapper.insertExpenses(expenseVOList);
 			if (insertedCount != expenseVOList.size()) {
 				throw new BusinessException(ErrorCode.TRANSACTION_FAIL,
