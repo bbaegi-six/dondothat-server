@@ -190,6 +190,27 @@ public class UserServiceTest {
     }
 
     @Test
+    @DisplayName("계좌 연동 여부 업데이트")
+    void updateAssetConnected() {
+        // Given
+        Long userId = 1L;
+        boolean assetConnected = true;
+
+        Authentication authentication = mock(Authentication.class);
+        CustomOAuth2User customOAuth2User = mock(CustomOAuth2User.class);
+
+        when(authentication.getPrincipal()).thenReturn(customOAuth2User);
+        when(customOAuth2User.getUserId()).thenReturn(userId);
+
+        // When
+        String result = userService.updateAssetConnected(assetConnected, authentication);
+
+        // Then
+        assertEquals("계좌 연동 여부 업데이트 완료: " + assetConnected, result);
+        verify(userMapper).updateAssetConnected(userId, assetConnected);
+    }
+
+    @Test
     @DisplayName("정상적인 로그인")
     void login_Success() {
         // Given
