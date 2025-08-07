@@ -185,7 +185,11 @@ public class AssetService {
 
 		if (!expenseVOList.isEmpty()) {
 			// log.info("llm start.." + expenseVOList.stream().toList());
-			expenseVOList = classifyService.classify(expenseVOList);
+			try{
+				expenseVOList = classifyService.classify(expenseVOList);
+			} catch (Exception e) {
+				log.info("llm err.." + e.getMessage());
+			}
 			// log.info("llm end.." + expenseVOList.stream().toList());
 			int insertedCount = assetMapper.insertExpenses(expenseVOList);
 			if (insertedCount != expenseVOList.size()) {
