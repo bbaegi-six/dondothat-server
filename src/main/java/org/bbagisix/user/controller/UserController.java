@@ -53,6 +53,12 @@ public class UserController {
 		return ResponseEntity.ok(userService.updateNickname(authentication, nickname));
 	}
 
+	@PutMapping("/update-assetConnected")
+	public ResponseEntity<String> updateAssetConnected(@Param("assetConnected") Boolean assetConnected,
+		Authentication authentication) {
+		return ResponseEntity.ok(userService.updateAssetConnected(assetConnected, authentication));
+	}
+
 	@GetMapping("/me")
 	public ResponseEntity<UserResponse> getCurrentUser(Authentication authentication) {
 		return ResponseEntity.ok(userService.getCurrentUser(authentication));

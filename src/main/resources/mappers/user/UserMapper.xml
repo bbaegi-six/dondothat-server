@@ -41,4 +41,8 @@
     <update id="updateNickname">
         update user set nickname = #{nickname} where user_id = #{userId}
     </update>
+
+    <update id="updateAssetConnected">
+        update user set asset_connected = #{assetConnected} where user_id = #{userId}
+    </update>
 </mapper>
