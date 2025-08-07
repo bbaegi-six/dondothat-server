@@ -1,6 +1,9 @@
 package org.bbagisix.finproduct.domain;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.math.BigDecimal;
@@ -8,6 +11,9 @@ import java.sql.Timestamp;
 
 @Getter
 @ToString
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class SavingOptionVO {
     private Long savingOptionId;
     private Long savingBaseId; // Foreign Key
