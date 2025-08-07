@@ -1,5 +1,6 @@
 package org.bbagisix.asset.controller;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.bbagisix.asset.dto.AssetDTO;
@@ -32,14 +33,27 @@ public class AssetController {
 		@RequestBody AssetDTO assetDTO,
 		Authentication authentication
 	) {
-		Long userId = getUserId(authentication);
+		try{
+			Long userId = getcurUser(authentication).getUserId();
 
-		assetService.connectMainAsset(userId, assetDTO);
+			String userName = getcurUser(authentication).getName();
 
-		return ResponseEntity.ok(Map.of(
-			"success", true,
-			"message", "메인 계좌 연결이 완료되었습니다."
-		));
+			String accountName = assetService.connectMainAsset(userId, assetDTO);
+
+			String returnStr = userName + "님 " + accountName;
+
+			return ResponseEntity.ok(Map.of(
+				"success", true,
+				"message", "메인 계좌 연결이 완료되었습니다.",
+				"accountName", returnStr
+			));
+		} catch (BusinessException e) {
+			return ResponseEntity.ok(Map.of(
+				"success", false,
+				"message", e.getErrorCode()
+			));
+		}
+
 	}
 
 	@PostMapping("/connect/sub")
@@ -47,47 +61,64 @@ public class AssetController {
 		@RequestBody AssetDTO assetDTO,
 		Authentication authentication
 	) {
-		Long userId = getUserId(authentication);
-		assetService.connectSubAsset(userId, assetDTO);
+		try {
+			Long userId = getcurUser(authentication).getUserId();
+			assetService.connectSubAsset(userId, assetDTO);
+			String userName = getcurUser(authentication).getName();
+			return ResponseEntity.ok(Map.of(
+				"success", true,
+				"message", "서브 계좌 연결이 완료되었습니다.",
+				"accountName", userName + "님 저축계좌"
+			));
+		} catch (BusinessException e) {
+			return ResponseEntity.ok(Map.of(
+				"success", false,
+				"message", e.getErrorCode()
+			));
+		}
 
-		return ResponseEntity.ok(Map.of(
-			"success", true,
-			"message", "서브 계좌 연결이 완료되었습니다."
-		));
 	}
 
 	@DeleteMapping
-	public ResponseEntity<Map<String, Object>> deleteMainAsset(
+	public ResponseEntity<Map<String, Object>> deleteAsset(
 		@RequestParam String status, // main or sub
 		Authentication authentication
 	) {
-		Long userId = getUserId(authentication);
-		// 입력값 검증
-		if (userId == null) {
-			throw new BusinessException(ErrorCode.USER_ID_REQUIRED);
+		try{
+			Long userId = getcurUser(authentication).getUserId();
+			// 입력값 검증
+			if (userId == null) {
+				throw new BusinessException(ErrorCode.USER_ID_REQUIRED);
+			}
+
+			assetService.deleteAsset(userId, status);
+
+			String message = "main".equals(status) ? "메인 계좌가" : "서브 계좌가";
+			return ResponseEntity.ok(Map.of(
+				"success", true,
+				"message", message + " 성공적으로 삭제되었습니다."
+			));
+		} catch (BusinessException e) {
+			return ResponseEntity.ok(Map.of(
+				"success", false,
+				"message", e.getErrorCode()
+			));
 		}
 
-		assetService.deleteMainAsset(userId, status);
-
-		String message = "main".equals(status) ? "메인 계좌가" : "서브 계좌가";
-		return ResponseEntity.ok(Map.of(
-			"success", true,
-			"message", message + " 성공적으로 삭제되었습니다."
-		));
 	}
-	// 사용자 ID 추출 및 검증
-	private Long getUserId(Authentication authentication) {
+	// 사용자 추출 및 검증
+	private CustomOAuth2User getcurUser(Authentication authentication) {
 		if (authentication == null || authentication.getPrincipal() == null) {
 			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
 		}
 
 		CustomOAuth2User curUser = (CustomOAuth2User) authentication.getPrincipal();
-		Long userId = curUser.getUserId();
 
-		if (userId == null) {
+		if (curUser == null) {
 			throw new BusinessException(ErrorCode.USER_ID_REQUIRED);
 		}
 
-		return userId;
+		return curUser;
 	}
+
 }
