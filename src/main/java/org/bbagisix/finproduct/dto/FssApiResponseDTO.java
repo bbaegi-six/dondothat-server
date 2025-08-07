@@ -35,9 +35,9 @@ public class FssApiResponseDTO {
         private String errMsg;
 
         @JsonProperty("baseList")
-        private List<ProductBaseDto> baseList;
+        private List<ProductBaseDTO> baseList;
 
         @JsonProperty("optionList")
-        private List<ProductOptionDto> optionList;
+        private List<ProductOptionDTO> optionList;
     }
 }
