@@ -69,7 +69,9 @@ jobs:
     if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && github.event_name == 'push'
 
     steps:
-      - name: Deploy with Docker Compose
+      - uses: actions/checkout@v3
+
+      - name: Deploy with Docker Compose and Nginx
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -89,25 +91,52 @@ jobs:
             export CODEF_CLIENT_SECRET="${{ secrets.CODEF_CLIENT_SECRET }}"
             export CODEF_PUBLIC_KEY="${{ secrets.CODEF_PUBLIC_KEY }}"
             
+            # SSL 인증서 디렉토리 생성 (없다면)
+            mkdir -p ssl
+            
+            # SSL 인증서 생성 (없다면)
+            if [ ! -f ssl/server.key ] || [ ! -f ssl/server.crt ]; then
+              cd ssl
+              openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+                -keyout server.key -out server.crt \
+                -subj "/C=KR/ST=Seoul/L=Seoul/O=DonDoThat/CN=54.208.50.238"
+              cd ..
+            fi
+            
             # Docker Compose 파일 생성
             cat > docker-compose.yml << EOF
             version: "3.8"
             
             services:
+              nginx:
+                image: nginx:alpine
+                container_name: nginx-proxy
+                ports:
+                  - "80:80"
+                  - "443:443"
+                volumes:
+                  - ./nginx.conf:/etc/nginx/nginx.conf
+                  - ./ssl:/etc/nginx/ssl
+                depends_on:
+                  - dondothat-server
+                networks:
+                  - dondothat-network
+                restart: always
+            
               redis-server:
                 image: redis:7-alpine
                 container_name: redis-server
                 restart: always
-                ports:
-                  - "6379:6379"
+                expose:
+                  - "6379"
                 networks:
                   - dondothat-network
             
               dondothat-server:
                 image: ghcr.io/${{ github.repository_owner }}/dondothat:latest
                 container_name: dondothat-server
-                ports:
-                  - "8080:8080"
+                expose:
+                  - "8080"
                 environment:
                   - SPRING_PROFILES_ACTIVE=prod
                   - DB_HOST=mysql-server
@@ -144,8 +173,8 @@ jobs:
                 environment:
                   - MYSQL_ROOT_PASSWORD=dondothat1234
                   - MYSQL_DATABASE=dondothat
-                ports:
-                  - "3306:3306"
+                expose:
+                  - "3306"
                 volumes:
                   - mysql_data:/var/lib/mysql
                 networks:
@@ -163,6 +192,7 @@ jobs:
             # 최신 이미지 pull
             docker pull ghcr.io/${{ github.repository_owner }}/dondothat:latest
             docker pull redis:7-alpine
+            docker pull nginx:alpine
             
             # 서비스 재시작
             /usr/local/bin/docker-compose down || true
@@ -171,4 +201,15 @@ jobs:
             # 상태 확인
             sleep 15
             /usr/local/bin/docker-compose ps
+            /usr/local/bin/docker-compose logs --tail=10 nginx
             /usr/local/bin/docker-compose logs --tail=10 dondothat-server
+
+      - name: Copy Nginx config to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "nginx/nginx.conf"
+          target: "."
+          strip_components: 1
