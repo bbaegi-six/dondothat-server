@@ -24,4 +24,5 @@ public class UserVO {
 	private boolean assetConnected;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
+	private Long tierId;
 }
