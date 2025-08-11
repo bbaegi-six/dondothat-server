@@ -12,11 +12,17 @@ public interface UserMapper {
 
 	// 조회 메서드
 	UserVO findByUserId(@Param("userId") Long userId);
+
 	UserVO selectUserByEmail(@Param("email") String email);
+
 	UserVO selectUserById(@Param("userId") Long userId);
+
 	UserVO findByName(@Param("name") String name);
+
 	UserVO findBySocialId(@Param("socialId") String socialId);
+
 	UserVO findByEmail(@Param("email") String email);
+
 	String getNameByUserId(@Param("userId") Long userId);
 
 	// 이메일 중복 체크
@@ -27,4 +33,7 @@ public interface UserMapper {
 
 	// 계좌 연동 여부 업데이트
 	void updateAssetConnected(@Param("userId") Long userId, @Param("assetConnected") Boolean assetConnected);
+
+	// 사용자 티어 업데이트
+	int updateUserTier(@Param("userId") Long userId, @Param("tierId") Long tierId);
 }
