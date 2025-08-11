@@ -45,7 +45,7 @@ import java.util.regex.Pattern;
             Controller.class, ControllerAdvice.class})
     }
 )
-@EnableScheduling
+// @EnableScheduling
 public class RootConfig {
     private static final Logger log = LogManager.getLogger(RootConfig.class);
 
