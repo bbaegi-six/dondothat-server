@@ -87,29 +87,6 @@
         )
     </delete>
 
-    <insert id="insertExpenses" parameterType="java.util.List">
-        INSERT INTO expenditure (
-        user_id,
-        asset_id,
-        category_id,
-        amount,
-        description,
-        expenditure_date,
-        created_at
-        ) VALUES
-        <foreach collection="list" item="expense" separator=",">
-            (
-            #{expense.userId},
-            #{expense.assetId},
-            #{expense.categoryId},
-            #{expense.amount},
-            #{expense.description},
-            #{expense.expenditureDate},
-            NOW()
-            )
-        </foreach>
-    </insert>
-
     <!-- 모든 main 계좌 조회 -->
     <select id="selectAllMainAssets" resultMap="AssetResultMap">
         SELECT

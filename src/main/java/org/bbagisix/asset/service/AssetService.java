@@ -191,7 +191,7 @@ public class AssetService {
 				log.info("llm err.." + e.getMessage());
 			}
 			// log.info("llm end.." + expenseVOList.stream().toList());
-			int insertedCount = assetMapper.insertExpenses(expenseVOList);
+			int insertedCount = expenseMapper.insertExpenses(expenseVOList);
 			if (insertedCount != expenseVOList.size()) {
 				throw new BusinessException(ErrorCode.TRANSACTION_FAIL,
 					"일부 거래내역 저장에 실패했습니다. 예상: " + expenseVOList.size() + ", 실제: " + insertedCount);

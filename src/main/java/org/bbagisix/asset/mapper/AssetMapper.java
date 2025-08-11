@@ -18,8 +18,6 @@ public interface AssetMapper {
 
 	int deleteExpensesByUserId(Long userId);
 
-	int insertExpenses(List<ExpenseVO> expenseVO);
-
 	// 모든 main 계좌 조회
 	List<AssetVO> selectAllMainAssets();
 
