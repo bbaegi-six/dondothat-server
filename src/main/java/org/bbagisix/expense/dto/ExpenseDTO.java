@@ -22,9 +22,8 @@ public class ExpenseDTO {
 	private Long expenditureId;
 	private String categoryName;
 	private String categoryIcon;
-	// asset 패키지 완성시 연동
-	// private String assetName;
-	// private String bankName;
+	private String assetName;
+	private String bankName;
 	private Date createdAt;
 	private Date updatedAt;
 
