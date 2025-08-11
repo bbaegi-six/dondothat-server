@@ -97,7 +97,7 @@ public class CodefSchedulerService {
 
 		if (!newTransactions.isEmpty()) {
 			newTransactions = classifyService.classify(newTransactions);
-			int insertedCount = assetMapper.insertExpenses(newTransactions);
+			int insertedCount = expenseMapper.insertExpenses(newTransactions);
 			log.info(" 👉 [ user ID : {} ] update new transactions... : {} ", asset.getUserId(), newTransactions.size());
 		}
 	}
