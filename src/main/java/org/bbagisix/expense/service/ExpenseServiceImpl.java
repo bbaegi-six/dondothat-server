@@ -3,6 +3,8 @@ package org.bbagisix.expense.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.bbagisix.asset.domain.AssetVO;
+import org.bbagisix.asset.mapper.AssetMapper;
 import org.bbagisix.category.domain.CategoryVO;
 import org.bbagisix.category.mapper.CategoryMapper;
 import org.bbagisix.expense.domain.ExpenseVO;
@@ -21,8 +23,7 @@ import lombok.extern.log4j.Log4j2;
 public class ExpenseServiceImpl implements ExpenseService {
 	private final ExpenseMapper expenseMapper;
 	private final CategoryMapper categoryMapper;
-	// asset 패키지 완성 시 연동
-	// private final AssetMapper assetMapper;
+	private final AssetMapper assetMapper;
 
 	@Override
 	public ExpenseDTO createExpense(ExpenseDTO expenseDTO) {
@@ -82,7 +83,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 			}
 
 			vo.setCategoryId(expenseDTO.getCategoryId());
-			vo.setAssetId(null); // asset 패키지 구현 전까지 null 처리
+			vo.setAssetId(expenseDTO.getAssetId());
 			vo.setAmount(expenseDTO.getAmount());
 			vo.setDescription(expenseDTO.getDescription());
 			vo.setExpenditureDate(expenseDTO.getExpenditureDate());
@@ -160,7 +161,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 			}
 
 			vo.setCategoryId(expenseDTO.getCategoryId());
-			vo.setAssetId(null); // asset 패키지 구현 전까지 null 처리
+			vo.setAssetId(expenseDTO.getAssetId());
 			vo.setAmount(expenseDTO.getAmount());
 			vo.setDescription(expenseDTO.getDescription());
 			vo.setExpenditureDate(expenseDTO.getExpenditureDate());
@@ -216,15 +217,16 @@ public class ExpenseServiceImpl implements ExpenseService {
 			}
 		}
 
-		/* asset 패키지 완성 시 연동
-		* if (vo.getAssetId() != null) {
-			AssetVO assetVO = assetMapper.findById(vo.getAssetId());
+		if (vo.getAssetId() != null) {
+			AssetVO assetVO = assetMapper.selectAssetByUserIdAndStatus(vo.getUserId(), "main");
+			if (assetVO == null) {
+				assetVO = assetMapper.selectAssetByUserIdAndStatus(vo.getUserId(), "sub");
+			}
 			if (assetVO != null) {
 				dto.setAssetName(assetVO.getAssetName());
 				dto.setBankName(assetVO.getBankName());
 			}
 		}
-		* */
 		return dto;
 	}
 }
