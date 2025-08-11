@@ -81,4 +81,27 @@
             BETWEEN DATE_SUB(CURDATE() - INTERVAL 1 DAY, INTERVAL #{period} DAY)
             AND (CURDATE() - INTERVAL 1 DAY)
     </select>
+
+    <insert id="insertExpenses" parameterType="java.util.List">
+        INSERT INTO expenditure (
+            user_id,
+            asset_id,
+            category_id,
+            amount,
+            description,
+            expenditure_date,
+            created_at
+        ) VALUES
+        <foreach collection="list" item="expense" separator=",">
+            (
+                #{expense.userId},
+                #{expense.assetId},
+                #{expense.categoryId},
+                #{expense.amount},
+                #{expense.description},
+                #{expense.expenditureDate},
+                NOW()
+            )
+        </foreach>
+    </insert>
 </mapper>

@@ -26,4 +26,6 @@ public interface ExpenseMapper {
 	Long getSumOfPeriodExpenses(@Param("userId") Long userId,
 		@Param("categoryId") Long categoryId,
 		@Param("period") Long period);
+
+	int insertExpenses(List<ExpenseVO> expenses);
 }
