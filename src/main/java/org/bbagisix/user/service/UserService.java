@@ -61,7 +61,7 @@ public class UserService {
 
 	@Transactional
 	public String updateNickname(Authentication authentication, String nickname) {
-		CustomOAuth2User currentUser = (CustomOAuth2User) authentication.getPrincipal();
+		CustomOAuth2User currentUser = (CustomOAuth2User)authentication.getPrincipal();
 		userMapper.updateNickname(currentUser.getUserId(), nickname);
 		return "닉네임 변경 완료";
 	}
@@ -71,6 +71,13 @@ public class UserService {
 		CustomOAuth2User currentUser = (CustomOAuth2User)authentication.getPrincipal();
 		userMapper.updateAssetConnected(currentUser.getUserId(), assetConnected);
 		return "계좌 연동 여부 업데이트 완료: " + assetConnected;
+	}
+
+	@Transactional
+	public String updateSavingConnected(Boolean savingConnected, Authentication authentication) {
+		CustomOAuth2User currentUser = (CustomOAuth2User)authentication.getPrincipal();
+		userMapper.updateSavingConnected(currentUser.getUserId(), savingConnected);
+		return "저금통 연결 여부 업데이트 완료: " + savingConnected;
 	}
 
 	@Transactional

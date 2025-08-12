@@ -71,6 +71,12 @@
         where user_id = #{userId}
     </update>
 
+    <update id="updateSavingConnected">
+        update user
+        set saving_connected = #{savingConnected}
+        where user_id = #{userId}
+    </update>
+
     <update id="updateUserTier">
         update user
         set tier_id = #{tierId}
