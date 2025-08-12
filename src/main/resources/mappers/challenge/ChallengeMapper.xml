@@ -122,4 +122,10 @@
         where user_challenge_id = #{userChallengeId}
     </update>
 
+    <select id="getUserChallengeById" parameterType="long" resultType="org.bbagisix.challenge.domain.UserChallengeVO">
+        select *
+        from user_challenge
+        where user_challenge_id = #{userChallengeId}
+    </select>
+
 </mapper>
