@@ -51,6 +51,7 @@ public class UserService {
 			.age(userVO.getAge())
 			.role(userVO.getRole())
 			.assetConnected(userVO.isAssetConnected())
+			.savingConnected(userVO.isSavingConnected())
 			.build();
 	}
 
