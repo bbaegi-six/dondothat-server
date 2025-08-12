@@ -87,16 +87,17 @@
 
     <!-- 8. 사용자 챌린지 진척도 조회 -->
     <select id="getChallengeProgress" resultType="org.bbagisix.challenge.dto.ChallengeProgressDTO">
-        SELECT uc.challenge_id,
+        SELECT uc.user_challenge_id,
+               uc.challenge_id,
                (SELECT c.title FROM challenge c WHERE c.challenge_id = uc.challenge_id) as title,
-               uc.period,
                uc.status,
+               uc.period,
                uc.progress,
-               uc.saving,
-               uc.is_active
+               uc.saving
         FROM user_challenge uc
         WHERE uc.user_id = #{userId}
-          AND uc.is_active = true LIMIT 1
+        ORDER BY uc.start_date DESC
+        LIMIT 1
     </select>
 
     <!--    진행중인 유저챌린지 조회-->
