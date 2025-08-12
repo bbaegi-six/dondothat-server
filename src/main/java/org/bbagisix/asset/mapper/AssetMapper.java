@@ -14,6 +14,8 @@ public interface AssetMapper {
 
 	AssetVO selectAssetByUserIdAndStatus(@Param("userId") Long userId, @Param("status") String status);
 
+	AssetVO selectAssetById(@Param("assetId") Long assetId);
+
 	int deleteUserAssetByUserIdAndStatus(@Param("userId") Long userId, @Param("status") String status);
 
 	int deleteExpensesByUserId(Long userId);

@@ -74,6 +74,23 @@
           AND status = #{status}
     </select>
 
+    <select id="selectAssetById" resultMap="AssetResultMap">
+        select
+            asset_id,
+            user_id,
+            asset_name,
+            bank_name,
+            bank_account,
+            bank_id,
+            bank_pw,
+            connected_id,
+            balance,
+            created_at,
+            status
+        from user_asset
+        where asset_id = #{assetId}
+    </select>
+
     <delete id="deleteUserAssetByUserIdAndStatus">
         delete from user_asset
         where user_id = #{userId}
