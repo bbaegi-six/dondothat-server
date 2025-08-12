@@ -15,4 +15,5 @@ public class UserResponse {
     private Integer age;
     private String role;
 	private boolean assetConnected;
+    private boolean savingConnected;
 }
