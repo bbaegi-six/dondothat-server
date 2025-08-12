@@ -213,15 +213,11 @@ public class ExpenseServiceImpl implements ExpenseService {
 			CategoryVO categoryVO = categoryMapper.findById(vo.getCategoryId());
 			if (categoryVO != null) {
 				dto.setCategoryName(categoryVO.getName());
-				dto.setCategoryIcon(categoryVO.getIcon());
 			}
 		}
 
 		if (vo.getAssetId() != null) {
-			AssetVO assetVO = assetMapper.selectAssetByUserIdAndStatus(vo.getUserId(), "main");
-			if (assetVO == null) {
-				assetVO = assetMapper.selectAssetByUserIdAndStatus(vo.getUserId(), "sub");
-			}
+			AssetVO assetVO = assetMapper.selectAssetById(vo.getAssetId());
 			if (assetVO != null) {
 				dto.setAssetName(assetVO.getAssetName());
 				dto.setBankName(assetVO.getBankName());

@@ -50,7 +50,6 @@
                e.created_at as createdAt,
                e.updated_at as updatedAt,
                c.name as categoryName,
-               c.icon as categoryIcon,
                a.asset_name as assetName,
                a.bank_name as bankName
         FROM expenditure e
