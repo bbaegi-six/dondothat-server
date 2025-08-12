@@ -39,6 +39,27 @@
         ORDER BY expenditure_date DESC
     </select>
 
+    <select id="findAllByUserIdWithDetails" parameterType="long" resultType="org.bbagisix.expense.dto.ExpenseDTO">
+        SELECT e.expenditure_id as expenditureId,
+               e.user_id as userId,
+               e.category_id as categoryId,
+               e.asset_id as assetId,
+               e.amount,
+               e.description,
+               e.expenditure_date as expenditureDate,
+               e.created_at as createdAt,
+               e.updated_at as updatedAt,
+               c.name as categoryName,
+               c.icon as categoryIcon,
+               a.asset_name as assetName,
+               a.bank_name as bankName
+        FROM expenditure e
+        LEFT JOIN category c ON e.category_id = c.category_id
+        LEFT JOIN user_asset a ON e.asset_id = a.asset_id
+        WHERE e.user_id = #{userId}
+        ORDER BY e.expenditure_date DESC
+    </select>
+
     <update id="update" parameterType="org.bbagisix.expense.domain.ExpenseVO">
         UPDATE expenditure
         SET category_id      = #{categoryId},
