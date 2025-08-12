@@ -66,7 +66,6 @@ public class UserController {
 
 	@GetMapping("/me")
 	public ResponseEntity<UserResponse> getCurrentUser(Authentication authentication) {
-
 		return ResponseEntity.ok(userService.getCurrentUser(authentication));
 	}
 
