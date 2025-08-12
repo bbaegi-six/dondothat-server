@@ -55,7 +55,7 @@
         FROM expenditure e
         LEFT JOIN category c ON e.category_id = c.category_id
         LEFT JOIN user_asset a ON e.asset_id = a.asset_id
-        WHERE e.user_id = #{userId}
+        WHERE e.user_id = #{userId} AND a.status = 'main'
         ORDER BY e.expenditure_date DESC
     </select>
 
