@@ -101,9 +101,9 @@ public class RootConfig {
     private String codefPublicKey;
     
     // FSS API 환경 변수
-    @Value("${fss.api.key}")
+    @Value("${FSS_API_KEY}")
     private String fssApiKey;
-    @Value("${fss.api.url}")
+    @Value("${FSS_API_URL}")
     private String fssApiUrl;
 
     @Bean
