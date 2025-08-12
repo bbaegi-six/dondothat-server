@@ -25,10 +25,10 @@ public class FssApiService {
 
     private final RestTemplate restTemplate;
     
-    @Value("${fss.api.key}")
+    @Value("${FSS_API_KEY}")
     private String apiKey;
     
-    @Value("${fss.api.url}")
+    @Value("${FSS_API_URL}")
     private String apiUrl;
     
 

@@ -33,4 +33,6 @@ public interface ChallengeMapper {
 
 	void updateChallenge(UserChallengeVO userChallenge);
 
+	UserChallengeVO getUserChallengeById(Long userChallengeId);
+
 }

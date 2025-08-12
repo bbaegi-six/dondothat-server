@@ -64,7 +64,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 	@Override
 	public List<ExpenseDTO> getExpensesByUserId(Long userId) {
 		try {
-			return expenseMapper.findAllByUserId(userId).stream().map(this::voToDto).collect(Collectors.toList());
+			return expenseMapper.findAllByUserIdWithDetails(userId);
 		} catch (Exception e) {
 			log.error("사용자 소비내역 목록 조회 중 오류 발생: userId={}, error={}", userId, e.getMessage(), e);
 			throw new BusinessException(ErrorCode.DATA_ACCESS_ERROR, e);
@@ -213,15 +213,11 @@ public class ExpenseServiceImpl implements ExpenseService {
 			CategoryVO categoryVO = categoryMapper.findById(vo.getCategoryId());
 			if (categoryVO != null) {
 				dto.setCategoryName(categoryVO.getName());
-				dto.setCategoryIcon(categoryVO.getIcon());
 			}
 		}
 
 		if (vo.getAssetId() != null) {
-			AssetVO assetVO = assetMapper.selectAssetByUserIdAndStatus(vo.getUserId(), "main");
-			if (assetVO == null) {
-				assetVO = assetMapper.selectAssetByUserIdAndStatus(vo.getUserId(), "sub");
-			}
+			AssetVO assetVO = assetMapper.selectAssetById(vo.getAssetId());
 			if (assetVO != null) {
 				dto.setAssetName(assetVO.getAssetName());
 				dto.setBankName(assetVO.getBankName());

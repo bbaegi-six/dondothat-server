@@ -90,7 +90,9 @@ jobs:
             export CODEF_CLIENT_ID="${{ secrets.CODEF_CLIENT_ID }}"
             export CODEF_CLIENT_SECRET="${{ secrets.CODEF_CLIENT_SECRET }}"
             export CODEF_PUBLIC_KEY="${{ secrets.CODEF_PUBLIC_KEY }}"
-            export API_KEY=${{ secrets.API_KEY }}"
+            export API_KEY="${{ secrets.API_KEY }}"
+            export FSS_API_KEY="${{ secrets.FSS_API_KEY }}"
+            export FSS_API_URL="${{ secrets.FSS_API_URL }}"
             
             # SSL 인증서 디렉토리 생성 (없다면)
             mkdir -p ssl
@@ -139,8 +141,8 @@ jobs:
                 container_name: llm-server
                 expose:
                   - "8000"
-               environment:
-                  - API_KEY=${{ secrets.API_KEY }}"
+                environment:
+                  - API_KEY=${{ secrets.API_KEY }}
                 networks:
                   - dondothat-network
                 restart: unless-stopped
@@ -173,6 +175,8 @@ jobs:
                   - CODEF_CLIENT_ID=$CODEF_CLIENT_ID
                   - CODEF_CLIENT_SECRET=$CODEF_CLIENT_SECRET
                   - CODEF_PUBLIC_KEY=$CODEF_PUBLIC_KEY
+                  - FSS_API_KEY=${{ secrets.FSS_API_KEY }}
+                  - FSS_API_URL=${{ secrets.FSS_API_URL }}
                 depends_on:
                   - mysql-server
                   - redis-server

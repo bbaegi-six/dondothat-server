@@ -22,6 +22,7 @@ public class UserVO {
 	private String role;
 	private boolean emailVerified;
 	private boolean assetConnected;
+	private boolean savingConnected;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 	private Long tierId;

@@ -33,7 +33,7 @@ public enum ErrorCode {
 	CHALLENGE_ENDED(HttpStatus.BAD_REQUEST, "CH003", "종료된 챌린지입니다."),
 	CHALLENGE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "CH004", "해당 챌린지에 참여할 권한이 없습니다."),
 	ALREADY_JOINED_CHALLENGE(HttpStatus.CONFLICT, "CH005", "이미 챌린지에 참여중입니다."),
-	CHALLENGE_NOT_JOINED(HttpStatus.BAD_REQUEST, "CH006","사용자 정보와 일치하는 챌린지가 없습니다"),
+	CHALLENGE_NOT_JOINED(HttpStatus.BAD_REQUEST, "CH006", "사용자 정보와 일치하는 챌린지가 없습니다"),
 
 	// 데이터베이스 관련 에러
 	DATA_ACCESS_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "D001", "일시적인 오류가 발생했습니다."),
@@ -79,7 +79,11 @@ public enum ErrorCode {
 	FINPRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "FP004", "금융상품을 찾을 수 없습니다."),
 
 	// Authentication 관련 에러
-	AUTHENTICATION_REQUIRED(HttpStatus.INTERNAL_SERVER_ERROR,"AU01", "Authentication인증이 필요합니다."),
+	AUTHENTICATION_REQUIRED(HttpStatus.INTERNAL_SERVER_ERROR, "AU01", "Authentication인증이 필요합니다."),
+
+	// 저금통 관련 에러
+	SAVING_UPDATE_DENIED(HttpStatus.FORBIDDEN, "S001", "해당 금액을 저금할 권한이 없습니다."),
+	SAVING_UPDATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S002", "저금통 계좌 잔액 업데이트에 실패했습니다."),
 
 	// 일반적인 시스템 에러
 	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S001", "서버 내부 오류가 발생했습니다."),

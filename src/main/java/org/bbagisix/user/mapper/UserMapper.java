@@ -34,6 +34,9 @@ public interface UserMapper {
 	// 계좌 연동 여부 업데이트
 	void updateAssetConnected(@Param("userId") Long userId, @Param("assetConnected") Boolean assetConnected);
 
+	// 저금통 연결 여부 업데이트
+	void updateSavingConnected(@Param("userId") Long userId, @Param("savingConnected") Boolean savingConnected);
+
 	// 사용자 티어 업데이트
 	int updateUserTier(@Param("userId") Long userId, @Param("tierId") Long tierId);
 }

@@ -13,7 +13,7 @@
     <select id="getTotalSaving" parameterType="long" resultType="long">
         select balance
         from user_asset
-        where user_id = #{user_id}
+        where user_id = #{userId}
           and status = 'sub'
     </select>
 </mapper>

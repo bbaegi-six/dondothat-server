@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.bbagisix.expense.domain.ExpenseVO;
+import org.bbagisix.expense.dto.ExpenseDTO;
 
 @Mapper
 public interface ExpenseMapper {
@@ -14,6 +15,8 @@ public interface ExpenseMapper {
 	ExpenseVO findById(Long expenditureId);
 
 	List<ExpenseVO> findAllByUserId(Long userId);
+
+	List<ExpenseDTO> findAllByUserIdWithDetails(Long userId);
 
 	int update(ExpenseVO expense);
 
