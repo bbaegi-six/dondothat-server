@@ -1,5 +1,6 @@
 package org.bbagisix.expense.service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,6 +29,13 @@ public class ExpenseServiceImpl implements ExpenseService {
 	@Override
 	public ExpenseDTO createExpense(ExpenseDTO expenseDTO) {
 		try {
+			// 항상 사용자의 main 계좌로 설정
+			AssetVO mainAsset = assetMapper.selectAssetByUserIdAndStatus(expenseDTO.getUserId(), "main");
+			if (mainAsset == null) {
+				throw new BusinessException(ErrorCode.ASSET_NOT_FOUND, "main 계좌가 연결되지 않았습니다.");
+			}
+			expenseDTO.setAssetId(mainAsset.getAssetId());
+			
 			ExpenseVO vo = dtoToVo(expenseDTO);
 			expenseMapper.insert(vo);
 			if (vo.getExpenditureId() == null) {
@@ -82,8 +90,14 @@ public class ExpenseServiceImpl implements ExpenseService {
 				throw new BusinessException(ErrorCode.EXPENSE_ACCESS_DENIED);
 			}
 
+			// 항상 사용자의 main 계좌로 설정
+			AssetVO mainAsset = assetMapper.selectAssetByUserIdAndStatus(userId, "main");
+			if (mainAsset == null) {
+				throw new BusinessException(ErrorCode.ASSET_NOT_FOUND, "main 계좌가 연결되지 않았습니다.");
+			}
+
 			vo.setCategoryId(expenseDTO.getCategoryId());
-			vo.setAssetId(expenseDTO.getAssetId());
+			vo.setAssetId(mainAsset.getAssetId());
 			vo.setAmount(expenseDTO.getAmount());
 			vo.setDescription(expenseDTO.getDescription());
 			vo.setExpenditureDate(expenseDTO.getExpenditureDate());
