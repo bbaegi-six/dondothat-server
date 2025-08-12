@@ -10,9 +10,18 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MyPageAccountDTO {
-	private Long assetId;
-	private String assetName;
-	private String bankName;
-	private Long balance;
-	private String status; // main, sub
+	private AccountInfo mainAccount;
+	private AccountInfo subAccount;
+
+	@Getter
+	@Builder
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class AccountInfo {
+		private Long assetId;
+		private String assetName;
+		private String bankName;
+		private Long balance;
+		private String status;    // main, sub
+	}
 }
