@@ -30,61 +30,58 @@
     </resultMap>
 
     <insert id="insertUserAsset" parameterType="org.bbagisix.asset.domain.AssetVO">
-        INSERT INTO user_asset (
-            user_id,
-            asset_name,
-            bank_name,
-            bank_account,
-            bank_id,
-            bank_pw,
-            connected_id,
-            balance,
-            created_at,
-            status
-
-        ) VALUES (
-                     #{userId},
-                     #{assetName},
-                     #{bankName},
-                     #{bankAccount, typeHandler=org.bbagisix.asset.encryption.AESEncryptedTypeHandler},
-                     #{bankId, typeHandler=org.bbagisix.asset.encryption.AESEncryptedTypeHandler},
-                     #{bankPw, typeHandler=org.bbagisix.asset.encryption.AESEncryptedTypeHandler},
-                     #{connectedId, typeHandler=org.bbagisix.asset.encryption.AESEncryptedTypeHandler},
-                     #{balance},
-                     NOW(),
-                     #{status}
-                 )
+        INSERT INTO user_asset (user_id,
+                                asset_name,
+                                bank_name,
+                                bank_account,
+                                bank_id,
+                                bank_pw,
+                                connected_id,
+                                balance,
+                                created_at,
+                                status)
+        VALUES (#{userId},
+                #{assetName},
+                #{bankName},
+                #{bankAccount, typeHandler=org.bbagisix.asset.encryption.AESEncryptedTypeHandler},
+                #{bankId, typeHandler=org.bbagisix.asset.encryption.AESEncryptedTypeHandler},
+                #{bankPw, typeHandler=org.bbagisix.asset.encryption.AESEncryptedTypeHandler},
+                #{connectedId, typeHandler=org.bbagisix.asset.encryption.AESEncryptedTypeHandler},
+                #{balance},
+                NOW(),
+                #{status})
     </insert>
 
     <select id="selectAssetByUserIdAndStatus" resultMap="AssetResultMap">
-        select
-            asset_id,
-            user_id,
-            asset_name,
-            bank_name,
-            bank_account,
-            bank_id,
-            bank_pw,
-            connected_id,
-            balance,
-            created_at,
-            status
+        select asset_id,
+               user_id,
+               asset_name,
+               bank_name,
+               bank_account,
+               bank_id,
+               bank_pw,
+               connected_id,
+               balance,
+               created_at,
+               status
         from user_asset
         where user_id = #{userId}
           AND status = #{status}
     </select>
 
     <delete id="deleteUserAssetByUserIdAndStatus">
-        delete from user_asset
+        delete
+        from user_asset
         where user_id = #{userId}
-        AND status = #{status}
+          AND status = #{status}
     </delete>
 
     <delete id="deleteExpensesByUserId">
-        DELETE FROM expenditure
-        WHERE asset_id IN (
-            SELECT asset_id FROM user_asset WHERE user_id = #{userId}
-        )
+        DELETE
+        FROM expenditure
+        WHERE asset_id IN (SELECT asset_id
+                           FROM user_asset
+                           WHERE user_id = #{userId})
     </delete>
 
     <insert id="insertExpenses" parameterType="java.util.List">
@@ -112,18 +109,17 @@
 
     <!-- 모든 main 계좌 조회 -->
     <select id="selectAllMainAssets" resultMap="AssetResultMap">
-        SELECT
-            asset_id,
-            user_id,
-            asset_name,
-            bank_name,
-            bank_account,
-            bank_id,
-            bank_pw,
-            connected_id,
-            balance,
-            created_at,
-            status
+        SELECT asset_id,
+               user_id,
+               asset_name,
+               bank_name,
+               bank_account,
+               bank_id,
+               bank_pw,
+               connected_id,
+               balance,
+               created_at,
+               status
         FROM user_asset
         WHERE status = 'main'
           AND connected_id IS NOT NULL
@@ -147,5 +143,12 @@
           AND description = #{description}
           AND DATE_FORMAT(expenditure_date, '%Y-%m-%d %H:%i') = DATE_FORMAT(#{expenditureDate}, '%Y-%m-%d %H:%i')
     </select>
+
+    <!-- 저금통 계좌 잔액 업데이트 (동시성 문제 때문에 따로 만듦) -->
+    <update id="updateSavingAssetBalance">
+        UPDATE user_asset
+        SET balance=balance + #{totalSaving}
+        WHERE asset_id = #{assetId}
+    </update>
 
 </mapper>

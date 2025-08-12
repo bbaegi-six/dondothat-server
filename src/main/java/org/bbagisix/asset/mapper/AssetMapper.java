@@ -1,12 +1,12 @@
 package org.bbagisix.asset.mapper;
 
+import java.util.Date;
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.bbagisix.asset.domain.AssetVO;
 import org.bbagisix.expense.domain.ExpenseVO;
-
-import java.util.Date;
-import java.util.List;
 
 @Mapper
 public interface AssetMapper {
@@ -34,4 +34,7 @@ public interface AssetMapper {
 		@Param("description") String description,
 		@Param("expenditureDate") Date expenditureDate
 	);
+
+	// 저금통 계좌 잔액 업데이트(아낀금액만큼 증가)
+	int updateSavingAssetBalance(@Param("assetId") Long assetId, @Param("totalSaving") Long totalSaving);
 }
