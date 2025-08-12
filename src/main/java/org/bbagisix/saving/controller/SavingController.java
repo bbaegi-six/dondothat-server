@@ -8,6 +8,8 @@ import org.bbagisix.user.dto.CustomOAuth2User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,4 +37,11 @@ public class SavingController {
 		return ResponseEntity.ok(savingHistory);
 	}
 
+	@PostMapping("/save/{userChallengeId}")
+	public ResponseEntity<String> saveSaving(@PathVariable Long userChallengeId, Authentication authentication) {
+		CustomOAuth2User currentUser = (CustomOAuth2User)authentication.getPrincipal();
+		Long userId = currentUser.getUserId();
+		savingService.updateSaving(userId, userChallengeId);
+		return ResponseEntity.ok("저금통 저장 완료");
+	}
 }
