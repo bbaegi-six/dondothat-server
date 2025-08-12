@@ -38,7 +38,9 @@ public class CodefSchedulerService {
 	private final ClassifyService classifyService;
 
 	// 10분마다 실행 (cron: 초 분 시 일 월 요일)
-	@Scheduled(cron = "0 */10 * * * *")
+	// @Scheduled(cron = "0 */10 * * * *")
+	// 자정(00:00)에 한번 실행
+	@Scheduled(cron = "0 0 0 * * *")
 	@Transactional
 	public void syncAllMainAssetsTransactions() {
 		LocalDateTime now = LocalDateTime.now();
