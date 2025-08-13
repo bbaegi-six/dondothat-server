@@ -55,52 +55,69 @@
     </select>
 
     <!-- 추천 적금 상품 조회 (1차 백엔드 필터링) -->
+    <!-- finPrdtCd별로 중복 제거하여 intrRate 최소값, intrRate2 최대값 추출 -->
     <select id="findRecommendedSavings" resultType="org.bbagisix.finproduct.dto.RecommendedSavingDTO">
         SELECT 
-            b.fin_prdt_cd as finPrdtCd,
-            b.kor_co_nm as korCoNm,
-            b.fin_prdt_nm as finPrdtNm,
-            b.spcl_cnd as spclCnd,
-            b.join_member as joinMember,
-            o.intr_rate as intrRate,
-            o.intr_rate2 as intrRate2,
-            u.age as userAge,
-            u.role as userJob,
-            SUBSTRING_INDEX(a.bank_name, '은행', 1) as mainBankName
-        FROM saving_base b
-        INNER JOIN saving_option o ON b.saving_base_id = o.saving_base_id
-        INNER JOIN user u ON u.user_id = #{userId}
-        LEFT JOIN user_asset a ON a.user_id = #{userId} AND a.status = 'main'
-        WHERE 1=1
-        
-        <!-- 1차 필터링: 명백한 불가능 케이스 제외 -->
-        
-        <!-- 나이 제한 필터 - CDATA로 XML 특수문자 처리 -->
-        AND (
-            b.join_member NOT LIKE '%세%'  -- 나이 제한 없는 상품
-            OR 
-            <![CDATA[
-            -- "만 XX세 이상" 패턴
-            (b.join_member LIKE '%만%세%이상%' AND 
-             u.age >= CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(b.join_member, '만', -1), '세', 1) AS UNSIGNED))
-            OR
-            -- "만 XX세 이하" 패턴  
-            (b.join_member LIKE '%만%세%이하%' AND
-             u.age <= CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(b.join_member, '만', -1), '세', 1) AS UNSIGNED))
-            OR
-            -- "만 XX세부터 만 YY세까지" 범위 패턴
-            (b.join_member REGEXP '만[[:space:]]*[0-9]+세.*만[[:space:]]*[0-9]+세' AND
-             u.age >= CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(b.join_member, '만', 2), '세', 1) AS UNSIGNED) AND
-             u.age <= CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING_INDEX(b.join_member, '만', -1), '세', 1), '까지', 1) AS UNSIGNED))
-            ]]>
-        )
-        
-        <!-- 직업 제한 필터 -->
-        AND (
-            (u.role = '직장인' AND b.spcl_cnd NOT LIKE '%군인%' AND b.spcl_cnd NOT LIKE '%경찰%' AND b.join_member NOT LIKE '%학생%')
-            OR (u.role = '학생' AND b.join_member NOT LIKE '%직장인%' AND b.join_member NOT LIKE '%재직자%')
-            OR (u.role NOT IN ('직장인', '학생'))
-        )
+            filtered.fin_prdt_cd as finPrdtCd,
+            filtered.kor_co_nm as korCoNm,
+            filtered.fin_prdt_nm as finPrdtNm,
+            filtered.spcl_cnd as spclCnd,
+            filtered.join_member as joinMember,
+            filtered.min_intr_rate as intrRate,
+            filtered.max_intr_rate2 as intrRate2,
+            filtered.userAge as userAge,
+            filtered.userJob as userJob,
+            filtered.mainBankName as mainBankName
+        FROM (
+            SELECT 
+                b.fin_prdt_cd,
+                b.kor_co_nm,
+                b.fin_prdt_nm,
+                b.spcl_cnd,
+                b.join_member,
+                MIN(o.intr_rate) as min_intr_rate,
+                MAX(o.intr_rate2) as max_intr_rate2,
+                u.age as userAge,
+                u.role as userJob,
+                SUBSTRING_INDEX(a.bank_name, '은행', 1) as mainBankName
+            FROM saving_base b
+            INNER JOIN saving_option o ON b.saving_base_id = o.saving_base_id
+            INNER JOIN user u ON u.user_id = #{userId}
+            LEFT JOIN user_asset a ON a.user_id = #{userId} AND a.status = 'main'
+            WHERE 1=1
+            
+            <!-- 1차 필터링: 명백한 불가능 케이스 제외 -->
+            
+            <!-- 나이 제한 필터 - CDATA로 XML 특수문자 처리 -->
+            AND (
+                b.join_member NOT LIKE '%세%'  -- 나이 제한 없는 상품
+                OR 
+                <![CDATA[
+                -- "만 XX세 이상" 패턴
+                (b.join_member LIKE '%만%세%이상%' AND 
+                 u.age >= CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(b.join_member, '만', -1), '세', 1) AS UNSIGNED))
+                OR
+                -- "만 XX세 이하" 패턴  
+                (b.join_member LIKE '%만%세%이하%' AND
+                 u.age <= CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(b.join_member, '만', -1), '세', 1) AS UNSIGNED))
+                OR
+                -- "만 XX세부터 만 YY세까지" 범위 패턴
+                (b.join_member REGEXP '만[[:space:]]*[0-9]+세.*만[[:space:]]*[0-9]+세' AND
+                 u.age >= CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(b.join_member, '만', 2), '세', 1) AS UNSIGNED) AND
+                 u.age <= CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING_INDEX(b.join_member, '만', -1), '세', 1), '까지', 1) AS UNSIGNED))
+                ]]>
+            )
+            
+            <!-- 직업 제한 필터 -->
+            AND (
+                (u.role = '직장인' AND b.spcl_cnd NOT LIKE '%군인%' AND b.spcl_cnd NOT LIKE '%경찰%' AND b.join_member NOT LIKE '%학생%')
+                OR (u.role = '학생' AND b.join_member NOT LIKE '%직장인%' AND b.join_member NOT LIKE '%재직자%')
+                OR (u.role NOT IN ('직장인', '학생'))
+            )
+            
+            <!-- finPrdtCd별로 그룹화하여 중복 제거 -->
+            GROUP BY b.fin_prdt_cd, b.kor_co_nm, b.fin_prdt_nm, b.spcl_cnd, b.join_member, u.age, u.role, a.bank_name
+        ) filtered
         
         <if test="limit != null and limit > 0">
             LIMIT #{limit}
