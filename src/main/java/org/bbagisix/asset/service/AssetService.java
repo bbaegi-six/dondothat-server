@@ -233,10 +233,25 @@ public class AssetService {
 				);
 				expenseVO.setExpenditureDate(expenditureDate);
 
+				// Codef 자동 생성 거래 설정
+				expenseVO.setUserModified(false);
+				// Codef transaction ID 생성 (날짜+시간+금액+설명 기반)
+				String codefTransactionId = generateCodefTransactionId(item);
+				expenseVO.setCodefTransactionId(codefTransactionId);
+
 				expenses.add(expenseVO);
 			}
 		}
 		return expenses;
+	}
+
+	// Codef transaction ID 생성
+	private String generateCodefTransactionId(CodefTransactionResDTO.HistoryItem item) {
+		return String.format("CODEF_%s_%s_%s_%s",
+			item.getResAccountTrDate(),
+			item.getResAccountTrTime(),
+			item.getResAccountOut() != null ? item.getResAccountOut() : item.getResAccountIn(),
+			item.getResAccountDesc3() != null ? item.getResAccountDesc3().hashCode() : "0");
 	}
 
 	// 금액 문자열을 Long으로 변환
