@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.math.BigDecimal;
 
@@ -13,6 +14,7 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+// API 응답용 적금 상품 정보 (사용자 정보는 내부 처리용)
 public class RecommendedSavingDTO {
     private String finPrdtCd;      // 금융상품 코드
     private String korCoNm;        // 금융회사 명
@@ -22,8 +24,11 @@ public class RecommendedSavingDTO {
     private BigDecimal intrRate;       // 저축 금리
     private BigDecimal intrRate2;      // 최고 우대금리
     
-    // 사용자 정보 (LLM 추천용)
+    // 사용자 정보 (LLM 추천용, JSON 응답에서 제외)
+    @JsonIgnore
     private Integer userAge;       // 사용자 나이
+    @JsonIgnore
     private String userJob;        // 사용자 직업
+    @JsonIgnore
     private String mainBankName;   // 주거래은행
 }

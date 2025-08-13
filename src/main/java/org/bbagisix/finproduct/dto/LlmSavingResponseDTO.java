@@ -7,7 +7,7 @@ import java.util.List;
 
 @Getter
 @Setter
-// LLM 서버 응답 데이터
+// LLM 서버에서 받는 추천 응답 데이터 (추천된 상품리스트)
 public class LlmSavingResponseDTO {
-    private List<RecommendedSavingDTO> recommendations;
+    private List<LlmSavingProductDTO> recommendations;
 }
