@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from openai import OpenAI
 import asyncio
 from dotenv import load_dotenv
-from typing import List
+from typing import List, Dict, Any
 from datetime import datetime
 import os
 import re
@@ -26,6 +26,21 @@ class ExpForAnalytics(BaseModel):
 
 class ExpsAnalytics(BaseModel):
     exps: List[ExpForAnalytics]
+
+class SavingProduct(BaseModel):
+    finPrdtCd: str
+    korCoNm: str
+    finPrdtNm: str
+    spclCnd: str
+    joinMember: str
+    intrRate: float
+    intrRate2: float
+
+class SavingRecommendRequest(BaseModel):
+    savings: List[SavingProduct]
+    userAge: int
+    userJob: str
+    mainBankName: str = None
 
 category_keyword_map = {
     1: ["우아한형제들", "요기요", "배달의민족", "배민", "쿠팡이츠"],
@@ -144,3 +159,119 @@ async def analysis(list: ExpsAnalytics):
         result_list = [1, 3, 7]  # 기본 과소비 카테고리
         
     return {"results": result_list}
+
+# 적금 상품 추천 API
+@app.post("/recommend-savings")
+async def recommend_savings(request: SavingRecommendRequest):
+    # 사용자 정보와 적금 상품 리스트를 기반으로 추천
+    user_info = {
+        "age": request.userAge,
+        "job": request.userJob,
+        "mainBank": request.mainBankName or "없음"
+    }
+    
+    savings_data = [
+        {
+            "상품코드": s.finPrdtCd,
+            "은행명": s.korCoNm,
+            "상품명": s.finPrdtNm,
+            "특별조건": s.spclCnd,
+            "가입대상": s.joinMember,
+            "기본금리": f"{s.intrRate}%",
+            "우대금리": f"{s.intrRate2}%"
+        } for s in request.savings
+    ]
+    
+    messages = [
+        {
+            "role": "system",
+            "content": """당신은 금융 상품 추천 전문가입니다. 사용자의 상황에 가장 적합한 적금 상품 3개를 추천하는 것이 당신의 역할입니다.
+
+추천 기준:
+1. 사용자 나이와 가입대상 적합성
+2. 사용자 직업과 상품 특성 매칭
+3. 주거래은행과의 연관성 (우대금리 혜택)
+4. 금리 경쟁력 (기본금리 + 우대금리)
+5. 특별조건의 달성 가능성
+
+출력 형식: 상품코드 3개를 쉼표로 구분하여 출력 (예: 00266451,00123456,00789012)
+반드시 제공된 상품 목록에서만 선택하세요."""
+        },
+        {
+            "role": "user", 
+            "content": f"""다음 사용자 정보를 바탕으로 가장 적합한 적금 상품 3개를 추천하세요:
+
+사용자 정보:
+- 나이: {user_info['age']}세
+- 직업: {user_info['role']}
+- 주거래은행: {user_info['mainBank']}
+
+추천 대상 적금 상품 목록:
+{savings_data}
+
+추천 조건:
+- 사용자가 실제 가입 가능한 상품만 선택
+- 금리가 높고 조건이 유리한 상품 우선
+- 주거래은행 상품이 있다면 우대 혜택 고려
+- 사용자 직업/연령대에 맞는 상품 우선
+
+상위 3개 추천 상품의 상품코드만 쉼표로 구분하여 출력:"""
+        }
+    ]
+    
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=messages, 
+        temperature=0,
+        max_tokens=50
+    )
+    
+    res = response.choices[0].message.content.strip()
+    
+    # 응답에서 상품코드 추출
+    product_codes = [code.strip() for code in res.split(',')]
+    
+    # 유효한 상품코드만 필터링
+    valid_codes = []
+    available_codes = [s.finPrdtCd for s in request.savings]
+    
+    for code in product_codes:
+        if code in available_codes and len(valid_codes) < 3:
+            valid_codes.append(code)
+    
+    # 추천된 상품 정보 반환
+    recommended_products = []
+    for code in valid_codes:
+        for saving in request.savings:
+            if saving.finPrdtCd == code:
+                recommended_products.append({
+                    "finPrdtCd": saving.finPrdtCd,
+                    "korCoNm": saving.korCoNm,
+                    "finPrdtNm": saving.finPrdtNm,
+                    "spclCnd": saving.spclCnd,
+                    "joinMember": saving.joinMember,
+                    "intrRate": saving.intrRate,
+                    "intrRate2": saving.intrRate2
+                })
+                break
+    
+    # 추천 결과가 부족하면 상위 상품으로 채우기
+    if len(recommended_products) < 3:
+        remaining_needed = 3 - len(recommended_products)
+        recommended_codes = [p["finPrdtCd"] for p in recommended_products]
+        
+        for saving in request.savings:
+            if len(recommended_products) >= 3:
+                break
+            if saving.finPrdtCd not in recommended_codes:
+                recommended_products.append({
+                    "finPrdtCd": saving.finPrdtCd,
+                    "korCoNm": saving.korCoNm,
+                    "finPrdtNm": saving.finPrdtNm,
+                    "spclCnd": saving.spclCnd,
+                    "joinMember": saving.joinMember,
+                    "intrRate": saving.intrRate,
+                    "intrRate2": saving.intrRate2
+                })
+    
+    return {"recommendations": recommended_products}
