@@ -136,6 +136,7 @@
           AND amount = #{amount}
           AND description = #{description}
           AND DATE_FORMAT(expenditure_date, '%Y-%m-%d %H:%i') = DATE_FORMAT(#{expenditureDate}, '%Y-%m-%d %H:%i')
+          AND deleted_at IS NULL
     </select>
 
     <!-- 저금통 계좌 잔액 업데이트 (동시성 문제 때문에 따로 만듦) -->
