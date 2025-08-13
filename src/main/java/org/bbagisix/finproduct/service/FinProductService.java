@@ -8,6 +8,7 @@ import org.bbagisix.finproduct.dto.FssApiResponseDTO;
 import org.bbagisix.finproduct.dto.ProductBaseDTO;
 import org.bbagisix.finproduct.dto.ProductOptionDTO;
 import org.bbagisix.finproduct.mapper.FinProductMapper;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ public class FinProductService {
     private final FinProductMapper finProductMapper;
     
     // 금감원 API 데이터를 동기화하여 DB에 저장
+    @Scheduled(cron = "0 0 4 ? * MON") // 매주 월요일 오전 4시에 실행
     @Transactional
     public void syncFinProductData() {
         try {
