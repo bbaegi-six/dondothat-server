@@ -21,4 +21,9 @@ public class RecommendedSavingDTO {
     private String joinMember;     // 가입 대상
     private BigDecimal intrRate;       // 저축 금리
     private BigDecimal intrRate2;      // 최고 우대금리
+    
+    // 사용자 정보 (LLM 추천용)
+    private Integer userAge;       // 사용자 나이
+    private String userJob;        // 사용자 직업
+    private String mainBankName;   // 주거래은행
 }
