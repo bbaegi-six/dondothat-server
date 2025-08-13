@@ -175,4 +175,15 @@
           AND user_id = #{param2}
           AND deleted_at IS NULL
     </update>
+
+    <select id="getCurrentMonthSummaryByCategory" parameterType="long" resultType="map">
+        SELECT c.name as key, SUM(e.amount) as value
+        FROM expenditure e 
+        JOIN category c ON e.category_id = c.category_id
+        WHERE e.user_id = #{userId} 
+          AND YEAR(e.expenditure_date) = YEAR(NOW())
+          AND MONTH(e.expenditure_date) = MONTH(NOW())
+          AND e.deleted_at IS NULL
+        GROUP BY c.name
+    </select>
 </mapper>

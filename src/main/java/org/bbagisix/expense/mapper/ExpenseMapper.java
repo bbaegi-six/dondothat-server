@@ -1,6 +1,7 @@
 package org.bbagisix.expense.mapper;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -40,4 +41,7 @@ public interface ExpenseMapper {
 
 	// 내역을 물리적 삭제 대신 소프트 삭제
 	int softDelete(Long expenditureId, Long userId);
+
+	// 현재월 카테고리별 지출 집계
+	Map<String, Long> getCurrentMonthSummaryByCategory(Long userId);
 }
