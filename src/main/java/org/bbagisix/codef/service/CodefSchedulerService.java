@@ -69,6 +69,19 @@ public class CodefSchedulerService {
 		log.info("Scheduler finish - success: {}, fail: {}", successCount, failCount);
 	}
 
+	// 개별 사용자 거래내역 동기화 (새로고침용)
+	@Transactional
+	public void syncUserTransactions(Long userId) {
+		AssetVO mainAsset = assetMapper.selectAssetByUserIdAndStatus(userId, "main");
+		if (mainAsset != null) {
+			log.info("User {} transaction sync start", userId);
+			syncAssetTransactions(mainAsset);
+			log.info("User {} transaction sync completed", userId);
+		} else {
+			log.warn("User {} has no main asset", userId);
+		}
+	}
+
 	// 단일 계좌의 거래내역 동기화
 	private void syncAssetTransactions(AssetVO asset) {
 		// AssetDTO 생성
