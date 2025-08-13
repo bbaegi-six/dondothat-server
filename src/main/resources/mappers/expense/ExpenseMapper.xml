@@ -28,25 +28,6 @@
           AND deleted_at IS NULL
     </select>
 
-    <select id="findAllByUserId" parameterType="long" resultType="org.bbagisix.expense.domain.ExpenseVO">
-        SELECT expenditure_id,
-               user_id,
-               category_id,
-               asset_id,
-               amount,
-               description,
-               expenditure_date,
-               created_at,
-               updated_at,
-               user_modified,
-               codef_transaction_id,
-               deleted_at
-        FROM expenditure
-        WHERE user_id = #{userId}
-          AND deleted_at IS NULL
-        ORDER BY expenditure_date DESC
-    </select>
-
     <select id="findAllByUserIdWithDetails" parameterType="long" resultType="org.bbagisix.expense.dto.ExpenseDTO">
         SELECT e.expenditure_id as expenditureId,
                e.user_id as userId,
@@ -80,12 +61,6 @@
           AND deleted_at IS NULL
     </update>
 
-    <delete id="delete">
-        DELETE
-        FROM expenditure
-        WHERE expenditure_id = #{param1}
-          AND user_id = #{param2}
-    </delete>
 
     <select id="getRecentExpenses" parameterType="long" resultType="org.bbagisix.expense.domain.ExpenseVO">
         SELECT *

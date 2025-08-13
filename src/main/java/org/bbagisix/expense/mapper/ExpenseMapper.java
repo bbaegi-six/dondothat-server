@@ -15,13 +15,9 @@ public interface ExpenseMapper {
 
 	ExpenseVO findById(Long expenditureId);
 
-	List<ExpenseVO> findAllByUserId(Long userId);
-
 	List<ExpenseDTO> findAllByUserIdWithDetails(Long userId);
 
 	int update(ExpenseVO expense);
-
-	int delete(Long expenditureId, Long userId);
 
 	List<ExpenseVO> getRecentExpenses(Long userId);
 
