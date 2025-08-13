@@ -31,4 +31,13 @@ public interface ExpenseMapper {
 		@Param("period") Long period);
 
 	int insertExpenses(List<ExpenseVO> expenses);
+
+	// codef 거래 ID로 중복 개수 확인
+	int countByCodefTransactionId(String codefTransactionId);
+
+	// codef 거래 ID로 실제 거래 데이터 조회
+	List<ExpenseVO> findByCodefTransactionId(String codefTransactionId);
+
+	// 내역을 물리적 삭제 대신 소프트 삭제
+	int softDelete(Long expenditureId, Long userId);
 }
