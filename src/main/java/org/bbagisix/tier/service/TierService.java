@@ -63,13 +63,52 @@ public class TierService {
 	// 챌린지 성공 시 티어 승급 처리
 	@Transactional
 	public void promoteUserTier(Long userId) {
-		UserVO user = userMapper.findByUserId(userId);
-		Long nextTierId = (user.getTierId() == null) ? 1L : user.getTierId() + 1;
-		TierVO nextTier = tierMapper.findById(nextTierId);
+		// 완료한 챌린지 수 조회
+		Integer completedChallenges = userMapper.getCompletedChallengeCount(userId);
 
-		if (nextTier != null) {
-			userMapper.updateUserTier(userId, nextTierId);
-			log.info("사용자 {} 티어 승급: {} → {}", userId, user.getTierId(), nextTierId);
+		// 완료한 챌린지 수에 기반한 적절한 tier 계산
+		Long appropriateTierId = calculateTierByCompletedChallenges(completedChallenges);
+
+		// 현재 사용자 정보 조회
+		UserVO user = userMapper.findByUserId(userId);
+		Long currentTierId = user.getTierId();
+
+		// 계산된 tier가 현재 tier보다 높은 경우에만 업데이트
+		if (appropriateTierId > (currentTierId != null ? currentTierId : 0L)) {
+			// 해당 tier가 실제로 존재하는지 확인
+			TierVO targetTier = tierMapper.findById(appropriateTierId);
+			if (targetTier != null) {
+				int updateResult = userMapper.updateUserTier(userId, appropriateTierId);
+				if (updateResult > 0) {
+					log.info("✅ 사용자 {} 티어 승급 성공: {} → {} (완료한 챌린지: {}개)",
+						userId, currentTierId, appropriateTierId, completedChallenges);
+				} else {
+					log.error("❌ 사용자 {} 티어 업데이트 실패", userId);
+				}
+			} else {
+				log.error("❌ tier_id {} 에 해당하는 tier가 존재하지 않음", appropriateTierId);
+			}
+		} else {
+			log.info("⏭️ tier 업데이트 조건 불만족 - 현재: {}, 계산된: {}", currentTierId, appropriateTierId);
+		}
+	}
+
+	// 완료한 챌린지 수에 따른 tier 계산
+	private Long calculateTierByCompletedChallenges(Integer completedChallenges) {
+		if (completedChallenges == null || completedChallenges == 0) {
+			return 1L; // default
+		} else if (completedChallenges <= 1) {
+			return 1L; // 브론즈
+		} else if (completedChallenges <= 2) {
+			return 2L; // 실버
+		} else if (completedChallenges <= 3) {
+			return 3L; // 골드
+		} else if (completedChallenges <= 4) {
+			return 4L; // 플래티넘
+		} else if (completedChallenges <= 5) {
+			return 5L; // 루비
+		} else {
+			return 6L; // 에메랄드
 		}
 	}
 }

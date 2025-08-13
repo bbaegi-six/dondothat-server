@@ -40,4 +40,5 @@ public class TierController {
 		List<TierDTO> allTiers = tierService.getAllTiers();
 		return ResponseEntity.ok(allTiers);
 	}
+	
 }

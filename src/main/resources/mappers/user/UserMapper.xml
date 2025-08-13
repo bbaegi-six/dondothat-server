@@ -82,4 +82,10 @@
         set tier_id = #{tierId}
         where user_id = #{userId}
     </update>
+
+    <select id="getCompletedChallengeCount" resultType="java.lang.Integer">
+        select count(*)
+        from user_challenge
+        where user_id = #{userId} and status = 'completed'
+    </select>
 </mapper>

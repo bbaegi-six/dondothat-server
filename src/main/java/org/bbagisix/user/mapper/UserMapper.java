@@ -39,4 +39,7 @@ public interface UserMapper {
 
 	// 사용자 티어 업데이트
 	int updateUserTier(@Param("userId") Long userId, @Param("tierId") Long tierId);
+
+	// 완료한 챌린지 수 조회
+	Integer getCompletedChallengeCount(@Param("userId") Long userId);
 }

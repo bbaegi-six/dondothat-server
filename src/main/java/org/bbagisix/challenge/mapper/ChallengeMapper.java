@@ -35,4 +35,8 @@ public interface ChallengeMapper {
 
 	UserChallengeVO getUserChallengeById(Long userChallengeId);
 
+	// 완료된 챌린지들만 조회 (completed + failed)
+	List<UserChallengeVO> getUserCompletedChallenges(@Param("userId") Long userId);
+
+
 }

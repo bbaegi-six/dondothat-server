@@ -52,6 +52,7 @@ public class UserService {
 			.role(userVO.getRole())
 			.assetConnected(userVO.isAssetConnected())
 			.savingConnected(userVO.isSavingConnected())
+			.tierId(userVO.getTierId())
 			.build();
 	}
 

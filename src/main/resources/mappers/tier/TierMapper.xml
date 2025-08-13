@@ -5,22 +5,18 @@
 
 <mapper namespace="org.bbagisix.tier.mapper.TierMapper">
 
-    <!-- 모든 티어 목록 조회 (tier_order 순서대로) -->
+    <!-- 모든 티어 목록 조회 (tier_id 순서대로) -->
     <select id="findAllTiers" resultType="org.bbagisix.tier.domain.TierVO">
         SELECT tier_id,
-               name,
-               required_success_count,
-               tier_order
+               name
         FROM tier
-        ORDER BY tier_order
+        ORDER BY tier_id
     </select>
 
     <!-- 티어 ID로 단일 티어 조회 -->
     <select id="findById" resultType="org.bbagisix.tier.domain.TierVO">
         SELECT tier_id,
-               name,
-               required_success_count,
-               tier_order
+               name
         FROM tier
         WHERE tier_id = #{tierId}
     </select>

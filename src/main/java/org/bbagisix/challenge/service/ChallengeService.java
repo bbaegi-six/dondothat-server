@@ -16,6 +16,7 @@ import org.bbagisix.challenge.mapper.ChallengeMapper;
 import org.bbagisix.exception.BusinessException;
 import org.bbagisix.exception.ErrorCode;
 import org.bbagisix.expense.mapper.ExpenseMapper;
+import org.bbagisix.tier.service.TierService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,7 @@ public class ChallengeService {
 	private final ChallengeMapper challengeMapper;
 	private final ExpenseMapper expenseMapper;
 	private final AnalyticsService analyticsService;
+	private final TierService tierService;
 
 	public ChallengeDTO getChallengeById(Long challengeId) {
 		if (challengeId == null) {
@@ -148,6 +150,11 @@ public class ChallengeService {
 					.progress(c.getProgress() + 1)
 					.status(isLastDay ? "completed" : c.getStatus()) // 마지막 날인 경우 -> 최종 성공
 					.build();
+				
+				// 챌린지 완료 시 tier 승급 처리
+				if (isLastDay) {
+					tierService.promoteUserTier(userId);
+				}
 			}
 
 			challengeMapper.updateChallenge(updated);

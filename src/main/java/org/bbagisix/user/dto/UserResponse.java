@@ -16,4 +16,5 @@ public class UserResponse {
     private String role;
 	private boolean assetConnected;
     private boolean savingConnected;
+    private Long tierId;
 }
