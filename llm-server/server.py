@@ -39,7 +39,7 @@ class SavingProduct(BaseModel):
 class SavingRecommendRequest(BaseModel):
     savings: List[SavingProduct]
     userAge: int
-    userJob: str
+    userRole: str
     mainBankName: str = None
 
 category_keyword_map = {
@@ -166,7 +166,7 @@ async def recommend_savings(request: SavingRecommendRequest):
     # 사용자 정보와 적금 상품 리스트를 기반으로 추천
     user_info = {
         "age": request.userAge,
-        "job": request.userJob,
+        "role": request.userRole,
         "mainBank": request.mainBankName or "없음"
     }
     
@@ -190,9 +190,14 @@ async def recommend_savings(request: SavingRecommendRequest):
 추천 기준:
 1. 사용자 나이와 가입대상 적합성
 2. 사용자 직업과 상품 특성 매칭
-3. 주거래은행과의 연관성 (우대금리 혜택)
-4. 금리 경쟁력 (기본금리 + 우대금리)
-5. 특별조건의 달성 가능성
+3. 금리 경쟁력 (기본금리 + 우대금리)
+4. 특별조건의 달성 가능성
+5. 은행 다양성 (가능한 다른 은행 상품 포함)
+
+추천 원칙:
+- 주거래은행 상품이 있고 조건이 좋다면 2개까지 포함 가능
+- 나머지는 다른 은행의 경쟁력 있는 상품으로 구성
+- 최대한 다양한 은행에서 선택하여 포트폴리오 다양화
 
 출력 형식: 상품코드 3개를 쉼표로 구분하여 출력 (예: 00266451,00123456,00789012)
 반드시 제공된 상품 목록에서만 선택하세요."""
@@ -212,8 +217,9 @@ async def recommend_savings(request: SavingRecommendRequest):
 추천 조건:
 - 사용자가 실제 가입 가능한 상품만 선택
 - 금리가 높고 조건이 유리한 상품 우선
-- 주거래은행 상품이 있다면 우대 혜택 고려
+- 주거래은행 상품은 최대 2개까지 포함 (다른 은행 상품도 반드시 포함)
 - 사용자 직업/연령대에 맞는 상품 우선
+- 서로 다른 은행 상품으로 구성하여 다양성 확보
 
 상위 3개 추천 상품의 상품코드만 쉼표로 구분하여 출력:"""
         }
