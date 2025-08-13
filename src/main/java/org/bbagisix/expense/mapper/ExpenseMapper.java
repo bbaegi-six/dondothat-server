@@ -39,5 +39,5 @@ public interface ExpenseMapper {
 	int softDelete(Long expenditureId, Long userId);
 
 	// 현재월 카테고리별 지출 집계
-	Map<String, Long> getCurrentMonthSummaryByCategory(Long userId);
+	List<Map<String, Object>> getCurrentMonthSummaryByCategory(Long userId);
 }

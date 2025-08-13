@@ -1,6 +1,7 @@
 package org.bbagisix.expense.service;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -263,7 +264,22 @@ public class ExpenseServiceImpl implements ExpenseService {
 	@Override
 	public Map<String, Long> getCurrentMonthSummary(Long userId) {
 		try {
-			return expenseMapper.getCurrentMonthSummaryByCategory(userId);
+			List<Map<String, Object>> results = expenseMapper.getCurrentMonthSummaryByCategory(userId);
+			Map<String, Long> summary = new HashMap<>();
+			
+			for (Map<String, Object> row : results) {
+				String categoryName = (String) row.get("key");
+				Object amountObj = row.get("value");
+				Long amount = 0L;
+				
+				if (amountObj instanceof Number) {
+					amount = ((Number) amountObj).longValue();
+				}
+				
+				summary.put(categoryName, amount);
+			}
+			
+			return summary;
 		} catch (Exception e) {
 			log.error("현재월 지출 집계 조회 중 오류 발생: userId={}, error={}", userId, e.getMessage(), e);
 			throw new BusinessException(ErrorCode.EXPENSE_SUMMARY_FAILED, "지출 집계 조회에 실패했습니다.");

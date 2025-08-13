@@ -152,7 +152,7 @@
     </update>
 
     <select id="getCurrentMonthSummaryByCategory" parameterType="long" resultType="map">
-        SELECT c.name as key, SUM(e.amount) as value
+        SELECT c.name as `key`, SUM(e.amount) as `value`
         FROM expenditure e 
         JOIN category c ON e.category_id = c.category_id
         WHERE e.user_id = #{userId} 
