@@ -134,7 +134,7 @@ public class CodefSchedulerService {
 				transactionResDTO);
 
 			for (ExpenseVO expenseVO : expenseVOList) {
-				if (!isDuplicateTransaction(expenseVO)) {
+				if (!isDuplicateTransaction(expenseVO) && !isUserModifiedTransaction(expenseVO)) {
 					newTransactions.add(expenseVO);
 				}
 			}
@@ -146,6 +146,15 @@ public class CodefSchedulerService {
 	// 중복 거래 내역 체크
 	private boolean isDuplicateTransaction(ExpenseVO expenseVO) {
 		try {
+			// 1차: codef_transaction_id 기반 중복 체크 (정확함)
+			if (expenseVO.getCodefTransactionId() != null) {
+				int codefCount = expenseMapper.countByCodefTransactionId(expenseVO.getCodefTransactionId());
+				if (codefCount > 0) {
+					return true;
+				}
+			}
+
+			// 2차: 기존 방식 fallback (codef_transaction_id가 없는 경우)
 			int count = assetMapper.countDuplicateTransaction(
 				expenseVO.getUserId(),
 				expenseVO.getAssetId(),
@@ -156,6 +165,24 @@ public class CodefSchedulerService {
 			return count > 0;
 		} catch (Exception err) {
 			return false; // 오류 시 중복이 아닌 것으로 간주하여 저장
+		}
+	}
+
+	// 사용자 수정 거래 체크 (user_modified=true인 거래 제외)
+	private boolean isUserModifiedTransaction(ExpenseVO expenseVO) {
+		try {
+			// codef_transaction_id가 있는 경우, 해당 거래가 사용자에 의해 수정되었는지 확인
+			if (expenseVO.getCodefTransactionId() != null) {
+				List<ExpenseVO> existingTransactions = expenseMapper.findByCodefTransactionId(expenseVO.getCodefTransactionId());
+				for (ExpenseVO existing : existingTransactions) {
+					if (Boolean.TRUE.equals(existing.getUserModified())) {
+						return true; // 사용자가 수정한 거래이므로 제외
+					}
+				}
+			}
+			return false;
+		} catch (Exception err) {
+			return false; // 오류 시 제외하지 않음
 		}
 	}
 }
