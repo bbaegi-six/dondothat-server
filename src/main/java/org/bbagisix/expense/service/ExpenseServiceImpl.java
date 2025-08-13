@@ -2,12 +2,14 @@ package org.bbagisix.expense.service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.bbagisix.asset.domain.AssetVO;
 import org.bbagisix.asset.mapper.AssetMapper;
 import org.bbagisix.category.domain.CategoryVO;
 import org.bbagisix.category.mapper.CategoryMapper;
+import org.bbagisix.codef.service.CodefSchedulerService;
 import org.bbagisix.expense.domain.ExpenseVO;
 import org.bbagisix.expense.dto.ExpenseDTO;
 import org.bbagisix.expense.mapper.ExpenseMapper;
@@ -25,6 +27,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 	private final ExpenseMapper expenseMapper;
 	private final CategoryMapper categoryMapper;
 	private final AssetMapper assetMapper;
+	private final CodefSchedulerService codefSchedulerService;
 
 	@Override
 	public ExpenseDTO createExpense(ExpenseDTO expenseDTO) {
@@ -238,5 +241,26 @@ public class ExpenseServiceImpl implements ExpenseService {
 			}
 		}
 		return dto;
+	}
+
+	@Override
+	public void refreshFromCodef(Long userId) {
+		try {
+			// CodefSchedulerService의 개별 사용자 동기화 로직 호출
+			codefSchedulerService.syncUserTransactions(userId);
+		} catch (Exception e) {
+			log.error("Codef 동기화 중 오류 발생: userId={}, error={}", userId, e.getMessage(), e);
+			throw new BusinessException(ErrorCode.EXTERNAL_API_ERROR, "거래내역 새로고침에 실패했습니다.");
+		}
+	}
+
+	@Override
+	public Map<String, Long> getCurrentMonthSummary(Long userId) {
+		try {
+			return expenseMapper.getCurrentMonthSummaryByCategory(userId);
+		} catch (Exception e) {
+			log.error("현재월 지출 집계 조회 중 오류 발생: userId={}, error={}", userId, e.getMessage(), e);
+			throw new BusinessException(ErrorCode.DATA_ACCESS_ERROR, "지출 집계 조회에 실패했습니다.");
+		}
 	}
 }

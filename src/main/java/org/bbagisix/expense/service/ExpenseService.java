@@ -1,6 +1,7 @@
 package org.bbagisix.expense.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.bbagisix.expense.domain.ExpenseVO;
 import org.bbagisix.expense.dto.ExpenseDTO;
@@ -21,4 +22,10 @@ public interface ExpenseService {
 	// 시스템 내부 호출용 메서드 (권한 검증 없음)
 	ExpenseDTO getExpenseByIdInternal(Long expenditureId);
 	ExpenseDTO updateExpenseInternal(Long expenditureId, ExpenseDTO expenseDTO);
+
+	// Codef 동기화
+	void refreshFromCodef(Long userId);
+
+	// 현재월 카테고리별 지출 집계
+	Map<String, Long> getCurrentMonthSummary(Long userId);
 }
