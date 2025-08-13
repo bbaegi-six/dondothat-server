@@ -256,7 +256,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 			codefSchedulerService.syncUserTransactions(userId);
 		} catch (Exception e) {
 			log.error("Codef 동기화 중 오류 발생: userId={}, error={}", userId, e.getMessage(), e);
-			throw new BusinessException(ErrorCode.EXTERNAL_API_ERROR, "거래내역 새로고침에 실패했습니다.");
+			throw new BusinessException(ErrorCode.EXPENSE_SUMMARY_FAILED, "거래내역 새로고침에 실패했습니다.");
 		}
 	}
 
