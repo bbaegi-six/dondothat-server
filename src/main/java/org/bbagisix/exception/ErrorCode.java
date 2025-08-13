@@ -52,6 +52,7 @@ public enum ErrorCode {
 	EXPENSE_CREATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "EX003", "소비내역 생성에 실패했습니다."),
 	EXPENSE_UPDATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "EX004", "소비내역 수정에 실패했습니다."),
 	EXPENSE_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "EX005", "소비내역 삭제에 실패했습니다."),
+	EXPENSE_SUMMARY_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "EX006", "지출 집계 조회에 실패했습니다."),
 
 	// LLM 관련 에러
 	LLM_CLASSIFY_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "L001", "카테고리 분류에 실패했습니다."),

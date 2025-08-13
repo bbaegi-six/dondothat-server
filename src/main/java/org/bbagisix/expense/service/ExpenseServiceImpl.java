@@ -266,7 +266,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 			return expenseMapper.getCurrentMonthSummaryByCategory(userId);
 		} catch (Exception e) {
 			log.error("현재월 지출 집계 조회 중 오류 발생: userId={}, error={}", userId, e.getMessage(), e);
-			throw new BusinessException(ErrorCode.DATA_ACCESS_ERROR, "지출 집계 조회에 실패했습니다.");
+			throw new BusinessException(ErrorCode.EXPENSE_SUMMARY_FAILED, "지출 집계 조회에 실패했습니다.");
 		}
 	}
 }
