@@ -29,4 +29,7 @@ public class ExpenseVO {
 	private Date expenditureDate;
 	private Date createdAt;
 	private Date updatedAt;
+	private Boolean userModified;
+	private String codefTransactionId;
+	private Date deletedAt;
 }
