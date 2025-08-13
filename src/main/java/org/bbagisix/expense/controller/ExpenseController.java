@@ -1,6 +1,7 @@
 package org.bbagisix.expense.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.bbagisix.category.dto.CategoryDTO;
 import org.bbagisix.category.service.CategoryService;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.core.Authentication;
 import org.bbagisix.user.dto.CustomOAuth2User;
@@ -70,5 +72,19 @@ public class ExpenseController {
 	@GetMapping("/categories")
 	public ResponseEntity<List<CategoryDTO>> getAllCategories() {
 		return ResponseEntity.ok(categoryService.getAllCategories());
+	}
+
+	@PostMapping("/refresh")
+	public ResponseEntity<String> refreshExpensesFromCodef(Authentication authentication) {
+		CustomOAuth2User currentUser = (CustomOAuth2User) authentication.getPrincipal();
+		expenseService.refreshFromCodef(currentUser.getUserId());
+		return ResponseEntity.ok("거래내역 새로고침이 완료되었습니다.");
+	}
+
+	@GetMapping("/current-month-summary")
+	public ResponseEntity<Map<String, Long>> getCurrentMonthSummary(Authentication authentication) {
+		CustomOAuth2User currentUser = (CustomOAuth2User) authentication.getPrincipal();
+		Map<String, Long> summary = expenseService.getCurrentMonthSummary(currentUser.getUserId());
+		return ResponseEntity.ok(summary);
 	}
 }
