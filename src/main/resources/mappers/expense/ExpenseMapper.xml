@@ -6,8 +6,8 @@
 <mapper namespace="org.bbagisix.expense.mapper.ExpenseMapper">
     <insert id="insert" parameterType="org.bbagisix.expense.domain.ExpenseVO" useGeneratedKeys="true"
             keyProperty="expenditureId">
-        INSERT INTO expenditure (user_id, category_id, asset_id, amount, description, expenditure_date)
-        VALUES (#{userId}, #{categoryId}, #{assetId}, #{amount}, #{description}, #{expenditureDate})
+        INSERT INTO expenditure (user_id, category_id, asset_id, amount, description, expenditure_date, user_modified, codef_transaction_id)
+        VALUES (#{userId}, #{categoryId}, #{assetId}, #{amount}, #{description}, #{expenditureDate}, #{userModified}, #{codefTransactionId})
     </insert>
 
     <select id="findById" parameterType="long" resultType="org.bbagisix.expense.domain.ExpenseVO">
@@ -19,9 +19,13 @@
                description,
                expenditure_date,
                created_at,
-               updated_at
+               updated_at,
+               user_modified,
+               codef_transaction_id,
+               deleted_at
         FROM expenditure
         WHERE expenditure_id = #{expenditureId}
+          AND deleted_at IS NULL
     </select>
 
     <select id="findAllByUserId" parameterType="long" resultType="org.bbagisix.expense.domain.ExpenseVO">
@@ -33,9 +37,13 @@
                description,
                expenditure_date,
                created_at,
-               updated_at
+               updated_at,
+               user_modified,
+               codef_transaction_id,
+               deleted_at
         FROM expenditure
         WHERE user_id = #{userId}
+          AND deleted_at IS NULL
         ORDER BY expenditure_date DESC
     </select>
 
@@ -55,7 +63,7 @@
         FROM expenditure e
         LEFT JOIN category c ON e.category_id = c.category_id
         LEFT JOIN user_asset a ON e.asset_id = a.asset_id
-        WHERE e.user_id = #{userId} AND a.status = 'main'
+        WHERE e.user_id = #{userId} AND a.status = 'main' AND e.deleted_at IS NULL
         ORDER BY e.expenditure_date DESC
     </select>
 
@@ -65,9 +73,11 @@
             asset_id         = #{assetId},
             amount           = #{amount},
             description      = #{description},
-            expenditure_date = #{expenditureDate}
+            expenditure_date = #{expenditureDate},
+            user_modified    = TRUE
         WHERE expenditure_id = #{expenditureId}
           AND user_id = #{userId}
+          AND deleted_at IS NULL
     </update>
 
     <delete id="delete">
@@ -82,6 +92,7 @@
         FROM expenditure
         WHERE user_id = #{userId}
           AND expenditure_date >= DATE_SUB(CURDATE(), INTERVAL 2 MONTH)
+          AND deleted_at IS NULL
         ORDER BY expenditure_date DESC
     </select>
 
@@ -90,6 +101,7 @@
         FROM expenditure
         WHERE user_id = #{userId}
           AND DATE (expenditure_date)=CURDATE()
+          AND deleted_at IS NULL
     </select>
 
     <select id="getSumOfPeriodExpenses" resultType="long">
@@ -100,6 +112,7 @@
           AND expenditure_date
             BETWEEN DATE_SUB(CURDATE() - INTERVAL 1 DAY, INTERVAL #{period} DAY)
             AND (CURDATE() - INTERVAL 1 DAY)
+          AND deleted_at IS NULL
     </select>
 
     <insert id="insertExpenses" parameterType="java.util.List">
@@ -110,7 +123,9 @@
             amount,
             description,
             expenditure_date,
-            created_at
+            created_at,
+            user_modified,
+            codef_transaction_id
         ) VALUES
         <foreach collection="list" item="expense" separator=",">
             (
@@ -120,8 +135,44 @@
                 #{expense.amount},
                 #{expense.description},
                 #{expense.expenditureDate},
-                NOW()
+                NOW(),
+                COALESCE(#{expense.userModified}, FALSE),
+                #{expense.codefTransactionId}
             )
         </foreach>
     </insert>
+
+    <select id="countByCodefTransactionId" parameterType="string" resultType="int">
+        SELECT COUNT(*)
+        FROM expenditure
+        WHERE codef_transaction_id = #{codefTransactionId}
+          AND deleted_at IS NULL
+    </select>
+
+    <select id="findByCodefTransactionId" parameterType="string" resultType="org.bbagisix.expense.domain.ExpenseVO">
+        SELECT expenditure_id,
+               user_id,
+               category_id,
+               asset_id,
+               amount,
+               description,
+               expenditure_date,
+               created_at,
+               updated_at,
+               user_modified,
+               codef_transaction_id,
+               deleted_at
+        FROM expenditure
+        WHERE codef_transaction_id = #{codefTransactionId}
+          AND deleted_at IS NULL
+    </select>
+
+    <update id="softDelete">
+        UPDATE expenditure
+        SET deleted_at = NOW(),
+            user_modified = TRUE
+        WHERE expenditure_id = #{param1}
+          AND user_id = #{param2}
+          AND deleted_at IS NULL
+    </update>
 </mapper>
