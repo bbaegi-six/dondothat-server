@@ -26,6 +26,7 @@ public class ExpenseDTO {
 	private String bankName;
 	private Date createdAt;
 	private Date updatedAt;
+	private Boolean userModified;
 
 	// 요청/응답 공통 필드
 	private Long userId;
