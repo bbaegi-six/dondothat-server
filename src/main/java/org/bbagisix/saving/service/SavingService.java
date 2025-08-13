@@ -1,11 +1,9 @@
 package org.bbagisix.saving.service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.bbagisix.asset.domain.AssetVO;
 import org.bbagisix.asset.mapper.AssetMapper;
-import org.bbagisix.challenge.domain.ChallengeVO;
 import org.bbagisix.challenge.domain.UserChallengeVO;
 import org.bbagisix.challenge.mapper.ChallengeMapper;
 import org.bbagisix.exception.BusinessException;
@@ -29,7 +27,7 @@ public class SavingService {
 
 	public List<SavingDTO> getSavingHistory(Long userId) {
 		try {
-			return savingMapper.getSavingHistory(userId).stream().map(this::voToDto).collect(Collectors.toList());
+			return savingMapper.getSavingHistory(userId);
 		} catch (Exception e) {
 			log.error("사용자 저금 내역 조회 중 오류 발생: userId={}, error={}", userId, e.getMessage(), e);
 			throw new BusinessException(ErrorCode.DATA_ACCESS_ERROR, e);
@@ -77,17 +75,5 @@ public class SavingService {
 		}
 	}
 
-	private SavingDTO voToDto(UserChallengeVO userChallengeVO) {
-		if (userChallengeVO == null)
-			return null;
-		ChallengeVO challengeVO = challengeMapper.findByChallengeId(userChallengeVO.getChallengeId());
-		return SavingDTO.builder()
-			.categoryId(challengeVO.getCategoryId())
-			.title(challengeVO.getTitle())
-			.startDate(userChallengeVO.getStartDate())
-			.endDate(userChallengeVO.getEndDate())
-			.saving(userChallengeVO.getSaving())
-			.build();
-	}
 
 }

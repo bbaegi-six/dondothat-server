@@ -4,11 +4,12 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="org.bbagisix.saving.mapper.SavingMapper">
-    <select id="getSavingHistory" parameterType="long" resultType="org.bbagisix.challenge.domain.UserChallengeVO">
-        select *
-        from user_challenge
-        where user_id = #{userId}
-          and status = 'completed'
+    <select id="getSavingHistory" parameterType="long" resultType="org.bbagisix.saving.dto.SavingDTO">
+        select c.category_id, c.title, uc.period, uc.start_date, uc.end_date, uc.saving
+        from user_challenge uc
+        join challenge c on uc.challenge_id = c.challenge_id
+        where uc.user_id = #{userId}
+          and uc.status = 'completed'
     </select>
     <select id="getTotalSaving" parameterType="long" resultType="long">
         select balance

@@ -2,10 +2,10 @@ package org.bbagisix.saving.mapper;
 
 import java.util.List;
 
-import org.bbagisix.challenge.domain.UserChallengeVO;
+import org.bbagisix.saving.dto.SavingDTO;
 
 public interface SavingMapper {
-	List<UserChallengeVO> getSavingHistory(Long userId);
+	List<SavingDTO> getSavingHistory(Long userId);
 
 	Long getTotalSaving(Long userId);
 }

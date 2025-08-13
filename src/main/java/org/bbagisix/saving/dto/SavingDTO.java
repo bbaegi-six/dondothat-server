@@ -18,6 +18,7 @@ import lombok.ToString;
 public class SavingDTO {
 	private Long categoryId; //
 	private String title;
+	private Long period;
 	private Date startDate;
 	private Date endDate;
 	private Long saving;
