@@ -3,7 +3,6 @@ package org.bbagisix.finproduct.controller;
 import org.bbagisix.finproduct.dto.RecommendedSavingDTO;
 import org.bbagisix.finproduct.service.FinProductService;
 import org.bbagisix.finproduct.service.RecommendationService;
-import org.bbagisix.user.dto.CustomOAuth2User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -39,21 +38,13 @@ public class FinProductController {
 	}
 
 	// 사용자 맞춤 적금상품 추천 조회
-	// 하이브리드 방식: 백엔드 1차 필터링된 결과를 반환 (향후 LLM 연동 예정)
+	// 하이브리드 방식: 백엔드 1차 필터링 + LLM 2차 지능형 추천
 	@GetMapping("/recommend")
 	public ResponseEntity<List<RecommendedSavingDTO>> getRecommendedSavings(
 		Authentication authentication,
 		@RequestParam(value = "limit", required = false) Integer limit) {
 
-		CustomOAuth2User currentUser = (CustomOAuth2User)authentication.getPrincipal();
-		Long userId = currentUser.getUserId();
-
-		log.info("사용자 {}에 대한 적금상품 추천 API 호출 - limit: {}", userId, limit);
-
-		// 1차 필터링된 상품 조회 (limit 파라미터로 통합 처리)
-		List<RecommendedSavingDTO> recommendations = recommendationService.getFilteredSavings(userId, limit);
-
-		log.info("사용자 {}에 대한 적금상품 추천 API 완료 - {}개 상품", userId, recommendations.size());
+		List<RecommendedSavingDTO> recommendations = recommendationService.getRecommendedSavings(authentication, limit);
 
 		return ResponseEntity.ok(recommendations);
 	}

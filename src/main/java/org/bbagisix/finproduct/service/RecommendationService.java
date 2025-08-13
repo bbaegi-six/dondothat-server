@@ -7,12 +7,14 @@ import org.bbagisix.finproduct.dto.LlmSavingRequestDTO;
 import org.bbagisix.finproduct.dto.LlmSavingResponseDTO;
 import org.bbagisix.finproduct.dto.RecommendedSavingDTO;
 import org.bbagisix.finproduct.mapper.FinProductMapper;
+import org.bbagisix.user.dto.CustomOAuth2User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -35,6 +37,16 @@ public class RecommendationService {
     
     @Value("${LLM_SERVER_URL}")
     private String llmServerUrl;
+
+    // Authentication에서 사용자 ID 추출하여 추천 서비스 호출
+    public List<RecommendedSavingDTO> getRecommendedSavings(Authentication authentication, Integer limit) {
+        CustomOAuth2User currentUser = (CustomOAuth2User) authentication.getPrincipal();
+        Long userId = currentUser.getUserId();
+        
+        log.info("사용자 {}에 대한 적금상품 추천 API 호출 - limit: {}", userId, limit);
+        
+        return getFilteredSavings(userId, limit);
+    }
 
     // 사용자 맞춤 적금상품 추천 (하이브리드 방식)
     // 1차: DB 필터링 → 2차: LLM 지능형 추천
