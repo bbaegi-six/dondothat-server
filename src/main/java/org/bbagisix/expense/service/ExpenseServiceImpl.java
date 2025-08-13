@@ -40,6 +40,8 @@ public class ExpenseServiceImpl implements ExpenseService {
 			expenseDTO.setAssetId(mainAsset.getAssetId());
 			
 			ExpenseVO vo = dtoToVo(expenseDTO);
+			// 사용자 직접 생성시 true 설정
+			vo.setUserModified(true);
 			expenseMapper.insert(vo);
 			if (vo.getExpenditureId() == null) {
 				throw new BusinessException(ErrorCode.EXPENSE_CREATE_FAILED);
@@ -104,6 +106,8 @@ public class ExpenseServiceImpl implements ExpenseService {
 			vo.setAmount(expenseDTO.getAmount());
 			vo.setDescription(expenseDTO.getDescription());
 			vo.setExpenditureDate(expenseDTO.getExpenditureDate());
+			// 수정 시 user_modified = true 자동 설정
+			vo.setUserModified(true);
 			vo.setUserId(userId); // WHERE 조건을 위해 필요
 
 			int result = expenseMapper.update(vo);
@@ -130,7 +134,8 @@ public class ExpenseServiceImpl implements ExpenseService {
 			if (!vo.getUserId().equals(userId)) {
 				throw new BusinessException(ErrorCode.EXPENSE_ACCESS_DENIED);
 			}
-			int result = expenseMapper.delete(expenditureId, userId);
+			// 삭제 시 softDelete() 메서드 사용
+			int result = expenseMapper.softDelete(expenditureId, userId);
 			if (result != 1) {
 				throw new BusinessException(ErrorCode.EXPENSE_DELETE_FAILED, 
 					"예상 삭제 수: 1, 실제: " + result);
@@ -224,6 +229,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 			.expenditureDate(vo.getExpenditureDate())
 			.createdAt(vo.getCreatedAt())
 			.updatedAt(vo.getUpdatedAt())
+			.userModified(vo.getUserModified())
 			.build();
 
 		if (vo.getCategoryId() != null) {
