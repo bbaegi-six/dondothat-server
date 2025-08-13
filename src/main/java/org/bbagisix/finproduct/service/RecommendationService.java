@@ -19,6 +19,7 @@ import org.springframework.web.client.RestTemplate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -104,7 +105,6 @@ public class RecommendationService {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<LlmSavingRequestDTO> entity = new HttpEntity<>(request, headers);
-            
             // LLM 서버 호출
             String llmEndpoint = llmServerUrl + "/recommend-savings";
             log.info("LLM 서버 호출: {} - 사용자: {}, 상품수: {}", llmEndpoint, userId, llmProducts.size());
@@ -117,17 +117,50 @@ public class RecommendationService {
             );
             
             if (response.getBody() != null && response.getBody().getRecommendations() != null) {
-                return response.getBody().getRecommendations();
+                // LLM 추천 결과 반환 (상품 정보만)
+                return response.getBody().getRecommendations().stream()
+                    .map(product -> RecommendedSavingDTO.builder()
+                        .finPrdtCd(product.getFinPrdtCd())
+                        .korCoNm(product.getKorCoNm())
+                        .finPrdtNm(product.getFinPrdtNm())
+                        .spclCnd(product.getSpclCnd())
+                        .joinMember(product.getJoinMember())
+                        .intrRate(BigDecimal.valueOf(product.getIntrRate()))
+                        .intrRate2(BigDecimal.valueOf(product.getIntrRate2()))
+                        .build())
+                    .collect(Collectors.toList());
             } else {
                 log.warn("LLM 서버에서 빈 응답 - 사용자: {}", userId);
-                // LLM 실패 시 상위 3개 상품 반환
-                return filteredProducts.stream().limit(3).collect(Collectors.toList());
+                // LLM 실패 시 상위 3개 상품 반환 (상품 정보만)
+                return filteredProducts.stream()
+                    .limit(3)
+                    .map(product -> RecommendedSavingDTO.builder()
+                        .finPrdtCd(product.getFinPrdtCd())
+                        .korCoNm(product.getKorCoNm())
+                        .finPrdtNm(product.getFinPrdtNm())
+                        .spclCnd(product.getSpclCnd())
+                        .joinMember(product.getJoinMember())
+                        .intrRate(product.getIntrRate())
+                        .intrRate2(product.getIntrRate2())
+                        .build())
+                    .collect(Collectors.toList());
             }
             
         } catch (Exception e) {
             log.error("LLM 서버 호출 실패 - 사용자: {}, 오류: {}", userId, e.getMessage(), e);
-            // LLM 실패 시 상위 3개 상품 반환
-            return filteredProducts.stream().limit(3).collect(Collectors.toList());
+            // LLM 실패 시 상위 3개 상품 반환 (상품 정보만)
+            return filteredProducts.stream()
+                .limit(3)
+                .map(product -> RecommendedSavingDTO.builder()
+                    .finPrdtCd(product.getFinPrdtCd())
+                    .korCoNm(product.getKorCoNm())
+                    .finPrdtNm(product.getFinPrdtNm())
+                    .spclCnd(product.getSpclCnd())
+                    .joinMember(product.getJoinMember())
+                    .intrRate(product.getIntrRate())
+                    .intrRate2(product.getIntrRate2())
+                    .build())
+                .collect(Collectors.toList());
         }
     }
 }
