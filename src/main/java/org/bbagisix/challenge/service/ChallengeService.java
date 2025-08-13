@@ -112,6 +112,15 @@ public class ChallengeService {
 		challengeMapper.joinChallenge(userChallenge);
 	}
 
+	public void closeChallenge(Long userChallengeId) {
+		UserChallengeVO userChallenge = challengeMapper.getUserChallengeById(userChallengeId);
+		if (userChallenge == null) {
+			throw new BusinessException(ErrorCode.CHALLENGE_NOT_FOUND);
+		}
+		UserChallengeVO updated = userChallenge.toBuilder().status("closed").build();
+		challengeMapper.updateChallenge(updated);
+	}
+
 	// 챌린지 성공/실패 판단 및 진척도 계산
 	@Transactional
 	public void dailyCheck() {

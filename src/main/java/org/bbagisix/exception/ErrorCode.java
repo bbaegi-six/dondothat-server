@@ -34,6 +34,7 @@ public enum ErrorCode {
 	CHALLENGE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "CH004", "해당 챌린지에 참여할 권한이 없습니다."),
 	ALREADY_JOINED_CHALLENGE(HttpStatus.CONFLICT, "CH005", "이미 챌린지에 참여중입니다."),
 	CHALLENGE_NOT_JOINED(HttpStatus.BAD_REQUEST, "CH006", "사용자 정보와 일치하는 챌린지가 없습니다"),
+	CHALLENGE_UPDATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CH007", "챌린지 업데이트에 실패했습니다"),
 
 	// 데이터베이스 관련 에러
 	DATA_ACCESS_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "D001", "일시적인 오류가 발생했습니다."),
@@ -71,7 +72,7 @@ public enum ErrorCode {
 
 	// 암호화 관련 에러
 	ENCRYPTION_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "E001", "암호화 처리 중 오류가 발생했습니다."),
-	
+
 	// 금융상품 관련 에러
 	FSS_API_CALL_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "FP001", "금감원 API 호출에 실패했습니다."),
 	FSS_API_RESPONSE_ERROR(HttpStatus.BAD_GATEWAY, "FP002", "금감원 API 응답 처리 중 오류가 발생했습니다."),

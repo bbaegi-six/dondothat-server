@@ -81,4 +81,18 @@ public class ChallengeController {
 			throw new BusinessException(ErrorCode.CHALLENGE_ID_REQUIRED);
 		}
 	}
+
+	@PostMapping("/close/{userChallengeId}")
+	public ResponseEntity<String> closeChallenge(@PathVariable Long userChallengeId) {
+		if (userChallengeId == null) {
+			throw new BusinessException(ErrorCode.CHALLENGE_ID_REQUIRED);
+		}
+		try {
+			challengeService.closeChallenge(userChallengeId);
+			return ResponseEntity.ok("챌린지 닫기가 완료되었습니다.");
+		} catch (Exception e) {
+			throw new BusinessException(ErrorCode.CHALLENGE_UPDATE_FAILED);
+		}
+	}
+
 }
