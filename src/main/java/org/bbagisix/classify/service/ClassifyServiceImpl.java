@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.bbagisix.exception.BusinessException;
 import org.bbagisix.exception.ErrorCode;
 import org.bbagisix.expense.domain.ExpenseVO;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -20,7 +21,9 @@ import lombok.extern.log4j.Log4j2;
 public class ClassifyServiceImpl implements ClassifyService {
 
 	private final RestTemplate restTemplate = new RestTemplate();
-	private static final String URL = "http://llm-server:8000/classify";
+	
+	@Value("${LLM_SERVER_URL}")
+	private String llmServerUrl;
 
 	@Override
 	public List<ExpenseVO> classify(List<ExpenseVO> expenses) {
@@ -50,7 +53,8 @@ public class ClassifyServiceImpl implements ClassifyService {
 
 		Map<String, Object> payload = Map.of("exps", exps);
 
-		Map<String, Object> response = restTemplate.postForObject(URL, payload, Map.class);
+		String classifyUrl = llmServerUrl + "/classify";
+		Map<String, Object> response = restTemplate.postForObject(classifyUrl, payload, Map.class);
 		if (response == null || !response.containsKey("results")) {
 			throw new BusinessException(ErrorCode.LLM_CLASSIFY_ERROR);
 		}
