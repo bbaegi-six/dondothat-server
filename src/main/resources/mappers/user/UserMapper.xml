@@ -7,8 +7,8 @@
 
     <insert id="insertUser" parameterType="org.bbagisix.user.domain.UserVO" useGeneratedKeys="true"
             keyProperty="userId">
-        insert into user (name, nickname, password, email, age, email_verified, role, social_id)
-        values (#{name}, #{nickname}, #{password}, #{email}, #{age}, #{emailVerified}, #{role}, #{socialId})
+        insert into user (name, nickname, password, email, age, email_verified, role, job, social_id)
+        values (#{name}, #{nickname}, #{password}, #{email}, #{age}, #{emailVerified}, #{role}, #{job}, #{socialId})
     </insert>
 
     <select id="selectUserByEmail" resultType="org.bbagisix.user.domain.UserVO">

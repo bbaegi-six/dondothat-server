@@ -14,6 +14,7 @@ public class UserResponse {
     private String nickname;
     private Integer age;
     private String role;
+    private String job;
 	private boolean assetConnected;
     private boolean savingConnected;
     private Long tierId;
