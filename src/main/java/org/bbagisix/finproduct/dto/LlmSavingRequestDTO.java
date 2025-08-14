@@ -13,6 +13,6 @@ import java.util.List;
 public class LlmSavingRequestDTO {
     private List<LlmSavingProductDTO> savings;
     private int userAge;
-    private String userRole;
+    private String userJob;
     private String mainBankName;
 }

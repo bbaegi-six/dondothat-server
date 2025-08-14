@@ -90,7 +90,7 @@ public class RecommendationService {
             // 사용자 정보 추출 (첫 번째 상품에서)
             RecommendedSavingDTO firstProduct = filteredProducts.get(0);
             int userAge = firstProduct.getUserAge();
-            String userRole = firstProduct.getUserJob();
+            String userJob = firstProduct.getUserJob();
             String mainBankName = firstProduct.getMainBankName();
             
             // LLM 요청 데이터 구성
@@ -109,7 +109,7 @@ public class RecommendationService {
             LlmSavingRequestDTO request = LlmSavingRequestDTO.builder()
                 .savings(llmProducts)
                 .userAge(userAge)
-                .userRole(userRole)
+                .userJob(userJob)
                 .mainBankName(mainBankName)
                 .build();
             
