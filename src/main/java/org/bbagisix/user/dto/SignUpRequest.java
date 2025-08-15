@@ -30,4 +30,7 @@ public class SignUpRequest {
 
 	@NotNull(message = "나이는 필수입니다.")
 	private Integer age;
+
+	@NotNull(message = "직업은 필수입니다.")
+	private String job;
 }

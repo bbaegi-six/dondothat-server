@@ -20,6 +20,7 @@ public class UserVO {
 	private Integer age;
 	private String socialId;
 	private String role;
+	private String job;
 	private boolean emailVerified;
 	private boolean assetConnected;
 	private boolean savingConnected;

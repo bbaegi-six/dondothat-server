@@ -78,7 +78,7 @@
                 MIN(o.intr_rate) as min_intr_rate,
                 MAX(o.intr_rate2) as max_intr_rate2,
                 u.age as userAge,
-                u.role as userJob,
+                u.job as userJob,
                 SUBSTRING_INDEX(a.bank_name, '은행', 1) as mainBankName
             FROM saving_base b
             INNER JOIN saving_option o ON b.saving_base_id = o.saving_base_id
@@ -110,13 +110,13 @@
             
             <!-- 직업 제한 필터 -->
             AND (
-                (u.role = '직장인' AND b.spcl_cnd NOT LIKE '%군인%' AND b.spcl_cnd NOT LIKE '%경찰%' AND b.join_member NOT LIKE '%학생%')
-                OR (u.role = '학생' AND b.join_member NOT LIKE '%직장인%' AND b.join_member NOT LIKE '%재직자%')
-                OR (u.role NOT IN ('직장인', '학생'))
+                (u.job = '직장인' AND b.spcl_cnd NOT LIKE '%군인%' AND b.spcl_cnd NOT LIKE '%경찰%' AND b.join_member NOT LIKE '%학생%')
+                OR (u.job = '학생' AND b.join_member NOT LIKE '%직장인%' AND b.join_member NOT LIKE '%재직자%')
+                OR (u.job NOT IN ('직장인', '학생'))
             )
             
             <!-- finPrdtCd별로 그룹화하여 중복 제거 -->
-            GROUP BY b.fin_prdt_cd, b.kor_co_nm, b.fin_prdt_nm, b.spcl_cnd, b.join_member, u.age, u.role, a.bank_name
+            GROUP BY b.fin_prdt_cd, b.kor_co_nm, b.fin_prdt_nm, b.spcl_cnd, b.join_member, u.age, u.job, a.bank_name
         ) filtered
         
         <if test="limit != null and limit > 0">
