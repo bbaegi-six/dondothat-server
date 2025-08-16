@@ -40,7 +40,7 @@ class SavingProduct(BaseModel):
 class SavingRecommendRequest(BaseModel):
     savings: List[SavingProduct]
     userAge: int
-    userRole: str
+    userJob: str
     mainBankName: str = None
 
 # classify 키워드
@@ -284,7 +284,7 @@ async def recommend_savings(request: SavingRecommendRequest):
     # 사용자 정보와 적금 상품 리스트를 기반으로 추천
     user_info = {
         "age": request.userAge,
-        "role": request.userRole,
+        "job": request.userJob,
         "mainBank": request.mainBankName or "없음"
     }
     
@@ -326,7 +326,7 @@ async def recommend_savings(request: SavingRecommendRequest):
 
 사용자 정보:
 - 나이: {user_info['age']}세
-- 직업: {user_info['role']}
+- 직업: {user_info['job']}
 - 주거래은행: {user_info['mainBank']}
 
 추천 대상 적금 상품 목록:
