@@ -1,4 +1,4 @@
-package org.bbagisix.config;
+package org.bbagisix.common.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -50,5 +50,4 @@ public class ServletConfig implements WebMvcConfigurer {
 		return resolver;
 	}
 
-	
 }

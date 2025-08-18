@@ -1,4 +1,4 @@
-package org.bbagisix.config;
+package org.bbagisix.common.config;
 
 import java.util.Arrays;
 
@@ -42,10 +42,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-		
+
 		// CORS 설정 적용
 		http.cors();
-		
+
 		// csrf disable
 		http.csrf().disable();
 
@@ -69,8 +69,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 			// OAuth2 관련 경로 허용
 			.antMatchers("/oauth2-login", "/oauth2-success", "/oauth2/**", "/login/oauth2/**").permitAll()
 			// API 회원가입/로그인 경로 허용
-			.antMatchers("/api/user/signup", "/api/user/login", "/api/user/send-verification", 
-						"/api/user/check-email", "/api/user/check-nickname").permitAll()
+			.antMatchers("/api/user/signup", "/api/user/login", "/api/user/send-verification",
+				"/api/user/check-email", "/api/user/check-nickname").permitAll()
 			// 디버그 경로 허용 (개발용)
 			.antMatchers("/debug/**").permitAll()
 			// 나머지는 인증 필요 (닉네임 변경, /me 등)
@@ -82,7 +82,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		http.oauth2Login()
 			.clientRegistrationRepository(clientRegistrationRepository(environment))
 			.userInfoEndpoint()
-				.userService(customOAuth2UserService)
+			.userService(customOAuth2UserService)
 			.and()
 			.successHandler(customOAuth2SuccessHandler)
 			.failureUrl("/oauth2-login?error");
@@ -103,25 +103,26 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
-	    CorsConfiguration configuration = new CorsConfiguration();
+		CorsConfiguration configuration = new CorsConfiguration();
 
-	    configuration.setAllowedOrigins(Arrays.asList(
-	        "http://localhost:5173", 
-	        "https://dondothat.netlify.app", 
-	        "http://dondothat.duckdns.org:8080",
-	        "https://54.208.50.238"  // 이 줄 추가
-	    ));
-	    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-	    configuration.setAllowedHeaders(Arrays.asList("*"));
-	    configuration.setAllowCredentials(true);
-	
-	    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-	    source.registerCorsConfiguration("/**", configuration);
-	    return source;
+		configuration.setAllowedOrigins(Arrays.asList(
+			"http://localhost:5173",
+			"https://dondothat.netlify.app",
+			"http://dondothat.duckdns.org:8080",
+			"https://54.208.50.238"  // 이 줄 추가
+		));
+		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+		configuration.setAllowedHeaders(Arrays.asList("*"));
+		configuration.setAllowCredentials(true);
+
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", configuration);
+		return source;
 	}
 
 	@Bean
-	public OAuth2AuthorizedClientService authorizedClientService(ClientRegistrationRepository clientRegistrationRepository) {
+	public OAuth2AuthorizedClientService authorizedClientService(
+		ClientRegistrationRepository clientRegistrationRepository) {
 		return new InMemoryOAuth2AuthorizedClientService(clientRegistrationRepository);
 	}
 

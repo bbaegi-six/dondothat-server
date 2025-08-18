@@ -1,4 +1,4 @@
-package org.bbagisix.config;
+package org.bbagisix.common.config;
 
 import org.bbagisix.chat.interceptior.WebSocketJwtInterceptor;
 import org.springframework.context.annotation.Configuration;

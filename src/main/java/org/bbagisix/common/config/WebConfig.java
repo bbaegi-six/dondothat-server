@@ -1,4 +1,4 @@
-package org.bbagisix.config;
+package org.bbagisix.common.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.filter.CharacterEncodingFilter;
@@ -43,9 +43,9 @@ public class WebConfig extends AbstractAnnotationConfigDispatcherServletInitiali
 		characterEncodingFilter.setForceEncoding(true);
 
 		// Spring Security Filter
-		org.springframework.web.filter.DelegatingFilterProxy securityFilter = 
+		org.springframework.web.filter.DelegatingFilterProxy securityFilter =
 			new org.springframework.web.filter.DelegatingFilterProxy("springSecurityFilterChain");
-		
+
 		return new Filter[] {characterEncodingFilter, securityFilter};
 	}
 

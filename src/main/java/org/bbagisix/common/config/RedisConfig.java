@@ -1,4 +1,4 @@
-package org.bbagisix.config;
+package org.bbagisix.common.config;
 
 import org.bbagisix.chat.service.ChatMessageSubscriber;
 import org.springframework.context.annotation.Bean;
