@@ -43,7 +43,6 @@ public class RedisConfig {
 		template.setDefaultSerializer(serializer);
 		template.setKeySerializer(new StringRedisSerializer());
 		template.setValueSerializer(serializer);
-		template.setHashKeySerializer(new StringRedisSerializer());
 		template.setHashKeySerializer(serializer);
 
 		return template;
@@ -59,13 +58,6 @@ public class RedisConfig {
 		container.addMessageListener(chatMessageSubscriber,
 			new PatternTopic("chat:channel:*"));
 
-		return container;
-	}
-
-	@Bean
-	public RedisMessageListenerContainer redisMessageListenerContainer() {
-		RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-		container.setConnectionFactory(redisConnectionFactory);
 		return container;
 	}
 }
