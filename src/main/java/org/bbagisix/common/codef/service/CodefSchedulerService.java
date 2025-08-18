@@ -1,4 +1,4 @@
-package org.bbagisix.codef.service;
+package org.bbagisix.common.codef.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -11,7 +11,7 @@ import org.bbagisix.asset.dto.AssetDTO;
 import org.bbagisix.asset.mapper.AssetMapper;
 import org.bbagisix.asset.service.AssetService;
 import org.bbagisix.classify.service.ClassifyService;
-import org.bbagisix.codef.dto.CodefTransactionResDTO;
+import org.bbagisix.common.codef.dto.CodefTransactionResDTO;
 import org.bbagisix.expense.domain.ExpenseVO;
 import org.bbagisix.expense.mapper.ExpenseMapper;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -186,7 +186,8 @@ public class CodefSchedulerService {
 		try {
 			// codef_transaction_id가 있는 경우, 해당 거래가 사용자에 의해 수정되었는지 확인
 			if (expenseVO.getCodefTransactionId() != null) {
-				List<ExpenseVO> existingTransactions = expenseMapper.findByCodefTransactionId(expenseVO.getCodefTransactionId());
+				List<ExpenseVO> existingTransactions = expenseMapper.findByCodefTransactionId(
+					expenseVO.getCodefTransactionId());
 				for (ExpenseVO existing : existingTransactions) {
 					if (Boolean.TRUE.equals(existing.getUserModified())) {
 						return true; // 사용자가 수정한 거래이므로 제외

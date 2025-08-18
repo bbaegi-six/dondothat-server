@@ -1,4 +1,4 @@
-package org.bbagisix.codef.domain;
+package org.bbagisix.common.codef.domain;
 
 import java.util.Date;
 

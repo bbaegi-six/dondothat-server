@@ -1,4 +1,4 @@
-package org.bbagisix.codef.dto;
+package org.bbagisix.common.codef.dto;
 
 import lombok.*;
 

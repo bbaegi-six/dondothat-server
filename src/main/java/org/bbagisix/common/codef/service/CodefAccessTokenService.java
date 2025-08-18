@@ -1,4 +1,4 @@
-package org.bbagisix.codef.service;
+package org.bbagisix.common.codef.service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,8 +11,8 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 
-import org.bbagisix.codef.domain.CodefAccessTokenVO;
-import org.bbagisix.codef.mapper.CodefAccessTokenMapper;
+import org.bbagisix.common.codef.domain.CodefAccessTokenVO;
+import org.bbagisix.common.codef.mapper.CodefAccessTokenMapper;
 import org.bbagisix.common.exception.BusinessException;
 import org.bbagisix.common.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;

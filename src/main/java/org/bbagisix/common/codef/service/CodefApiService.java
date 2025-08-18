@@ -1,4 +1,4 @@
-package org.bbagisix.codef.service;
+package org.bbagisix.common.codef.service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -18,8 +18,8 @@ import org.bbagisix.asset.domain.AssetVO;
 import org.bbagisix.asset.dto.AssetDTO;
 import org.bbagisix.asset.mapper.AssetMapper;
 import org.bbagisix.asset.encryption.EncryptionUtil;
-import org.bbagisix.codef.dto.CodefTransactionReqDTO;
-import org.bbagisix.codef.dto.CodefTransactionResDTO;
+import org.bbagisix.common.codef.dto.CodefTransactionReqDTO;
+import org.bbagisix.common.codef.dto.CodefTransactionResDTO;
 import org.bbagisix.common.exception.BusinessException;
 import org.bbagisix.common.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;

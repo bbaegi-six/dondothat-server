@@ -1,7 +1,7 @@
-package org.bbagisix.codef.mapper;
+package org.bbagisix.common.codef.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
-import org.bbagisix.codef.domain.CodefAccessTokenVO;
+import org.bbagisix.common.codef.domain.CodefAccessTokenVO;
 
 @Mapper
 public interface CodefAccessTokenMapper {
