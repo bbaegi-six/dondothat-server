@@ -1,4 +1,4 @@
-package org.bbagisix.controller;
+package org.bbagisix.common.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
