@@ -20,8 +20,8 @@ import org.bbagisix.asset.mapper.AssetMapper;
 import org.bbagisix.asset.encryption.EncryptionUtil;
 import org.bbagisix.codef.dto.CodefTransactionReqDTO;
 import org.bbagisix.codef.dto.CodefTransactionResDTO;
-import org.bbagisix.exception.BusinessException;
-import org.bbagisix.exception.ErrorCode;
+import org.bbagisix.common.exception.BusinessException;
+import org.bbagisix.common.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -56,6 +56,7 @@ public class CodefApiService {
 
 	// 은행 코드 매핑
 	private static final Map<String, String> BANK_CODES = new HashMap<>();
+
 	static {
 		BANK_CODES.put("산업은행", "0002");
 		BANK_CODES.put("광주은행", "0034");
@@ -92,20 +93,20 @@ public class CodefApiService {
 
 		// API 호출
 		Map<String, Object> res = postCodefApi(CONNECTED_ID_URL, reqBody);
-		if(res == null){
+		if (res == null) {
 			throw new BusinessException(ErrorCode.CODEF_FAIL, "Codef API로부터 응답을 받지 못했습니다.");
 		}
 
 		// connected id 추출
 		String connectedId = extractConnectedId(res);
-		if(connectedId == null){
-			throw new BusinessException(ErrorCode.CODEF_FAIL,"응답에서 Connected ID를 찾을 수 없습니다.");
+		if (connectedId == null) {
+			throw new BusinessException(ErrorCode.CODEF_FAIL, "응답에서 Connected ID를 찾을 수 없습니다.");
 		}
 		return connectedId;
 	}
 
 	// Connected ID 요청 본문 생성
-	private Map<String, Object> connectedIdReqBody(String bankCode,String bankId, String encryptedPw){
+	private Map<String, Object> connectedIdReqBody(String bankCode, String bankId, String encryptedPw) {
 		Map<String, Object> account = new HashMap<>();
 		account.put("countryCode", "KR");
 		account.put("businessType", "BK");
@@ -115,9 +116,8 @@ public class CodefApiService {
 		account.put("id", bankId);
 		account.put("password", encryptedPw);
 
-
 		Map<String, Object> reqBody = new HashMap<>();
-		reqBody.put("accountList", new Map[]{account});
+		reqBody.put("accountList", new Map[] {account});
 
 		return reqBody;
 	}
@@ -133,21 +133,22 @@ public class CodefApiService {
 
 	// 응답에서 Connected ID 추출
 	private String extractConnectedId(Map<String, Object> res) {
-		Map<String,Object> dataMap = (Map<String, Object>) res.get("data");
-		if(dataMap == null || dataMap.get("connectedId") == null){
+		Map<String, Object> dataMap = (Map<String, Object>)res.get("data");
+		if (dataMap == null || dataMap.get("connectedId") == null) {
 			throw new BusinessException(ErrorCode.CODEF_FAIL, "응답 데이터에서 Connected ID를 찾을 수 없습니다.");
 		}
 		return dataMap.get("connectedId").toString();
 	}
 
 	// 거래 내역 조회 요청 DTO 생성
-	private CodefTransactionReqDTO createTransactionReqDTO(AssetDTO assetDTO, String connectedId, String startDate, String endDate, boolean isFirst) {
+	private CodefTransactionReqDTO createTransactionReqDTO(AssetDTO assetDTO, String connectedId, String startDate,
+		String endDate, boolean isFirst) {
 		CodefTransactionReqDTO requestDTO = new CodefTransactionReqDTO();
 
 		String bankCode = BANK_CODES.get(assetDTO.getBankName());
 		requestDTO.setBankCode(bankCode);
 
-		if(isFirst){
+		if (isFirst) {
 			String encryptedPassword = encryptPw(assetDTO.getBankpw());
 			requestDTO.setBankEncryptPw(encryptedPassword);
 		} else {
@@ -164,17 +165,16 @@ public class CodefApiService {
 		return requestDTO;
 	}
 
-
-
 	// 거래 내역 조회
-	public CodefTransactionResDTO getTransactionList(AssetDTO assetDTO, String connectedId, String startDate, String endDate, boolean isFirst) {
+	public CodefTransactionResDTO getTransactionList(AssetDTO assetDTO, String connectedId, String startDate,
+		String endDate, boolean isFirst) {
 
-		CodefTransactionReqDTO requestDTO = createTransactionReqDTO(assetDTO, connectedId, startDate, endDate,isFirst);
+		CodefTransactionReqDTO requestDTO = createTransactionReqDTO(assetDTO, connectedId, startDate, endDate, isFirst);
 
 		Map<String, Object> requestBody = transactionListReqBody(requestDTO);
 		Map<String, Object> res = postCodefApi(TRANSACTION_LIST_URL, requestBody);
 
-		if(res == null){
+		if (res == null) {
 			throw new BusinessException(ErrorCode.CODEF_FAIL, "거래내역 조회 API로부터 응답을 받지 못했습니다.");
 		}
 
@@ -186,7 +186,7 @@ public class CodefApiService {
 	public boolean deleteConnectedId(Long userId) {
 
 		// 사용자 계좌 정보 조회
-		AssetVO assetVO = assetMapper.selectAssetByUserIdAndStatus(userId,"main");
+		AssetVO assetVO = assetMapper.selectAssetByUserIdAndStatus(userId, "main");
 		if (assetVO == null) {
 			throw new BusinessException(ErrorCode.ASSET_NOT_FOUND);
 		}
@@ -204,7 +204,7 @@ public class CodefApiService {
 		Map<String, Object> reqBody = deleteConnectedIdReqBody(bankCode, connectedId);
 		Map<String, Object> res = postCodefApi(DELETED_URL, reqBody);
 
-		if(res == null){
+		if (res == null) {
 			throw new BusinessException(ErrorCode.CODEF_FAIL, "Connected ID 삭제 API로부터 응답을 받지 못했습니다.");
 		}
 
@@ -221,8 +221,8 @@ public class CodefApiService {
 		account.put("loginType", "1");
 
 		Map<String, Object> reqBody = new HashMap<>();
-		reqBody.put("accountList", new Map[]{account});
-		reqBody.put("connectedId",connectedId);
+		reqBody.put("accountList", new Map[] {account});
+		reqBody.put("connectedId", connectedId);
 		return reqBody;
 	}
 
@@ -241,18 +241,18 @@ public class CodefApiService {
 	}
 
 	// 응답을 CodefTransactionResDTO로 변환
-	private CodefTransactionResDTO toTransactionResDTO(Map<String, Object> res){
-		Map<String, Object> dataMap = (Map<String, Object>) res.get("data");
-		if(dataMap == null){
+	private CodefTransactionResDTO toTransactionResDTO(Map<String, Object> res) {
+		Map<String, Object> dataMap = (Map<String, Object>)res.get("data");
+		if (dataMap == null) {
 			throw new BusinessException(ErrorCode.CODEF_FAIL, "거래내역 응답 데이터가 없습니다.");
 		}
 
 		CodefTransactionResDTO resDTO = new CodefTransactionResDTO();
-		resDTO.setResAccountBalance((String) dataMap.get("resAccountBalance"));
-		resDTO.setResAccountName((String) dataMap.get("resAccountName"));
+		resDTO.setResAccountBalance((String)dataMap.get("resAccountBalance"));
+		resDTO.setResAccountName((String)dataMap.get("resAccountName"));
 
-		List<Map<String, Object>> historyList = (List<Map<String, Object>>) dataMap.get("resTrHistoryList");
-		if(historyList != null){
+		List<Map<String, Object>> historyList = (List<Map<String, Object>>)dataMap.get("resTrHistoryList");
+		if (historyList != null) {
 			List<CodefTransactionResDTO.HistoryItem> historyItems = historyList.stream()
 				.map(this::toHistoryItem)
 				.toList();
@@ -262,18 +262,18 @@ public class CodefApiService {
 	}
 
 	// Map을 HistoryItem으로 변환
-	private CodefTransactionResDTO.HistoryItem toHistoryItem(Map<String, Object> itemMap){
+	private CodefTransactionResDTO.HistoryItem toHistoryItem(Map<String, Object> itemMap) {
 		CodefTransactionResDTO.HistoryItem item = new CodefTransactionResDTO.HistoryItem();
-		item.setResAccountTrDate((String) itemMap.get("resAccountTrDate"));
-		item.setResAccountTrTime((String) itemMap.get("resAccountTrTime"));
-		item.setResAccountOut((String) itemMap.get("resAccountOut"));
-		item.setResAccountIn((String) itemMap.get("resAccountIn"));
-		item.setResAccountDesc1((String) itemMap.get("resAccountDesc1"));
-		item.setResAccountDesc2((String) itemMap.get("resAccountDesc2"));
-		item.setResAccountDesc3((String) itemMap.get("resAccountDesc3"));
-		item.setResAccountDesc4((String) itemMap.get("resAccountDesc4"));
-		item.setResAfterTranBalance((String) itemMap.get("resAfterTranBalance"));
-		item.setTranDesc((String) itemMap.get("tranDesc"));
+		item.setResAccountTrDate((String)itemMap.get("resAccountTrDate"));
+		item.setResAccountTrTime((String)itemMap.get("resAccountTrTime"));
+		item.setResAccountOut((String)itemMap.get("resAccountOut"));
+		item.setResAccountIn((String)itemMap.get("resAccountIn"));
+		item.setResAccountDesc1((String)itemMap.get("resAccountDesc1"));
+		item.setResAccountDesc2((String)itemMap.get("resAccountDesc2"));
+		item.setResAccountDesc3((String)itemMap.get("resAccountDesc3"));
+		item.setResAccountDesc4((String)itemMap.get("resAccountDesc4"));
+		item.setResAfterTranBalance((String)itemMap.get("resAfterTranBalance"));
+		item.setTranDesc((String)itemMap.get("tranDesc"));
 		return item;
 	}
 
@@ -284,7 +284,7 @@ public class CodefApiService {
 
 		try {
 			URL url = new URL(apiURL);
-			con = (HttpURLConnection) url.openConnection();
+			con = (HttpURLConnection)url.openConnection();
 			con.setRequestMethod("POST");
 			con.setRequestProperty("Content-Type", "application/json");
 
@@ -327,7 +327,8 @@ public class CodefApiService {
 				decodedRes = resString;
 			}
 
-			return objectMapper.readValue(decodedRes, new TypeReference<Map<String, Object>>() {});
+			return objectMapper.readValue(decodedRes, new TypeReference<Map<String, Object>>() {
+			});
 		} catch (ProtocolException e) {
 			throw new BusinessException(ErrorCode.CODEF_FAIL, "프로토콜 오류가 발생했습니다: " + e.getMessage());
 		} catch (MalformedURLException e) {
@@ -340,7 +341,7 @@ public class CodefApiService {
 			throw new BusinessException(ErrorCode.CODEF_FAIL, "JSON 처리 오류가 발생했습니다: " + e.getMessage());
 		} catch (IOException e) {
 			throw new BusinessException(ErrorCode.CODEF_FAIL, "네트워크 I/O 오류가 발생했습니다: " + e.getMessage());
-		}finally {
+		} finally {
 			// 리소스 정리
 			if (br != null) {
 				try {

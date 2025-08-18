@@ -1,12 +1,11 @@
 package org.bbagisix.asset.controller;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.bbagisix.asset.dto.AssetDTO;
 import org.bbagisix.asset.service.AssetService;
-import org.bbagisix.exception.BusinessException;
-import org.bbagisix.exception.ErrorCode;
+import org.bbagisix.common.exception.BusinessException;
+import org.bbagisix.common.exception.ErrorCode;
 import org.bbagisix.user.dto.CustomOAuth2User;
 import org.bbagisix.user.mapper.UserMapper;
 import org.springframework.http.ResponseEntity;
@@ -36,7 +35,7 @@ public class AssetController {
 		@RequestBody AssetDTO assetDTO,
 		Authentication authentication
 	) {
-		try{
+		try {
 			Long userId = getUserId(authentication);
 
 			String userName = userMapper.getNameByUserId(userId);
@@ -89,7 +88,7 @@ public class AssetController {
 		@RequestParam String status, // main or sub
 		Authentication authentication
 	) {
-		try{
+		try {
 			Long userId = getUserId(authentication);
 			// 입력값 검증
 			if (userId == null) {
@@ -118,7 +117,7 @@ public class AssetController {
 			throw new BusinessException(ErrorCode.AUTHENTICATION_REQUIRED);
 		}
 
-		CustomOAuth2User curUser = (CustomOAuth2User) authentication.getPrincipal();
+		CustomOAuth2User curUser = (CustomOAuth2User)authentication.getPrincipal();
 
 		if (curUser == null) {
 			throw new BusinessException(ErrorCode.USER_ID_REQUIRED);

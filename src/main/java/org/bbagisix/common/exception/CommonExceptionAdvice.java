@@ -1,4 +1,4 @@
-package org.bbagisix.exception;
+package org.bbagisix.common.exception;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -14,7 +14,7 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 @ControllerAdvice
 public class CommonExceptionAdvice {
-	
+
 	@ExceptionHandler(NoHandlerFoundException.class)
 	@ResponseStatus(HttpStatus.NOT_FOUND)
 	public String handle404(NoHandlerFoundException ex, HttpServletRequest request, Model model) {

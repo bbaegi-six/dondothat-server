@@ -1,14 +1,11 @@
 package org.bbagisix.user.service;
 
-import java.sql.BatchUpdateException;
-import java.util.Currency;
-
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.Cookie;
 
-import org.bbagisix.exception.BusinessException;
-import org.bbagisix.exception.ErrorCode;
+import org.bbagisix.common.exception.BusinessException;
+import org.bbagisix.common.exception.ErrorCode;
 import org.bbagisix.user.domain.UserVO;
 import org.bbagisix.user.dto.CustomOAuth2User;
 import org.bbagisix.user.dto.SignUpRequest;
@@ -37,7 +34,7 @@ public class UserService {
 
 	@Transactional
 	public UserResponse getCurrentUser(Authentication authentication) {
-		CustomOAuth2User currentUser = (CustomOAuth2User) authentication.getPrincipal();
+		CustomOAuth2User currentUser = (CustomOAuth2User)authentication.getPrincipal();
 		UserVO userVO = userMapper.findByUserId(currentUser.getUserId());
 		if (userVO == null) {
 			throw new BusinessException(ErrorCode.USER_NOT_FOUND);
@@ -104,16 +101,16 @@ public class UserService {
 			.build();
 
 		userMapper.insertUser(user);
-		
+
 		String token = jwtUtil.createToken(
-			user.getEmail(), 
-			user.getRole(), 
-			user.getName(), 
+			user.getEmail(),
+			user.getRole(),
+			user.getName(),
 			user.getNickname(),
 			user.getUserId(),
 			24 * 60 * 60 * 1000L
 		);
-		
+
 		CookieUtil.addJwtCookie(response, token);
 		return "회원가입 완료.";
 	}
@@ -148,14 +145,14 @@ public class UserService {
 		jsessionCookie.setPath("/");
 		jsessionCookie.setMaxAge(0);
 		response.addCookie(jsessionCookie);
-		
+
 		// JSESSIONID 삭제
-		response.addHeader("Set-Cookie", 
-			"JSESSIONID=" + 
-			"; Path=/" + 
-			"; Max-Age=0" + 
-			"; Expires=Thu, 01 Jan 1970 00:00:00 GMT");
-		
+		response.addHeader("Set-Cookie",
+			"JSESSIONID=" +
+				"; Path=/" +
+				"; Max-Age=0" +
+				"; Expires=Thu, 01 Jan 1970 00:00:00 GMT");
+
 		// 세션 무효화
 		if (request.getSession(false) != null) {
 			request.getSession().invalidate();
@@ -165,7 +162,8 @@ public class UserService {
 	}
 
 	@Transactional
-	public void processOAuth2Login(String email, String role, String name, String nickname, Long userId, HttpServletResponse response) {
+	public void processOAuth2Login(String email, String role, String name, String nickname, Long userId,
+		HttpServletResponse response) {
 		log.info("OAuth2 로그인 처리 시작: {}", email);
 		String token = jwtUtil.createToken(email, role, name, nickname, userId, 24 * 60 * 60 * 1000L);
 		CookieUtil.addJwtCookie(response, token);

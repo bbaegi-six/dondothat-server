@@ -8,8 +8,8 @@ import org.bbagisix.asset.mapper.AssetMapper;
 import org.bbagisix.challenge.domain.ChallengeVO;
 import org.bbagisix.challenge.domain.UserChallengeVO;
 import org.bbagisix.challenge.mapper.ChallengeMapper;
-import org.bbagisix.exception.BusinessException;
-import org.bbagisix.exception.ErrorCode;
+import org.bbagisix.common.exception.BusinessException;
+import org.bbagisix.common.exception.ErrorCode;
 import org.bbagisix.mypage.domain.MyPageDTO;
 import org.bbagisix.tier.service.TierService;
 import org.bbagisix.tier.dto.TierDTO;
@@ -114,7 +114,7 @@ public class MyPageService {
 	private Integer getCompletedChallengeCount(Long userId) {
 		Integer count = userMapper.getCompletedChallengeCount(userId);
 		return count != null ? count : 0;
-  }
+	}
 
 	private UserChallengeDTO convertToUserChallengeDTO(UserChallengeVO userChallenge) {
 		// 챌린지 상세 정보 조회

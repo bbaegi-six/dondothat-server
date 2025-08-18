@@ -1,7 +1,7 @@
 package org.bbagisix.asset.encryption;
 
-import org.bbagisix.exception.BusinessException;
-import org.bbagisix.exception.ErrorCode;
+import org.bbagisix.common.exception.BusinessException;
+import org.bbagisix.common.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -43,7 +43,6 @@ public class EncryptionUtil {
 	@Value("${AES_SECRET_KEY}")
 	private String aesBase64SecretKey;
 
-
 	// RSA 암호화
 	public String encryptRSA(String plainText, String rsaBase64PublicKey) {
 		try {
@@ -78,7 +77,7 @@ public class EncryptionUtil {
 			SecretKey secretKey = keyGenerator.generateKey();
 
 			// 원시 바이트 -> base64 인코딩 -> String
-			return  Base64.getEncoder().encodeToString(secretKey.getEncoded());
+			return Base64.getEncoder().encodeToString(secretKey.getEncoded());
 
 		} catch (NoSuchAlgorithmException err) {
 			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "AES 알고리즘을 찾을 수 없습니다: " + err.getMessage());
@@ -87,10 +86,10 @@ public class EncryptionUtil {
 
 	// Base64 문자열을 SecretKey로 변환
 	private SecretKey base64ToKey(String base64KeyString) {
-		if(!StringUtils.hasText(base64KeyString)){
+		if (!StringUtils.hasText(base64KeyString)) {
 			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "암호화 키가 설정되지 않았습니다.");
 		}
-		try{
+		try {
 			byte[] keyBytes = Base64.getDecoder().decode(base64KeyString);
 			return new SecretKeySpec(keyBytes, AES_ALGORITHM);
 		} catch (IllegalArgumentException err) {
@@ -100,10 +99,9 @@ public class EncryptionUtil {
 		}
 	}
 
-
 	// AES 암호화
-	public String encryptAES (String plainText) {
-		if(!StringUtils.hasText(plainText) || plainText.startsWith(ENCRYPTION_PREFIX)){
+	public String encryptAES(String plainText) {
+		if (!StringUtils.hasText(plainText) || plainText.startsWith(ENCRYPTION_PREFIX)) {
 			return plainText;
 		}
 		try {
@@ -127,7 +125,7 @@ public class EncryptionUtil {
 
 			// 접두사 붙여서 반환
 			return ENCRYPTION_PREFIX + Base64.getEncoder().encodeToString(encryptedWithIv);
-		}  catch (NoSuchAlgorithmException err) {
+		} catch (NoSuchAlgorithmException err) {
 			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "AES 알고리즘을 찾을 수 없습니다: " + err.getMessage());
 		} catch (NoSuchPaddingException err) {
 			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "AES 패딩 방식을 찾을 수 없습니다: " + err.getMessage());
@@ -177,7 +175,8 @@ public class EncryptionUtil {
 			byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
 			return new String(decryptedBytes, "UTF-8");
 		} catch (IllegalArgumentException err) {
-			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "Base64 디코딩에 실패했습니다. 잘못된 암호화 데이터 형식입니다: " + err.getMessage());
+			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL,
+				"Base64 디코딩에 실패했습니다. 잘못된 암호화 데이터 형식입니다: " + err.getMessage());
 		} catch (NoSuchAlgorithmException err) {
 			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "AES 알고리즘을 찾을 수 없습니다: " + err.getMessage());
 		} catch (NoSuchPaddingException err) {
@@ -189,7 +188,8 @@ public class EncryptionUtil {
 		} catch (IllegalBlockSizeException err) {
 			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "AES 복호화 블록 크기가 유효하지 않습니다: " + err.getMessage());
 		} catch (BadPaddingException err) {
-			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "AES 복호화 중 패딩 오류가 발생했습니다. 잘못된 키이거나 손상된 데이터일 수 있습니다: " + err.getMessage());
+			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL,
+				"AES 복호화 중 패딩 오류가 발생했습니다. 잘못된 키이거나 손상된 데이터일 수 있습니다: " + err.getMessage());
 		} catch (UnsupportedEncodingException err) {
 			throw new BusinessException(ErrorCode.ENCRYPTION_FAIL, "UTF-8 인코딩을 지원하지 않습니다: " + err.getMessage());
 		} catch (Exception err) {

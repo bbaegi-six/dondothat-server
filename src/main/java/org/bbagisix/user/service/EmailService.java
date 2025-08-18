@@ -1,13 +1,15 @@
 package org.bbagisix.user.service;
 
-import org.bbagisix.exception.BusinessException;
-import org.bbagisix.exception.ErrorCode;
+import org.bbagisix.common.exception.BusinessException;
+import org.bbagisix.common.exception.ErrorCode;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.beans.factory.annotation.Value;  // 👈 이것으로 변경
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

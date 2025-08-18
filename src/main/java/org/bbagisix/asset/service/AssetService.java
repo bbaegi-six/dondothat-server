@@ -15,8 +15,8 @@ import org.bbagisix.asset.mapper.AssetMapper;
 import org.bbagisix.classify.service.ClassifyService;
 import org.bbagisix.codef.dto.CodefTransactionResDTO;
 import org.bbagisix.codef.service.CodefApiService;
-import org.bbagisix.exception.BusinessException;
-import org.bbagisix.exception.ErrorCode;
+import org.bbagisix.common.exception.BusinessException;
+import org.bbagisix.common.exception.ErrorCode;
 import org.bbagisix.expense.domain.ExpenseVO;
 import org.bbagisix.expense.mapper.ExpenseMapper;
 import org.springframework.stereotype.Service;
@@ -185,7 +185,7 @@ public class AssetService {
 
 		if (!expenseVOList.isEmpty()) {
 			// log.info("llm start.." + expenseVOList.stream().toList());
-			try{
+			try {
 				expenseVOList = classifyService.classify(expenseVOList);
 			} catch (Exception e) {
 				log.info("llm err.." + e.getMessage());

@@ -3,8 +3,8 @@ package org.bbagisix.tier.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.bbagisix.exception.BusinessException;
-import org.bbagisix.exception.ErrorCode;
+import org.bbagisix.common.exception.BusinessException;
+import org.bbagisix.common.exception.ErrorCode;
 import org.bbagisix.tier.domain.TierVO;
 import org.bbagisix.tier.dto.TierDTO;
 import org.bbagisix.tier.mapper.TierMapper;

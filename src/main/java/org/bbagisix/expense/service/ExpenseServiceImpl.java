@@ -1,10 +1,8 @@
 package org.bbagisix.expense.service;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.bbagisix.asset.domain.AssetVO;
 import org.bbagisix.asset.mapper.AssetMapper;
@@ -14,8 +12,8 @@ import org.bbagisix.codef.service.CodefSchedulerService;
 import org.bbagisix.expense.domain.ExpenseVO;
 import org.bbagisix.expense.dto.ExpenseDTO;
 import org.bbagisix.expense.mapper.ExpenseMapper;
-import org.bbagisix.exception.BusinessException;
-import org.bbagisix.exception.ErrorCode;
+import org.bbagisix.common.exception.BusinessException;
+import org.bbagisix.common.exception.ErrorCode;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -39,7 +37,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 				throw new BusinessException(ErrorCode.ASSET_NOT_FOUND, "main 계좌가 연결되지 않았습니다.");
 			}
 			expenseDTO.setAssetId(mainAsset.getAssetId());
-			
+
 			ExpenseVO vo = dtoToVo(expenseDTO);
 			// 사용자 직접 생성시 true 설정
 			vo.setUserModified(true);
@@ -70,7 +68,8 @@ public class ExpenseServiceImpl implements ExpenseService {
 		} catch (BusinessException e) {
 			throw e;
 		} catch (Exception e) {
-			log.error("소비내역 조회 중 예상치 못한 오류 발생: expenditureId={}, userId={}, error={}", expenditureId, userId, e.getMessage(), e);
+			log.error("소비내역 조회 중 예상치 못한 오류 발생: expenditureId={}, userId={}, error={}", expenditureId, userId,
+				e.getMessage(), e);
 			throw new BusinessException(ErrorCode.DATA_ACCESS_ERROR, e);
 		}
 	}
@@ -113,14 +112,15 @@ public class ExpenseServiceImpl implements ExpenseService {
 
 			int result = expenseMapper.update(vo);
 			if (result != 1) {
-				throw new BusinessException(ErrorCode.EXPENSE_UPDATE_FAILED, 
+				throw new BusinessException(ErrorCode.EXPENSE_UPDATE_FAILED,
 					"예상 업데이트 수: 1, 실제: " + result);
 			}
 			return voToDto(expenseMapper.findById(expenditureId));
 		} catch (BusinessException e) {
 			throw e;
 		} catch (Exception e) {
-			log.error("소비내역 수정 중 예상치 못한 오류 발생: expenditureId={}, userId={}, error={}", expenditureId, userId, e.getMessage(), e);
+			log.error("소비내역 수정 중 예상치 못한 오류 발생: expenditureId={}, userId={}, error={}", expenditureId, userId,
+				e.getMessage(), e);
 			throw new BusinessException(ErrorCode.EXPENSE_UPDATE_FAILED, e);
 		}
 	}
@@ -138,13 +138,14 @@ public class ExpenseServiceImpl implements ExpenseService {
 			// 삭제 시 softDelete() 메서드 사용
 			int result = expenseMapper.softDelete(expenditureId, userId);
 			if (result != 1) {
-				throw new BusinessException(ErrorCode.EXPENSE_DELETE_FAILED, 
+				throw new BusinessException(ErrorCode.EXPENSE_DELETE_FAILED,
 					"예상 삭제 수: 1, 실제: " + result);
 			}
 		} catch (BusinessException e) {
 			throw e;
 		} catch (Exception e) {
-			log.error("소비내역 삭제 중 예상치 못한 오류 발생: expenditureId={}, userId={}, error={}", expenditureId, userId, e.getMessage(), e);
+			log.error("소비내역 삭제 중 예상치 못한 오류 발생: expenditureId={}, userId={}, error={}", expenditureId, userId,
+				e.getMessage(), e);
 			throw new BusinessException(ErrorCode.EXPENSE_DELETE_FAILED, e);
 		}
 	}
@@ -191,7 +192,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 
 			int result = expenseMapper.update(vo);
 			if (result != 1) {
-				throw new BusinessException(ErrorCode.EXPENSE_UPDATE_FAILED, 
+				throw new BusinessException(ErrorCode.EXPENSE_UPDATE_FAILED,
 					"예상 업데이트 수: 1, 실제: " + result);
 			}
 			return voToDto(expenseMapper.findById(expenditureId));
@@ -266,19 +267,19 @@ public class ExpenseServiceImpl implements ExpenseService {
 		try {
 			List<Map<String, Object>> results = expenseMapper.getCurrentMonthSummaryByCategory(userId);
 			Map<String, Long> summary = new HashMap<>();
-			
+
 			for (Map<String, Object> row : results) {
-				String categoryName = (String) row.get("key");
+				String categoryName = (String)row.get("key");
 				Object amountObj = row.get("value");
 				Long amount = 0L;
-				
+
 				if (amountObj instanceof Number) {
-					amount = ((Number) amountObj).longValue();
+					amount = ((Number)amountObj).longValue();
 				}
-				
+
 				summary.put(categoryName, amount);
 			}
-			
+
 			return summary;
 		} catch (Exception e) {
 			log.error("현재월 지출 집계 조회 중 오류 발생: userId={}, error={}", userId, e.getMessage(), e);

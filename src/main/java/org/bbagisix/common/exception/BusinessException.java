@@ -1,4 +1,4 @@
-package org.bbagisix.exception;
+package org.bbagisix.common.exception;
 
 import lombok.Getter;
 

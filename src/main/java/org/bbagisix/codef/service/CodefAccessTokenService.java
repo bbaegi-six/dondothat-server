@@ -13,8 +13,8 @@ import java.util.HashMap;
 
 import org.bbagisix.codef.domain.CodefAccessTokenVO;
 import org.bbagisix.codef.mapper.CodefAccessTokenMapper;
-import org.bbagisix.exception.BusinessException;
-import org.bbagisix.exception.ErrorCode;
+import org.bbagisix.common.exception.BusinessException;
+import org.bbagisix.common.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -42,7 +42,7 @@ public class CodefAccessTokenService {
 	private long expiresTime;
 
 	// access token 유효성 확인 및 갱신
-	public String getValidAccessToken(){
+	public String getValidAccessToken() {
 
 		CodefAccessTokenVO curToken = codefAccessTokenMapper.getCurrentToken();
 
@@ -73,7 +73,6 @@ public class CodefAccessTokenService {
 
 		return (currentTime + bufferTime) >= tokenExpiryTime;
 	}
-
 
 	// 가져온 token을 token table에 저장
 	public void saveAccessToken() {
@@ -134,7 +133,7 @@ public class CodefAccessTokenService {
 			}
 
 			URL url = new URL(OAUTH_URL);
-			con = (HttpURLConnection) url.openConnection();
+			con = (HttpURLConnection)url.openConnection();
 
 			// body
 			String params = "grant_type=client_credentials&scope=read";
@@ -162,28 +161,34 @@ public class CodefAccessTokenService {
 			if (responseCode == HttpURLConnection.HTTP_OK) {
 				br = new BufferedReader(new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8));
 			} else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
-				throw new BusinessException(ErrorCode.CODEF_AUTH_FAIL, "Codef OAuth 인증에 실패했습니다. 클라이언트 ID/Secret을 확인해주세요. (HTTP " + responseCode + ")");
+				throw new BusinessException(ErrorCode.CODEF_AUTH_FAIL,
+					"Codef OAuth 인증에 실패했습니다. 클라이언트 ID/Secret을 확인해주세요. (HTTP " + responseCode + ")");
 			} else {
 				// 에러 응답 읽기
 				br = new BufferedReader(new InputStreamReader(con.getErrorStream(), StandardCharsets.UTF_8));
 				String errorResponse = readResponse(br);
-				throw new BusinessException(ErrorCode.CODEF_AUTH_FAIL, "Codef OAuth API 요청이 실패했습니다. (HTTP " + responseCode + "): " + errorResponse);
+				throw new BusinessException(ErrorCode.CODEF_AUTH_FAIL,
+					"Codef OAuth API 요청이 실패했습니다. (HTTP " + responseCode + "): " + errorResponse);
 			}
 			// 성공 응답 읽기
 			String responseStr = readResponse(br);
 
 			// JSON 파싱
 			ObjectMapper mapper = new ObjectMapper();
-			HashMap<String, Object> result = mapper.readValue(responseStr, new TypeReference<HashMap<String, Object>>() {});
+			HashMap<String, Object> result = mapper.readValue(responseStr,
+				new TypeReference<HashMap<String, Object>>() {
+				});
 
 			log.info("Codef OAuth API에서 토큰 성공적으로 획득");
 			return result;
 
-		}catch (IOException e) {
-			throw new BusinessException(ErrorCode.CODEF_AUTH_FAIL, "Codef OAuth API 네트워크 오류가 발생했습니다: " + e.getMessage());
+		} catch (IOException e) {
+			throw new BusinessException(ErrorCode.CODEF_AUTH_FAIL,
+				"Codef OAuth API 네트워크 오류가 발생했습니다: " + e.getMessage());
 		} catch (Exception e) {
 			// log.error("Access Token 획득 중 예상치 못한 오류", e);
-			throw new BusinessException(ErrorCode.CODEF_AUTH_FAIL, "Access Token 획득 중 예상치 못한 오류가 발생했습니다: " + e.getMessage());
+			throw new BusinessException(ErrorCode.CODEF_AUTH_FAIL,
+				"Access Token 획득 중 예상치 못한 오류가 발생했습니다: " + e.getMessage());
 		} finally {
 			// 리소스 정리
 			if (br != null) {

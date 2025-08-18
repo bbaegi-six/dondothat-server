@@ -6,8 +6,8 @@ import org.bbagisix.asset.domain.AssetVO;
 import org.bbagisix.asset.mapper.AssetMapper;
 import org.bbagisix.challenge.domain.UserChallengeVO;
 import org.bbagisix.challenge.mapper.ChallengeMapper;
-import org.bbagisix.exception.BusinessException;
-import org.bbagisix.exception.ErrorCode;
+import org.bbagisix.common.exception.BusinessException;
+import org.bbagisix.common.exception.ErrorCode;
 import org.bbagisix.saving.dto.SavingDTO;
 import org.bbagisix.saving.mapper.SavingMapper;
 import org.springframework.stereotype.Service;
@@ -74,6 +74,5 @@ public class SavingService {
 			throw new BusinessException(ErrorCode.DATA_ACCESS_ERROR, e);
 		}
 	}
-
 
 }

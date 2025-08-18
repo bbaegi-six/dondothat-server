@@ -5,8 +5,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-import org.bbagisix.exception.BusinessException;
-import org.bbagisix.exception.ErrorCode;
+import org.bbagisix.common.exception.BusinessException;
+import org.bbagisix.common.exception.ErrorCode;
 import org.bbagisix.expense.domain.ExpenseVO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,7 @@ import lombok.extern.log4j.Log4j2;
 public class ClassifyServiceImpl implements ClassifyService {
 
 	private final RestTemplate restTemplate = new RestTemplate();
-	
+
 	@Value("${LLM_SERVER_URL}")
 	private String llmServerUrl;
 

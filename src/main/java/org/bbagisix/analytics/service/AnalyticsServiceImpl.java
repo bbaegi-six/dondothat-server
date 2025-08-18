@@ -5,8 +5,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.bbagisix.category.service.CategoryService;
-import org.bbagisix.exception.BusinessException;
-import org.bbagisix.exception.ErrorCode;
+import org.bbagisix.common.exception.BusinessException;
+import org.bbagisix.common.exception.ErrorCode;
 import org.bbagisix.expense.domain.ExpenseVO;
 import org.bbagisix.expense.service.ExpenseService;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +24,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 	private final ExpenseService expenseService;
 	private final CategoryService categoryService;
 	private final RestTemplate restTemplate = new RestTemplate();
-	
+
 	@Value("${LLM_SERVER_URL}")
 	private String llmServerUrl;
 
