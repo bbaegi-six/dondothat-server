@@ -146,7 +146,7 @@
         ORDER BY end_date DESC, start_date DESC
     </select>
 
-    <!-- 챌린지 실패시 소비내역 조회 (최근 7일간) -->
+    <!-- 챌린지 실패시 소비내역 조회 -->
     <select id="getFailExpenditures" resultType="org.bbagisix.challenge.dto.ChallengeFailDTO">
         SELECT
             e.amount,
