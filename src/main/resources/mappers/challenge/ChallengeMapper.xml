@@ -146,27 +146,18 @@
         ORDER BY end_date DESC, start_date DESC
     </select>
 
-    <!-- 챌린지 실패시 소비내역 조회 -->
+    <!-- 챌린지 실패시 소비내역 조회 (최근 7일간) -->
     <select id="getFailExpenditures" resultType="org.bbagisix.challenge.dto.ChallengeFailDTO">
         SELECT
             e.amount,
             e.description,
             e.expenditure_date as expenditureDate
         FROM expenditure e
-                 JOIN (
-            SELECT user_id, MAX(end_date) as latest_end_date
-            FROM user_challenge
-            WHERE user_id = #{userId}
-            GROUP BY user_id
-        ) uc ON e.user_id = uc.user_id
-            AND DATE(e.expenditure_date) = DATE(uc.latest_end_date)
+        JOIN challenge c ON c.challenge_id = #{challengeId}
         WHERE e.user_id = #{userId}
-          AND e.category_id = #{challengeId}
-          AND EXISTS (
-            SELECT 1
-            FROM user_challenge uc2
-            WHERE uc2.user_id = #{userId}
-              AND uc2.challenge_id = #{challengeId}
-        )
+          AND e.category_id = c.category_id
+          AND e.expenditure_date >= DATE_SUB(NOW(), INTERVAL 1 DAY)
+        ORDER BY e.expenditure_date DESC
+        LIMIT 10
     </select>
 </mapper>
