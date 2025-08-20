@@ -153,9 +153,9 @@ public class ChatService {
 		}
 
 		try {
-			log.warn("❌ userId가 null입니다");  // 추가
+			log.info("📊 사용자 활성 챌린지 조회: userId={}", userId);
 			UserChallengeInfoDTO challengeInfo = chatMapper.selectUserActiveChallengeInfo(userId);
-			log.info("📊 DB 조회 결과: {}", challengeInfo);  // 추가
+			log.info("📊 DB 조회 결과: {}", challengeInfo);
 
 			if (challengeInfo == null) {
 				// 참여 중인 챌린지가 없는 경우
