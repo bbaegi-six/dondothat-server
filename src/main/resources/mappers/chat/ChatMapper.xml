@@ -143,7 +143,6 @@
         FROM user_challenge uc
                  JOIN challenge c ON uc.challenge_id = c.challenge_id
         WHERE uc.user_id = #{userId}
-          AND uc.status = 'ongoing'
         ORDER BY uc.start_date DESC LIMIT 1
     </select>
 
